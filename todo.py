@@ -22,6 +22,10 @@ TERM_COLORS = {
 HOME = os.getenv("HOME")
 TODO_DIR = HOME + "/.todo"
 GIT = git.Git(TODO_DIR)
+PRI_A = ''
+PRI_B = ''
+PRI_C = ''
+PRI_X = ''
 
 def get_config():
 	exists = true
@@ -32,7 +36,25 @@ def get_config():
 	if exists:
 		config_file = TODO_DIR + "/config"
 		config = ConfigParser.ConfigParser()
-		config.read(config_file)
+        if not config.read(config_file):
+            default_config()
+        else:
+			try:
+				PRI_A = config.get("colors", "PRI_A")
+			except:
+				PRI_A = "yellow"
+			try:
+				PRI_B = config.get("colors", "PRI_B")
+			except:
+				PRI_B = "green"
+			try:
+				PRI_C = config.get("colors", "PRI_C")
+			except:
+				PRI_C = "light blue"
+			try:
+				PRI_X = config.get("colors", "PRI_X")
+			except:
+				PRI_X = "white"
 
 def default_config():
 	try:
