@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-import os
-import ConfigParser
+import os, re, sys, getopt
 try:
 	import git
 except ImportError:
 	print "You must download and install GitPython from:\
-		http://pypi.python.org/pypi/GitPython"
+			http://pypi.python.org/pypi/GitPython"
 
 TERM_COLORS = { 
 		"black" : "\033[0;30m", "red" : "\033[0;31m", 
@@ -19,51 +18,102 @@ TERM_COLORS = {
 		"default" : "\033[0m"
 		}
 
+FROM_CONFIG = {}
+TO_CONFIG = {}
+for key in TERM_COLORS.keys():
+	bkey = "$" + re.sub(' ', '_', key).upper()
+	FROM_CONFIG[bkey] = key
+	TO_CONFIG[key] = bkey
+
 HOME = os.getenv("HOME")
 TODO_DIR = HOME + "/.todo"
-GIT = git.Git(TODO_DIR)
-PRI_A = ''
-PRI_B = ''
-PRI_C = ''
-PRI_X = ''
+#GIT = git.Git(TODO_DIR)
+
+CONFIG = {
+		"HOME" : HOME,
+		"TODO_DIR" : TODO_DIR,
+		"TODOTXT_DEFAULT_ACTION" : "",
+		"TODOTXT_CFG_FILE" : "",
+		"TODO_FILE" : TODO_DIR + "/todo.txt",
+		"TMP_FILE" : TODO_DIR + "/todo.tmp",
+		"DONE_FILE" : TODO_DIR + "/done.txt",
+		"REPORT_FILE" : TODO_DIR + "/report.txt",
+		"GIT" : git.Git(TODO_DIR),
+		"PRI_A" : "",
+		"PRI_B" : "",
+		"PRI_C" : "",
+		"PRI_X" : ""
+		}
 
 def get_config():
-	exists = true
-	try:
-		os.lstat(TODO_DIR)
-	except:
-		exists = false
-	if exists:
-		config_file = TODO_DIR + "/config"
-		config = ConfigParser.ConfigParser()
-        if not config.read(config_file):
-            default_config()
-        else:
-			try:
-				PRI_A = config.get("colors", "PRI_A")
-			except:
-				PRI_A = "yellow"
-			try:
-				PRI_B = config.get("colors", "PRI_B")
-			except:
-				PRI_B = "green"
-			try:
-				PRI_C = config.get("colors", "PRI_C")
-			except:
-				PRI_C = "light blue"
-			try:
-				PRI_X = config.get("colors", "PRI_X")
-			except:
-				PRI_X = "white"
+	"""
+	Read the config file
+	"""
+	GIT = CONFIG["GIT"]
+	if not CONFIG["TODOTXT_CFG_FILE"]:
+		config_file = CONFIG["TODO_DIR"] + "/config"
+	else:
+		config_file = CONFIG["TODOTXT_CFG_FILE"]
+	if not os.path.exists(CONFIG["TODO_DIR"]) or not os.path.exists(config_file):
+		default_config()
+	else:
+		f = open(config_file, 'r')
+		for line in f.readlines():
+			if not re.match('#', line) and not re.match('^$', line):
+				line = line.strip()
+				i = line.find(' ') + 1
+				if i > 0:
+					line = line[i:]
+				items = re.split('=', line)
+				items[1] = items[1].strip('"')
+				i = items[1].find(' ')
+				if i > 0:
+					items[1] = items[1][:i]
+				if re.match("PRI_[ABCX]", items[0]):
+					items[1] = FROM_CONFIG[items[1]]
+				if '/' in items[1] and '$' in items[1]: # elision for path names
+					i = items[1].find('/')
+					if items[1][1:i] in CONFIG.keys():
+						items[1] = CONFIG[items[1][1:i]] + items[1][i:]
+				if items[0] == "TODO_DIR":
+					CONFIG["GIT"] = git.Git(items[1])
+				CONFIG[items[0]] = items[1]
+		f.close()
+	if CONFIG["TODOTXT_CFG_FILE"] not in GIT.ls_files():
+		GIT.add([CONFIG["TODOTXT_CFG_FILE"]])
+
 
 def default_config():
+	GIT = CONFIG["GIT"]
+	if not os.path.exists(CONFIG["TODO_DIR"]):
+		os.makedirs(CONFIG["TODO_DIR"])
 	try:
-		os.lstat(TODO_DIR)
+		GIT.status()
 	except:
 		val = raw_input("Would you like to create a new git repository in " + \
-				os.getcwd() + "? [y/N] ")
+				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
-			os.mkdirs(TODO_DIR)
 			print(GIT.init())
+	# touch/create files needed for the operation of the script
+	open(CONFIG["TODO_FILE"], "w").close() 
+	open(CONFIG["TMP_FILE"], "w").close()
+	open(CONFIG["DONE_FILE"], "w").close()
+	open(CONFIG["REPORT_FILE"], "w").close()
+	cfg = open(CONFIG["TODO_DIR"] + "/config", 'w')
+	CONFIG["PRI_A"] = "yellow"
+	CONFIG["PRI_B"] = "green"
+	CONFIG["PRI_C"] = "light blue"
+	CONFIG["PRI_X"] = "white"
+	for k, v in CONFIG.items():
+		if k != "GIT":
+			if v in TO_CONFIG.keys():
+				cfg.write("export " + k + "=" + TO_CONFIG[v] + "\n")
+			else:
+				cfg.write("export " + k + '="' + v + '"\n')
+	GIT.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
+	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 
-# vim: set noet
+if __name__ == "__main__" :
+	get_config()
+	CONFIG["TODO_SH"] = sys.argv.pop(0)
+# vim:set noet:
