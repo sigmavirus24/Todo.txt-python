@@ -4,7 +4,8 @@ try:
 	import git
 except ImportError:
 	print "You must download and install GitPython from:\
-			http://pypi.python.org/pypi/GitPython"
+	http://pypi.python.org/pypi/GitPython"
+	sys.exit(52)
 
 TERM_COLORS = { 
 		"black" : "\033[0;30m", "red" : "\033[0;31m", 
