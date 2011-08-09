@@ -27,7 +27,6 @@ for key in TERM_COLORS.keys():
 
 HOME = os.getenv("HOME")
 TODO_DIR = HOME + "/.todo"
-#GIT = git.Git(TODO_DIR)
 
 CONFIG = {
 		"HOME" : HOME,
@@ -49,7 +48,7 @@ def get_config():
 	"""
 	Read the config file
 	"""
-	GIT = CONFIG["GIT"]
+	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = CONFIG["TODO_DIR"] + "/config"
 	else:
@@ -79,21 +78,21 @@ def get_config():
 					CONFIG["GIT"] = git.Git(items[1])
 				CONFIG[items[0]] = items[1]
 		f.close()
-	if CONFIG["TODOTXT_CFG_FILE"] not in GIT.ls_files():
-		GIT.add([CONFIG["TODOTXT_CFG_FILE"]])
+	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
+		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
 
 def default_config():
-	GIT = CONFIG["GIT"]
+	repo = CONFIG["GIT"]
 	if not os.path.exists(CONFIG["TODO_DIR"]):
 		os.makedirs(CONFIG["TODO_DIR"])
 	try:
-		GIT.status()
+		repo.status()
 	except:
 		val = raw_input("Would you like to create a new git repository in " + \
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
-			print(GIT.init())
+			print(repo.init())
 	# touch/create files needed for the operation of the script
 	open(CONFIG["TODO_FILE"], "w").close() 
 	open(CONFIG["TMP_FILE"], "w").close()
@@ -105,12 +104,12 @@ def default_config():
 	CONFIG["PRI_C"] = "light blue"
 	CONFIG["PRI_X"] = "white"
 	for k, v in CONFIG.items():
-		if k != "GIT":
+		if k != "repo":
 			if v in TO_CONFIG.keys():
 				cfg.write("export " + k + "=" + TO_CONFIG[v] + "\n")
 			else:
 				cfg.write("export " + k + '="' + v + '"\n')
-	GIT.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
+	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 
 if __name__ == "__main__" :
