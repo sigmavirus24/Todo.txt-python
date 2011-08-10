@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, re, sys, getopt
+import os, re, sys, optparse
 try:
 	import git
 except ImportError:
@@ -84,6 +84,15 @@ def get_config():
 
 
 def default_config():
+	"""
+	Set up the default configuration file.
+	"""
+	def touch(filename):
+		"""
+		Create files if they aren't already there.
+		"""
+		open(filename, "w").close()
+
 	repo = CONFIG["GIT"]
 	if not os.path.exists(CONFIG["TODO_DIR"]):
 		os.makedirs(CONFIG["TODO_DIR"])
@@ -94,11 +103,13 @@ def default_config():
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
 			print(repo.init())
+
 	# touch/create files needed for the operation of the script
-	open(CONFIG["TODO_FILE"], "w").close() 
-	open(CONFIG["TMP_FILE"], "w").close()
-	open(CONFIG["DONE_FILE"], "w").close()
-	open(CONFIG["REPORT_FILE"], "w").close()
+	touch(CONFIG["TODO_FILE"])
+	touch(CONFIG["TMP_FILE"])
+	touch(CONFIG["DONE_FILE"])
+	touch(CONFIG["REPORT_FILE"])
+
 	cfg = open(CONFIG["TODO_DIR"] + "/config", 'w')
 	CONFIG["PRI_A"] = "yellow"
 	CONFIG["PRI_B"] = "green"
@@ -116,4 +127,7 @@ def default_config():
 if __name__ == "__main__" :
 	get_config()
 	CONFIG["TODO_SH"] = sys.argv.pop(0)
+	#parser = optparse.OptionParser()
+	#parser.add_option('-f', '--force', 
+	#		'Forces actions without confirmation or interactive input', action=")
 # vim:set noet:
