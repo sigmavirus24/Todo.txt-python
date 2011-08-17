@@ -131,5 +131,5 @@ if __name__ == "__main__" :
 	CONFIG["TODO_SH"] = sys.argv.pop(0)
 	valid, extra = getopt(sys.argv, 'c:h', ['help'])
 	for opt in valid:
-		print "opt: " + opt
+		print "opt: " + str(opt)
 # vim:set noet:
