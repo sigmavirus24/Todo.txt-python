@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os, re, sys
-from getopt import getopt
+#from getopt import getopt
+from optparse import OptionParser
 try:
 	import git
 except ImportError:
@@ -46,10 +47,12 @@ CONFIG = {
 		"PRI_X" : ""
 		}
 
-def get_config():
+def get_config(config_name=""):
 	"""
 	Read the config file
 	"""
+	if config_name:
+		CONFIG["TODOTXT_CFG_FILE"] = config_name
 	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = CONFIG["TODO_DIR"] + "/config"
@@ -126,10 +129,51 @@ def default_config():
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 
+def format_lines(lines):
+	i = 1
+	default = TERM_COLORS["default"]
+	category = ""
+	formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
+	for line in lines:
+		if re.match("\(A\)", line):
+			color = TERM_COLORS[CONFIG["PRI_A"]]
+			category = "A"
+		elif re.match("\(B\)", line):
+			color = TERM_COLORS[CONFIG["PRI_B"]]
+			category = "B"
+		elif re.match("\(C\)", line):
+			color = TERM_COLORS[CONFIG["PRI_C"]]
+			category = "C"
+		else:
+			color = default
+			category = "X"
+		formatted[category].append(color + str(i) + " " + line[:-1] + default)
+		i += 1
+	return formatted
+
+
+def list_todo():
+	file = open(CONFIG["TODO_FILE"])
+	lines = file.readlines()
+	file.close()
+	formatted_lines = format_lines(lines)
+	for category in ["A", "B", "C", "X"]:
+		for line in formatted_lines[category]:
+			print(line)
+	sys.exit(0)
+
 if __name__ == "__main__" :
-	get_config()
-	CONFIG["TODO_SH"] = sys.argv.pop(0)
-	valid, extra = getopt(sys.argv, 'c:h', ['help'])
-	for opt in valid:
-		print "opt: " + str(opt)
+	CONFIG["TODO_PY"] = sys.argv[0]
+	opts = OptionParser("Usage: %prog [options] action args")
+	opts.add_option("-c", "--config", dest = "config",
+			type = "string", 
+			help = \
+			"Supply your own configuration file, must be an absolute path"
+			)
+	valid, args = opts.parse_args()
+	get_config(valid.config)
+	print CONFIG["TODO_PY"], valid, args
+	list_todo()
+	#valid, extra = getopt(sys.argv, 'c:h', ['help'])
+
 # vim:set noet:
