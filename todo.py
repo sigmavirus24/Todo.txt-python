@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import os, re, sys, optparse
+import os, re, sys
+from getopt import getopt
 try:
 	import git
 except ImportError:
@@ -105,16 +106,17 @@ def default_config():
 			print(repo.init())
 
 	# touch/create files needed for the operation of the script
-	touch(CONFIG["TODO_FILE"])
-	touch(CONFIG["TMP_FILE"])
-	touch(CONFIG["DONE_FILE"])
-	touch(CONFIG["REPORT_FILE"])
+	for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
+		touch(CONFIG[item])
 
 	cfg = open(CONFIG["TODO_DIR"] + "/config", 'w')
+
+	# set the defaults for the colors
 	CONFIG["PRI_A"] = "yellow"
 	CONFIG["PRI_B"] = "green"
 	CONFIG["PRI_C"] = "light blue"
 	CONFIG["PRI_X"] = "white"
+
 	for k, v in CONFIG.items():
 		if k != "repo":
 			if v in TO_CONFIG.keys():
@@ -127,7 +129,7 @@ def default_config():
 if __name__ == "__main__" :
 	get_config()
 	CONFIG["TODO_SH"] = sys.argv.pop(0)
-	#parser = optparse.OptionParser()
-	#parser.add_option('-f', '--force', 
-	#		'Forces actions without confirmation or interactive input', action=")
+	valid, extra = getopt(sys.argv, 'c:h', ['help'])
+	for opt in valid:
+		print "opt: " + opt
 # vim:set noet:
