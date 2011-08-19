@@ -162,7 +162,7 @@ def list_todo():
 		for line in formatted_lines[category]:
 			print(line)
 	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
-	sys.exit(0)
+	#sys.exit(0)
 
 def add_todo(line):
 	_git = CONFIG["GIT"]
@@ -176,9 +176,23 @@ def add_todo(line):
 	_git.commit("-m", s)
 	print(s)
 
+def do_todo(mark_done):
+	if not mark_done.isdigit():
+		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
+	else:
+		_git = CONFIG["GIT"]
+		file = open(CONFIG["TODO_FILE"], "r+")
+		lines = file.readlines()
+		removed = lines.pop(int(mark_done) - 1)
+		file.seek(0, 0)
+		file.truncate(0)
+		file.writelines(lines)
+		file.close()
+
+
 if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
-	opts = OptionParser("Usage: %prog [options] action args")
+	opts = OptionParser("Usage: %prog [options] action arg(s)")
 	opts.add_option("-c", "--config", dest = "config",
 			type = "string", 
 			help = \
@@ -195,6 +209,8 @@ if __name__ == "__main__" :
 			"push"		: (False, CONFIG["GIT"].push)
 			}
 	#list_todo()
+	if not len(args) > 0:
+		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 	while args:
 		arg = args.pop(0)
 		if arg in commands.keys():
