@@ -75,13 +75,14 @@ def get_config(config_name=""):
 					items[1] = items[1][:i]
 				if re.match("PRI_[ABCX]", items[0]):
 					items[1] = FROM_CONFIG[items[1]]
-				if '/' in items[1] and '$' in items[1]: # elision for path names
+				elif '/' in items[1] and '$' in items[1]: # elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = CONFIG[items[1][1:i]] + items[1][i:]
-				if items[0] == "TODO_DIR":
+				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
-				CONFIG[items[0]] = items[1]
+				else:
+					CONFIG[items[0]] = items[1]
 		f.close()
 	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
@@ -160,7 +161,20 @@ def list_todo():
 	for category in ["A", "B", "C", "X"]:
 		for line in formatted_lines[category]:
 			print(line)
+	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
 	sys.exit(0)
+
+def add_todo(line):
+	_git = CONFIG["GIT"]
+	file = open(CONFIG["TODO_FILE"], "r+")
+	l = len(file.readlines()) + 1
+	file.write(line + "\n")
+	file.close()
+	s = "TODO: '{0}' added on line {1}.".format(
+		line, l)
+	_git.add(CONFIG["TODO_FILE"])
+	_git.commit("-m", s)
+	print(s)
 
 if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
@@ -172,8 +186,22 @@ if __name__ == "__main__" :
 			)
 	valid, args = opts.parse_args()
 	get_config(valid.config)
-	print CONFIG["TODO_PY"], valid, args
-	list_todo()
-	#valid, extra = getopt(sys.argv, 'c:h', ['help'])
+	#print CONFIG["TODO_PY"], valid, args
+	commands = {
+			# command 	: ( Args, Function),
+			"add"		: ( True, add_todo),
+			"ls"		: (False, list_todo),
+			"list"		: (False, list_todo),
+			"push"		: (False, CONFIG["GIT"].push)
+			}
+	#list_todo()
+	while args:
+		arg = args.pop(0)
+		if arg in commands.keys():
+			if not commands[arg][0]:
+				commands[arg][1]()
+			else:
+				commands[arg][1](args.pop(0))
+
 
 # vim:set noet:
