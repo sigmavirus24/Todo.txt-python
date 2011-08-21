@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import os, re, sys, datetime
+import os, re, sys
 from optparse import OptionParser
+from datetime import datetime, date
 
 try:
 	import git
@@ -49,6 +50,14 @@ CONFIG = {
 		"PRI_C" : "",
 		"PRI_X" : ""
 		}
+
+### Helper Functions 
+def get_todos():
+	_file = open(CONFIG["TODO_FILE"])
+	lines = _file.readlines()
+	_file.close()
+	return lines
+### End Helper Functions
 
 def get_config(config_name=""):
 	"""
@@ -160,9 +169,7 @@ def list_todo():
 	Print the list of todo items in order of priority and position in the
 	todo.txt file.
 	"""
-	_file = open(CONFIG["TODO_FILE"])
-	lines = _file.readlines()
-	_file.close()
+	lines = get_todos()
 	formatted_lines = format_lines(lines)
 	for category in ["A", "B", "C", "X"]:
 		for line in formatted_lines[category]:
@@ -200,7 +207,7 @@ def do_todo(mark_done):
 		_file.truncate(0)
 		_file.writelines(lines)
 		_file.close()
-		today = datetime.datetime.now().strftime("%Y-%m-%d")
+		today = datetime.now().strftime("%Y-%m-%d")
 		removed = re.sub("\(?[ABCX]\)?\s?", "", removed)
 		removed = "x " + today + " " + removed
 		_file = open(CONFIG["DONE_FILE"], "a")
@@ -210,6 +217,33 @@ def do_todo(mark_done):
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(mark_done))
 		print("TODO: {0} archived.".format(CONFIG["DONE_FILE"]))
+
+def list_date():
+	"""
+	List todo items by date @{yyyy-mm-dd}.
+	"""
+	lines = get_todos()
+	todo = {}
+	dates = []
+	i = 1
+	for line in lines:
+		_re = re.search("@\{(\d{4})-(\d{2})-(\d{2})\}", line)
+		if _re and len(_re.groups()) == 3:
+			tup = _re.groups()
+			dates.append(date(int(tup[0]), int(tup[1]), int(tup[2])))
+			todo[dates[-1]] = "{0} ".format(i) + line
+			lines.remove(line)
+		else:
+			j = lines.index(line)
+			lines[j] = "{0} ".format(i) + line
+		i += 1 
+	dates.sort()
+	sortedl = []
+	for d in dates:
+		sortedl.append(todo[d])
+	sortedl += lines
+	print("".join(sortedl)[:-1])
+	print("--\nTODO: {0} of {1} tasks shown".format(len(sortedl), len(sortedl)))
 
 
 if __name__ == "__main__" :
@@ -231,6 +265,8 @@ if __name__ == "__main__" :
 			"do"		: ( True, do_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
+			"lsd"		: (False, list_date),
+			"listdate"	: (False, list_date),
 			"push"		: (False, CONFIG["GIT"].push)
 			}
 	commandsl = commands.keys()
