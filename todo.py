@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import os, re, sys
-#from getopt import getopt
+import os, re, sys, datetime
 from optparse import OptionParser
+
 try:
 	import git
 except ImportError:
@@ -66,7 +66,7 @@ def get_config(config_name=""):
 	else:
 		f = open(config_file, 'r')
 		for line in f.readlines():
-			if not re.match('#', line) and not re.match('^$', line):
+			if not (re.match('#', line) or re.match('^$', line)):
 				line = line.strip()
 				i = line.find(' ') + 1
 				if i > 0:
@@ -77,7 +77,7 @@ def get_config(config_name=""):
 				if i > 0:
 					items[1] = items[1][:i]
 				if re.match("PRI_[ABCX]", items[0]):
-					items[1] = FROM_CONFIG[items[1]]
+					CONFIG[items[0]] = FROM_CONFIG[items[1]]
 				elif '/' in items[1] and '$' in items[1]: # elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
@@ -134,32 +134,35 @@ def default_config():
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 
 def format_lines(lines):
+	"""
+	Take in a list of lines to do, return them formatted with the TERM_COLORS
+	and organized based upon priority.
+	"""
 	i = 1
 	default = TERM_COLORS["default"]
 	category = ""
 	formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
 	for line in lines:
-		if re.match("\(A\)", line):
-			color = TERM_COLORS[CONFIG["PRI_A"]]
-			category = "A"
-		elif re.match("\(B\)", line):
-			color = TERM_COLORS[CONFIG["PRI_B"]]
-			category = "B"
-		elif re.match("\(C\)", line):
-			color = TERM_COLORS[CONFIG["PRI_C"]]
-			category = "C"
+		r = re.match("\(([ABC])\)", line)
+		if r:
+			category = r.group()[1]
+			color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
 		else:
-			color = default
 			category = "X"
+			color = default
 		formatted[category].append(color + str(i) + " " + line[:-1] + default)
 		i += 1
 	return formatted
 
 
 def list_todo():
-	file = open(CONFIG["TODO_FILE"])
-	lines = file.readlines()
-	file.close()
+	"""
+	Print the list of todo items in order of priority and position in the
+	todo.txt file.
+	"""
+	_file = open(CONFIG["TODO_FILE"])
+	lines = _file.readlines()
+	_file.close()
 	formatted_lines = format_lines(lines)
 	for category in ["A", "B", "C", "X"]:
 		for line in formatted_lines[category]:
@@ -168,11 +171,14 @@ def list_todo():
 	#sys.exit(0)
 
 def add_todo(line):
+	"""
+	Add a new item to the list of things to do.
+	"""
 	_git = CONFIG["GIT"]
-	file = open(CONFIG["TODO_FILE"], "r+")
-	l = len(file.readlines()) + 1
-	file.write(line + "\n")
-	file.close()
+	_file = open(CONFIG["TODO_FILE"], "r+")
+	l = len(_file.readlines()) + 1
+	_file.write(line + "\n")
+	_file.close()
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
 	_git.add(CONFIG["TODO_FILE"])
@@ -180,21 +186,35 @@ def add_todo(line):
 	print(s)
 
 def do_todo(mark_done):
+	"""
+	Mark an item on a specified line as done.
+	"""
 	if not mark_done.isdigit():
 		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
 	else:
 		_git = CONFIG["GIT"]
-		file = open(CONFIG["TODO_FILE"], "r+")
-		lines = file.readlines()
+		_file = open(CONFIG["TODO_FILE"], "r+")
+		lines = _file.readlines()
 		removed = lines.pop(int(mark_done) - 1)
-		file.seek(0, 0)
-		file.truncate(0)
-		file.writelines(lines)
-		file.close()
+		_file.seek(0, 0)
+		_file.truncate(0)
+		_file.writelines(lines)
+		_file.close()
+		today = datetime.datetime.now().strftime("%Y-%m-%d")
+		removed = re.sub("\(?[ABCX]\)?\s?", "", removed)
+		removed = "x " + today + " " + removed
+		_file = open(CONFIG["DONE_FILE"], "a")
+		_file.write(removed)
+		_file.close()
+		_git.commit("-a", "-m", removed)
+		print(removed[:-1])
+		print("TODO: Item {0} marked as done.".format(mark_done))
+		print("TODO: {0} archived.".format(CONFIG["DONE_FILE"]))
 
 
 if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
+
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
 	opts.add_option("-c", "--config", dest = "config",
 			type = "string", 
@@ -202,11 +222,13 @@ if __name__ == "__main__" :
 			"Supply your own configuration file, must be an absolute path"
 			)
 	valid, args = opts.parse_args()
+
 	get_config(valid.config)
-	#print CONFIG["TODO_PY"], valid, args
+
 	commands = {
 			# command 	: ( Args, Function),
 			"add"		: ( True, add_todo),
+			"do"		: ( True, do_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
 			"push"		: (False, CONFIG["GIT"].push)
