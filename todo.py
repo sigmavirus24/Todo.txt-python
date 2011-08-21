@@ -145,7 +145,7 @@ def format_lines(lines):
 	for line in lines:
 		r = re.match("\(([ABC])\)", line)
 		if r:
-			category = r.group()[1]
+			category = r.groups()[0]
 			color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
 		else:
 			category = "X"
