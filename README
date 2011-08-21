@@ -1,0 +1,7 @@
+A port of the popular todo.txt-cli project written in bash to python.
+
+This REQUIRES GitPython. Running the script once will give you the URL to
+download it.
+
+Enjoy, contribute, and feel free to clone. I'm doing this blind as best as
+possible for fun.

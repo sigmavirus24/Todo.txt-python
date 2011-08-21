@@ -5,8 +5,11 @@ from optparse import OptionParser
 try:
 	import git
 except ImportError:
-	print "You must download and install GitPython from:\
-	http://pypi.python.org/pypi/GitPython"
+	if sys.version_info < (3, 0):
+		print("You must download and install GitPython from:\
+	http://pypi.python.org/pypi/GitPython")
+	else:
+		print("GitPython is not available for Python3 last I checked.")
 	sys.exit(52)
 
 TERM_COLORS = { 
@@ -192,7 +195,7 @@ def do_todo(mark_done):
 
 if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
-	opts = OptionParser("Usage: %prog [options] action arg(s)")
+	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
 	opts.add_option("-c", "--config", dest = "config",
 			type = "string", 
 			help = \
@@ -208,16 +211,24 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"push"		: (False, CONFIG["GIT"].push)
 			}
+	commandsl = commands.keys()
 	#list_todo()
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 	while args:
-		arg = args.pop(0)
-		if arg in commands.keys():
+		# ensure this doesn't error because of a faulty CAPS LOCK key
+		arg = args.pop(0).lower() 
+		if arg in commandsl:
 			if not commands[arg][0]:
 				commands[arg][1]()
 			else:
 				commands[arg][1](args.pop(0))
-
+		else:
+			commandsl.sort()
+			commandsl = ["\t" + i for i in commandsl]
+			print("Unable to find command: {0}".format(arg))
+			print("Valid commands: ")
+			print("\n".join(commandsl))
+			sys.exit(1)
 
 # vim:set noet:
