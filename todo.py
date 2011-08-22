@@ -111,6 +111,10 @@ def get_config(config_name=""):
 	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
+def parse_valid(valid_opts):
+	CONFIG["PLAIN"] = valid_opts.plain
+	CONFIG["NO_PRI"] = valid_opts.priority
+
 
 def default_config():
 	"""
@@ -154,29 +158,46 @@ def default_config():
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 
-def format_lines(lines):
+def format_lines(lines, color_only=False):
 	"""
 	Take in a list of lines to do, return them formatted with the TERM_COLORS
 	and organized based upon priority.
 	"""
 	i = 1
 	default = TERM_COLORS["default"]
+	plain = CONFIG["PLAIN"]
+	no_priority = CONFIG["NO_PRI"]
 	category = ""
-	formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
+
+	if color_only:
+		formatted = []
+	else:
+		formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
+
 	for line in lines:
 		r = re.match("\(([ABC])\)", line)
 		if r:
 			category = r.groups()[0]
-			color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
+			if plain:
+				color = default
+			else:
+				color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
+			if no_priority:
+				line = re.sub("^\([ABC]\)\s", "", line)
 		else:
 			category = "X"
 			color = default
-		formatted[category].append(color + str(i) + " " + line[:-1] + default)
+
+		l = color + str(i) + " " + line[:-1] + default
+		if color_only:
+			formatted.append(l)
+		else:
+			formatted[category].append(l)
 		i += 1
 	return formatted
 
 
-def list_todo():
+def list_todo(plain = False, no_priority = False):
 	"""
 	Print the list of todo items in order of priority and position in the
 	todo.txt file.
@@ -244,22 +265,24 @@ def list_date():
 	lines = get_todos()
 	todo = {"nodate" : []}
 	dates = []
-	i = 1
+	#i = 1
 
+	lines = format_lines(lines, color_only = True)
 	for line in lines:
 		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
-		l = "{0} ".format(i) + line
+		#l = "{0} ".format(i) + line
+		line += "\n"
 		if _re:
 			tup = _re.groups()
 			d = date(int(tup[0]), int(tup[1]), int(tup[2]))
 			if d not in dates:
 				dates.append(d)
-				todo[d] = [l]
+				todo[d] = [line]
 			else:
-				todo[d].append(l)
+				todo[d].append(line)
 		else:
-			todo["nodate"].append(l)
-		i += 1 
+			todo["nodate"].append(line)
+		#i += 1 
 
 	dates.sort()
 	sortedl = []
@@ -282,9 +305,21 @@ if __name__ == "__main__" :
 			help = \
 			"Supply your own configuration file, must be an absolute path"
 			)
+	opts.add_option("-p", "--plain-mode", action = "store_true", 
+			dest = "plain",
+			default = False,
+			help = "Turn off colors"
+			)
+	opts.add_option("-P", "--no-priority", action = "store_true",
+			dest = "priority",
+			default = False,
+			help = "Hide priority labels in list output"
+			)
 	valid, args = opts.parse_args()
 
 	get_config(valid.config)
+
+	parse_valid(valid)
 
 	commands = {
 			# command 	: ( Args, Function),
