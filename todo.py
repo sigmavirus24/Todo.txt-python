@@ -57,6 +57,15 @@ def get_todos():
 	lines = _file.readlines()
 	_file.close()
 	return lines
+
+def _git_pull():
+	print(CONFIG["GIT"].pull())
+
+def _git_push():
+	print(CONFIG["GIT"].push())
+
+def _git_status():
+	print(CONFIG["GIT"].status())
 ### End Helper Functions
 
 def get_config(config_name=""):
@@ -283,7 +292,9 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
-			"push"		: (False, CONFIG["GIT"].push)
+			"push"		: (False, _git_push),
+			"pull"		: (False, _git_pull),
+			"status"	: (False, _git_status),
 			}
 	commandsl = commands.keys()
 	#list_todo()
