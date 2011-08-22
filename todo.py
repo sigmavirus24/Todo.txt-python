@@ -53,9 +53,9 @@ CONFIG = {
 
 ### Helper Functions 
 def get_todos():
-	_file = open(CONFIG["TODO_FILE"])
-	lines = _file.readlines()
-	_file.close()
+	fd = open(CONFIG["TODO_FILE"])
+	lines = fd.readlines()
+	fd.close()
 	return lines
 
 def _git_pull():
@@ -190,10 +190,10 @@ def add_todo(line):
 	Add a new item to the list of things todo.
 	"""
 	_git = CONFIG["GIT"]
-	_file = open(CONFIG["TODO_FILE"], "r+")
-	l = len(_file.readlines()) + 1
-	_file.write(line + "\n")
-	_file.close()
+	fd = open(CONFIG["TODO_FILE"], "r+")
+	l = len(fd.readlines()) + 1
+	fd.write(line + "\n")
+	fd.close()
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
 	_git.add(CONFIG["TODO_FILE"])
@@ -216,19 +216,19 @@ def do_todo(mark_done):
 		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
 	else:
 		_git = CONFIG["GIT"]
-		_file = open(CONFIG["TODO_FILE"], "r+")
-		lines = _file.readlines()
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
 		removed = lines.pop(int(mark_done) - 1)
-		_file.seek(0, 0)
-		_file.truncate(0)
-		_file.writelines(lines)
-		_file.close()
+		fd.seek(0, 0)
+		fd.truncate(0)
+		fd.writelines(lines)
+		fd.close()
 		today = datetime.now().strftime("%Y-%m-%d")
 		removed = re.sub("\(?[ABCX]\)?\s?", "", removed)
 		removed = "x " + today + " " + removed
-		_file = open(CONFIG["DONE_FILE"], "a")
-		_file.write(removed)
-		_file.close()
+		fd = open(CONFIG["DONE_FILE"], "a")
+		fd.write(removed)
+		fd.close()
 		_git.commit("-a", "-m", removed)
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(mark_done))
