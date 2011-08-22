@@ -223,25 +223,28 @@ def list_date():
 	List todo items by date @{yyyy-mm-dd}.
 	"""
 	lines = get_todos()
-	todo = {}
+	todo = {"nodate" : []}
 	dates = []
 	i = 1
+
 	for line in lines:
-		_re = re.search("@\{(\d{4})-(\d{2})-(\d{2})\}", line)
-		if _re and len(_re.groups()) == 3:
+		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
+		if _re:
 			tup = _re.groups()
 			dates.append(date(int(tup[0]), int(tup[1]), int(tup[2])))
 			todo[dates[-1]] = "{0} ".format(i) + line
-			lines.remove(line)
 		else:
 			j = lines.index(line)
-			lines[j] = "{0} ".format(i) + line
+			todo["nodate"].append("{0} ".format(i) + line)
 		i += 1 
+
 	dates.sort()
 	sortedl = []
+
 	for d in dates:
 		sortedl.append(todo[d])
-	sortedl += lines
+
+	sortedl += todo["nodate"]
 	print("".join(sortedl)[:-1])
 	print("--\nTODO: {0} of {1} tasks shown".format(len(sortedl), len(sortedl)))
 
