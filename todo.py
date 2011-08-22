@@ -65,7 +65,10 @@ def _git_push():
 	print(CONFIG["GIT"].push())
 
 def _git_status():
-	print(CONFIG["GIT"].status())
+	try:
+		print(CONFIG["GIT"].status())
+	except git.exc.GitCommandError, g:
+		print("Error retrieving status of git repository.")
 ### End Helper Functions
 
 def get_config(config_name=""):
@@ -124,7 +127,7 @@ def default_config():
 		os.makedirs(CONFIG["TODO_DIR"])
 	try:
 		repo.status()
-	except:
+	except git.exc.GitCommandError, g:
 		val = raw_input("Would you like to create a new git repository in " + \
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
