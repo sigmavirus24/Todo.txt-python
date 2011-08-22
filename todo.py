@@ -175,11 +175,10 @@ def list_todo():
 		for line in formatted_lines[category]:
 			print(line)
 	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
-	#sys.exit(0)
 
 def add_todo(line):
 	"""
-	Add a new item to the list of things to do.
+	Add a new item to the list of things todo.
 	"""
 	_git = CONFIG["GIT"]
 	_file = open(CONFIG["TODO_FILE"], "r+")
@@ -191,6 +190,14 @@ def add_todo(line):
 	_git.add(CONFIG["TODO_FILE"])
 	_git.commit("-m", s)
 	print(s)
+
+def addm_todo(todo):
+	"""
+	Add new items to the list of things todo.
+	"""
+	lines = todo.split("\n")
+	for line in lines:
+		add_todo(line)
 
 def do_todo(mark_done):
 	"""
@@ -229,20 +236,25 @@ def list_date():
 
 	for line in lines:
 		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
+		l = "{0} ".format(i) + line
 		if _re:
 			tup = _re.groups()
-			dates.append(date(int(tup[0]), int(tup[1]), int(tup[2])))
-			todo[dates[-1]] = "{0} ".format(i) + line
+			d = date(int(tup[0]), int(tup[1]), int(tup[2]))
+			if d not in dates:
+				dates.append(d)
+				todo[d] = [l]
+			else:
+				todo[d].append(l)
 		else:
-			j = lines.index(line)
-			todo["nodate"].append("{0} ".format(i) + line)
+			todo["nodate"].append(l)
 		i += 1 
 
 	dates.sort()
 	sortedl = []
 
 	for d in dates:
-		sortedl.append(todo[d])
+		for l in todo[d]:
+			sortedl.append(l)
 
 	sortedl += todo["nodate"]
 	print("".join(sortedl)[:-1])
@@ -265,6 +277,7 @@ if __name__ == "__main__" :
 	commands = {
 			# command 	: ( Args, Function),
 			"add"		: ( True, add_todo),
+			"addm"		: ( True, addm_todo),
 			"do"		: ( True, do_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
