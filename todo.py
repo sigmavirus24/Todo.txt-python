@@ -114,7 +114,7 @@ def get_config(config_name=""):
 def parse_valid(valid_opts):
 	CONFIG["PLAIN"] = valid_opts.plain
 	CONFIG["NO_PRI"] = valid_opts.priority
-
+	CONFIG["PRE_DATE"] = valid.prepend_date
 
 def default_config():
 	"""
@@ -213,9 +213,15 @@ def add_todo(line):
 	"""
 	Add a new item to the list of things todo.
 	"""
+	prepend = CONFIG["PRE_DATE"]
 	_git = CONFIG["GIT"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
+	if re.match("(\([ABC]\))", line):
+		line = re.sub("(\([ABC]\))", "\g<1>" + datetime.now().strftime(" %Y-%m-%d "), 
+			line)
+	else:
+		line = datetime.now().strftime("%Y-%m-%d ") + line
 	fd.write(line + "\n")
 	fd.close()
 	s = "TODO: '{0}' added on line {1}.".format(
@@ -315,6 +321,13 @@ if __name__ == "__main__" :
 			default = False,
 			help = "Hide priority labels in list output"
 			)
+	opts.add_option("-t", "--prepend-date", action = "store_true",
+			dest = "prepend_date",
+			default = False,
+			help = \
+			"Prepend the current date to a task automattically when it's added."
+			)
+
 	valid, args = opts.parse_args()
 
 	get_config(valid.config)
