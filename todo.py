@@ -1,4 +1,22 @@
 #!/usr/bin/env python
+#### TODO.TXT-CLI-python
+#### Copyright (C) 2011  Sigmavirus24
+####
+#### This program is free software: you can redistribute it and/or modify
+#### it under the terms of the GNU General Public License as published by
+#### the Free Software Foundation, either version 3 of the License, or
+#### (at your option) any later version.
+####
+#### This program is distributed in the hope that it will be useful,
+#### but WITHOUT ANY WARRANTY; without even the implied warranty of
+#### MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#### GNU General Public License for more details.
+####
+#### You should have received a copy of the GNU General Public License
+#### along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#### TLDR: This is licensed under the GPLv3. See LICENSE for more details.
+
 import os, re, sys
 from optparse import OptionParser
 from datetime import datetime, date
@@ -130,9 +148,82 @@ def get_config(config_name=""):
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
 def parse_valid(valid_opts):
+	"""
+	Set configuration options based that are set from the command-line.
+	"""
 	CONFIG["PLAIN"] = valid_opts.plain
 	CONFIG["NO_PRI"] = valid_opts.priority
 	CONFIG["PRE_DATE"] = valid.prepend_date
+
+def repo_config():
+	"""
+	Help the user configure their git repository.
+	"""
+	from getpass import getuser
+	from os import getenv
+	g = CONFIG["GIT"]
+	# local configuration
+	try:
+		user_name = g.config("--global", "--get", "user.name")
+	except:
+		user_name = getuser()
+
+	try:
+		user_email = g.config("--global", "--get", "user.email")
+	except:
+		user_email = user.name + "@" + getenv("HOSTNAME")
+	print("First configure your local repository options.")
+	ret = raw_input("git config user.name " + user_name + "? ")
+	if ret:
+		user_name = ret
+	ret = raw_input("git config user.email " + user_email + "? ")
+	if ret:
+		user_email = ret
+
+	g.config("user.name", user_name)
+	g.config("user.email", user_email)
+
+	# remote configuration
+	ret = raw_input("Would you like to add a remote repository? ")
+	if re.match(ret, "yes", flags = re.I):
+		remote_host = None
+		remote_path = None
+		remote_user = None
+		remote_branch = None
+
+		while not remote_host:
+			remote_host = raw_input("Remote hostname: ")
+			if not remote_host:
+				print("Please enter the remote's hostname.")
+		while not remote_path:
+			remote_path = raw_input("Remote path: ")
+			if not remote_path:
+				print("Please enter the path to the remote's repository.")
+		while not remote_user:
+			remote_user = raw_input("Remote user: ")
+			if not remote_user:
+				print("Please enter the user on the remote machine.")
+		while not remote_branch:
+			remote_branch = raw_input("Remote branch: ")
+			if not remote_branch:
+				print("Please enter the branch to push to on the remote machine.")
+		raw_input("Press enter when you have initialized a bare" +\
+				"repository on the remote or are ready to proceed.")
+		local_branch = g.branch()
+		if not local_branch:
+			local_branch = "master"
+		else:
+			for l in local_branch.split("\n"):
+				if re.match("^\*\s.*", l):
+					local_branch = re.sub("^\*\s", "", l)
+					break
+
+		g.remote("add", "origin", remote_user + "@" + remote_host +\
+				":" + remote_path)
+		g.config("branch." + local_branch + ".remote", "origin")
+		g.config("branch." + local_branch + ".merge", "refs/heads/" +\
+				remote_branch)
+
 
 def default_config():
 	"""
@@ -154,6 +245,13 @@ def default_config():
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
 			print(repo.init())
+			val = raw_input(
+	"Would you like {prog} to help you configure your new git repository? [y/n] ".format(
+				prog = CONFIG["TODO_PY"]
+				)
+			)
+			if val == 'y':
+				repo_config()
 
 	# touch/create files needed for the operation of the script
 	for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
@@ -168,13 +266,15 @@ def default_config():
 	CONFIG["PRI_X"] = "white"
 
 	for k, v in CONFIG.items():
-		if k != "repo":
+		if k != "GIT":
 			if v in TO_CONFIG.keys():
 				cfg.write("export " + k + "=" + TO_CONFIG[v] + "\n")
 			else:
 				cfg.write("export " + k + '="' + v + '"\n')
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
+	repo.commit("-m", CONFIG["TODO_PY"] + " initial Commit.")
+	#repo.push()
 ### End Config Functions
 
 ### New todo Functions
@@ -233,6 +333,50 @@ def do_todo(mark_done):
 		print("TODO: Item {0} marked as done.".format(mark_done))
 		print("TODO: {0} archived.".format(CONFIG["DONE_FILE"]))
 ### End todo Functions
+
+### HELP
+def cmd_help():
+	print("Use " + CONFIG["TODO_PY"] + """ -h for option help
+
+Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
+	add "Item to do +project @context @{yyyy-mm-dd}"
+		Adds 'Item to do +project @context @{yyyy-mm-dd}' to your todo.txt
+		file.
+		+project, @context, @{yyyy-mm-dd} are optional
+
+	addm "First item to do +project @context @{yyyy-mm-dd}
+		Second item to do +project @context @{yyyy-mm-dd}
+		...
+		Last item to do +project @context @{yyyy-mm-dd}"
+		Adds each line as a separate item to your todo.txt file.
+
+	do NUMBER
+		Marks item with corresponding number as done and moves it to your 
+		done.txt file.
+
+	list | ls
+		Lists all items in your todo.txt file sorted by priority.
+
+	listdate | lsd
+		Lists all items in your todo.txt file sorted by date.
+
+	help | h
+		Shows this message and exits.
+
+	pull
+		Pulls from the remote for your git repository.
+
+	push
+		Pushs to the remote for your git repository.
+
+	status
+		If using $(git --version) > 1.7, shows the status of your local 
+		git repository.
+
+	log
+		Shows the last two commits in your local git repository.""")
+	sys.exit(0)
+### HELP
 
 ### List Printing Functions
 def format_lines(lines, color_only=False):
@@ -334,7 +478,7 @@ Contributors to original: https://github.com/ginatrapani/todo.txt-cli/network
 Python version: https://github.com/sigmavirus24/Todo.txt-python/
 Contributors to python version: \
 https://github.com/sigmavirus24/Todo.txt-python/network
-License:
+License: GPLv3
 Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
 	version = VERSION))
@@ -389,6 +533,8 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
+			"h"			: (False, cmd_help),
+			"help"		: (False, cmd_help),
 			# Git functions:
 			"push"		: (False, _git_push),
 			"pull"		: (False, _git_pull),
