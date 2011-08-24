@@ -339,6 +339,7 @@ Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
 	version = VERSION))
 	sys.exit(0)
+### End callback functions
 
 
 if __name__ == "__main__" :
