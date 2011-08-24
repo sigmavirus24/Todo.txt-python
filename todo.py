@@ -71,6 +71,9 @@ def _git_status():
 		print(CONFIG["GIT"].status())
 	except git.exc.GitCommandError, g:
 		print("Error retrieving status of git repository.")
+
+def print_x_of_y(x, y):
+	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
 ### End Helper Functions
 
 ### Configuration Functions
@@ -171,10 +174,10 @@ def add_todo(line):
 	_git = CONFIG["GIT"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
-	if re.match("(\([ABC]\))", line):
+	if re.match("(\([ABC]\))", line) and prepend:
 		line = re.sub("(\([ABC]\))", "\g<1>" + datetime.now().strftime(" %Y-%m-%d "), 
 			line)
-	else:
+	elif prepend:
 		line = datetime.now().strftime("%Y-%m-%d ") + line
 	fd.write(line + "\n")
 	fd.close()
@@ -268,7 +271,7 @@ def list_todo(plain = False, no_priority = False):
 	for category in ["A", "B", "C", "X"]:
 		for line in formatted_lines[category]:
 			print(line)
-	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
+	print_x_of_y(lines, lines)
 
 def list_date():
 	"""
@@ -305,7 +308,7 @@ def list_date():
 
 	sortedl += todo["nodate"]
 	print("".join(sortedl)[:-1])
-	print("--\nTODO: {0} of {1} tasks shown".format(len(sortedl), len(sortedl)))
+	print_x_of_y(sortedl, lines)
 ### End LP Functions
 
 ### Callback functions for options
