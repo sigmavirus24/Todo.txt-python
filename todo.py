@@ -72,6 +72,18 @@ def _git_status():
 	except git.exc.GitCommandError, g:
 		print("Error retrieving status of git repository.")
 
+def _git_log():
+	lines = CONFIG["GIT"].log("-2")
+	flines = []
+	for line in lines.split("\n"):
+		if re.match("commit", line):
+			flines.append(TERM_COLORS["yellow"] + line[:-1] + 
+					TERM_COLORS["default"] + "\n")
+		else:
+			flines.append(line + "\n")
+	flines[-1] = flines[-1][:-1]
+	print("".join(flines))
+
 def print_x_of_y(x, y):
 	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
 ### End Helper Functions
@@ -376,9 +388,11 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
+			# Git functions:
 			"push"		: (False, _git_push),
 			"pull"		: (False, _git_pull),
 			"status"	: (False, _git_status),
+			"log"		: (False, _git_log),
 			}
 	commandsl = commands.keys()
 	#list_todo()
