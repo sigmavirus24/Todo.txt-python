@@ -3,6 +3,8 @@ import os, re, sys
 from optparse import OptionParser
 from datetime import datetime, date
 
+VERSION = "0.0-master_dev"
+
 try:
 	import git
 except ImportError:
@@ -71,6 +73,7 @@ def _git_status():
 		print("Error retrieving status of git repository.")
 ### End Helper Functions
 
+### Configuration Functions
 def get_config(config_name=""):
 	"""
 	Read the config file
@@ -157,58 +160,9 @@ def default_config():
 				cfg.write("export " + k + '="' + v + '"\n')
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
+### End Config Functions
 
-def format_lines(lines, color_only=False):
-	"""
-	Take in a list of lines to do, return them formatted with the TERM_COLORS
-	and organized based upon priority.
-	"""
-	i = 1
-	default = TERM_COLORS["default"]
-	plain = CONFIG["PLAIN"]
-	no_priority = CONFIG["NO_PRI"]
-	category = ""
-
-	if color_only:
-		formatted = []
-	else:
-		formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
-
-	for line in lines:
-		r = re.match("\(([ABC])\)", line)
-		if r:
-			category = r.groups()[0]
-			if plain:
-				color = default
-			else:
-				color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
-			if no_priority:
-				line = re.sub("^\([ABC]\)\s", "", line)
-		else:
-			category = "X"
-			color = default
-
-		l = color + str(i) + " " + line[:-1] + default
-		if color_only:
-			formatted.append(l)
-		else:
-			formatted[category].append(l)
-		i += 1
-	return formatted
-
-
-def list_todo(plain = False, no_priority = False):
-	"""
-	Print the list of todo items in order of priority and position in the
-	todo.txt file.
-	"""
-	lines = get_todos()
-	formatted_lines = format_lines(lines)
-	for category in ["A", "B", "C", "X"]:
-		for line in formatted_lines[category]:
-			print(line)
-	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
-
+### New todo Functions
 def add_todo(line):
 	"""
 	Add a new item to the list of things todo.
@@ -263,6 +217,58 @@ def do_todo(mark_done):
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(mark_done))
 		print("TODO: {0} archived.".format(CONFIG["DONE_FILE"]))
+### End todo Functions
+
+### List Printing Functions
+def format_lines(lines, color_only=False):
+	"""
+	Take in a list of lines to do, return them formatted with the TERM_COLORS
+	and organized based upon priority.
+	"""
+	i = 1
+	default = TERM_COLORS["default"]
+	plain = CONFIG["PLAIN"]
+	no_priority = CONFIG["NO_PRI"]
+	category = ""
+
+	if color_only:
+		formatted = []
+	else:
+		formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
+
+	for line in lines:
+		r = re.match("\(([ABC])\)", line)
+		if r:
+			category = r.groups()[0]
+			if plain:
+				color = default
+			else:
+				color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
+			if no_priority:
+				line = re.sub("^\([ABC]\)\s", "", line)
+		else:
+			category = "X"
+			color = default
+
+		l = color + str(i) + " " + line[:-1] + default
+		if color_only:
+			formatted.append(l)
+		else:
+			formatted[category].append(l)
+		i += 1
+	return formatted
+
+def list_todo(plain = False, no_priority = False):
+	"""
+	Print the list of todo items in order of priority and position in the
+	todo.txt file.
+	"""
+	lines = get_todos()
+	formatted_lines = format_lines(lines)
+	for category in ["A", "B", "C", "X"]:
+		for line in formatted_lines[category]:
+			print(line)
+	print("--\nTODO: {0} of {1} tasks shown".format(len(lines), len(lines)))
 
 def list_date():
 	"""
@@ -300,6 +306,24 @@ def list_date():
 	sortedl += todo["nodate"]
 	print("".join(sortedl)[:-1])
 	print("--\nTODO: {0} of {1} tasks shown".format(len(sortedl), len(sortedl)))
+### End LP Functions
+
+### Callback functions for options
+def version(option, opt, value, parser):
+	print("""TODO.TXT Command Line Interface v{version}
+
+First release:
+Original conception by: Gina Trapani (http://ginatrapani.org)
+Original version project: https://github.com/ginatrapani/todo.txt-cli/
+Contributors to original: https://github.com/ginatrapani/todo.txt-cli/network
+Python version: https://github.com/sigmavirus24/Todo.txt-python/
+Contributors to python version: \
+https://github.com/sigmavirus24/Todo.txt-python/network
+License:
+Code repository: \
+https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
+	version = VERSION))
+	sys.exit(0)
 
 
 if __name__ == "__main__" :
@@ -308,6 +332,7 @@ if __name__ == "__main__" :
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
 	opts.add_option("-c", "--config", dest = "config",
 			type = "string", 
+			nargs = 1,
 			help = \
 			"Supply your own configuration file, must be an absolute path"
 			)
@@ -326,6 +351,11 @@ if __name__ == "__main__" :
 			default = False,
 			help = \
 			"Prepend the current date to a task automattically when it's added."
+			)
+	opts.add_option("-V", "--version", action = "callback",
+			callback = version,
+			nargs = 0,
+			help = "Print version, license, and credits"
 			)
 
 	valid, args = opts.parse_args()
