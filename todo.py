@@ -79,16 +79,24 @@ def get_todos():
 	return lines
 
 def _git_pull():
-	print(CONFIG["GIT"].pull())
+	try:
+		print(CONFIG["GIT"].pull())
+	except git.exc.GitCommandError, g:
+		print(g.stderr)
 
 def _git_push():
-	print(CONFIG["GIT"].push())
+	try:
+		print(CONFIG["GIT"].push())
+	except git.exc.GitCommandError, g:
+		print(g.stderr)
 
 def _git_status():
 	try:
 		print(CONFIG["GIT"].status())
 	except git.exc.GitCommandError, g:
-		print("Error retrieving status of git repository.")
+		#print("Error retrieving status of git repository.")
+		print(g.stderr)
+		print(g)
 
 def _git_log():
 	lines = CONFIG["GIT"].log("-2")
