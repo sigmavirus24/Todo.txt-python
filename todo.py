@@ -363,12 +363,16 @@ def do_todo(mark_done):
 
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
-	print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a " +\
-			arg1 + " then a " + arg2)
+	if arg2:
+		print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a(n) " +\
+			arg1 + " then a " + arg2 + ".")
+	else:
+		print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a(n) " +\
+			arg1 + ".")
 
 def post_success(item_no, old_line, new_line):
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
-		item_no, old_line, new_line)
+		item_no + 1, old_line, new_line)
 	print(print_str)
 	_git_commit([CONFIG["TODO_FILE"]], print_str)
 
@@ -410,6 +414,23 @@ def prioritize_todo(args):
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('pri', 'NUMBER', 'capital letter')
+	sys.exit(0)
+
+def de_prioritize_todo(number):
+	if number.isdigit():
+		number = int(number) - 1
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
+		old_line = lines[number][:-1]
+		lines[number] = re.sub("(\([ABC]\)\s)", "", lines[number])
+		new_line = lines[number][:-1]
+		fd.seek(0, 0)
+		fd.truncate(0)
+		fd.writelines(lines)
+		fd.close()
+		post_success(number, old_line, new_line)
+	else:
+		post_err('depri', 'NUMBER', None)
 	sys.exit(0)
 
 def prepend_todo(args):
@@ -635,6 +656,8 @@ if __name__ == "__main__" :
 			"pri"		: ( True, prioritize_todo),
 			"pre"		: ( True, prepend_todo),
 			"prepend"	: ( True, prepend_todo),
+			"dp"		: ( True, de_prioritize_todo),
+			"depri"		: ( True, de_prioritize_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
