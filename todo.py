@@ -93,7 +93,10 @@ def _git_pull():
 def _git_push():
 	try:
 		s = CONFIG["GIT"].push()
-		print(s) if s else print("TODO: 'git push'")
+		if s:
+			print(s) 
+		else:
+			print("TODO: 'git push' executed.")
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 
@@ -114,6 +117,17 @@ def _git_log():
 			flines.append(line + "\n")
 	flines[-1] = flines[-1][:-1]
 	print("".join(flines))
+
+def _git_commit(files, message):
+	"""
+	Make a commit to the git repository.
+	 * files should be a list like ['file_a', 'file_b'] or ['-a']
+	"""
+	CONFIG["GIT"].commit(files, "-m", message)
+	if "-a" not in files:
+		print("TODO: " + " ".join(files) + " archived.")
+	else:
+		print("TODO: " + CONFIG["TODO_DIR"] + " archived.")
 
 def print_x_of_y(x, y):
 	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
@@ -286,7 +300,7 @@ def default_config():
 				cfg.write("export " + k + '="' + v + '"\n')
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
-	repo.commit("-m", CONFIG["TODO_PY"] + " initial Commit.")
+	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 	#repo.push()
 ### End Config Functions
 
@@ -308,9 +322,10 @@ def add_todo(line):
 	fd.close()
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
-	_git.add(CONFIG["TODO_FILE"])
-	_git.commit("-m", s)
+	#_git.add(CONFIG["TODO_FILE"])
+	#_git.commit("-m", s)
 	print(s)
+	_git_commit([CONFIG["TODO_FILE"]], s)
 
 def addm_todo(todo):
 	"""
@@ -341,11 +356,83 @@ def do_todo(mark_done):
 		fd = open(CONFIG["DONE_FILE"], "a")
 		fd.write(removed)
 		fd.close()
-		_git.commit("-a", "-m", removed)
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(mark_done))
-		print("TODO: {0} archived.".format(CONFIG["DONE_FILE"]))
-### End todo Functions
+		_git_commit([CONFIG["DONE_FILE"]], removed)
+### End new todo Functions
+
+### Post-production todo functions
+def post_error(command, arg1, arg2):
+	print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a " +\
+			arg1 + " then a " + arg2)
+
+def post_success(item_no, old_line, new_line):
+	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
+		item_no, old_line, new_line)
+	print(print_str)
+	_git_commit([CONFIG["TODO_FILE"]], print_str)
+
+def append_todo(args):
+	if args[0].isdigit():
+		line_no = int(args.pop(0)) - 1
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
+		fd.seek(0, 0)
+		fd.truncate(0)
+		old_line = lines[line_no][:-1]
+		lines[line_no] = old_line + " " + " ".join(args) + "\n"
+		new_line = lines[line_no][:-1]
+		fd.writelines(lines)
+		fd.close()
+		post_success(line_no, old_line, new_line)
+	else:
+		post_error('append', 'NUMBER', 'string')
+	sys.exit(0)
+
+def prioritize_todo(args):
+	if args[0].isdigit():
+		line_no = int(args.pop(0)) - 1
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
+		fd.seek(0, 0)
+		fd.truncate(0)
+		old_line = lines[line_no][:-1]
+		new_pri = "(" + args[0] + ") "
+		r = re.match("(\([ABC]\)\s).*", old_line)
+		if r:
+			lines[line_no] = re.sub(re.escape(r.groups()[0]), new_pri,
+					lines[line_no])
+		else:
+			lines[line_no] = new_pri + lines[line_no]
+		new_line = lines[line_no][:-1]
+		fd.writelines(lines)
+		fd.close()
+		post_success(line_no, old_line, new_line)
+	else:
+		post_error('pri', 'NUMBER', 'capital letter')
+	sys.exit(0)
+
+def prepend_todo(args):
+	if args[0].isdigit():
+		line_no = int(args.pop(0)) - 1
+		prepend_str = " ".join(args) + " "
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
+		old_line = lines[line_no][:-1]
+		if re.match("\([ABC]\)", lines[line_no]):
+			lines[line_no] = re.sub("^(\([ABC]\)\s)", "\g<1>" + prepend_str, lines[line_no])
+		else:
+			lines[line_no] = prepend_str + lines[line_no]
+		fd.seek(0, 0)
+		fd.truncate(0)
+		new_line = lines[line_no][:-1]
+		fd.writelines(lines)
+		post_success(line_no, old_line, new_line)
+	else:
+		post_error('prepend', 'NUMBER', 'string')
+	sys.exit(0)
+
+### End Post-production todo functions
 
 ### HELP
 def cmd_help():
@@ -541,7 +628,13 @@ if __name__ == "__main__" :
 			# command 	: ( Args, Function),
 			"add"		: ( True, add_todo),
 			"addm"		: ( True, addm_todo),
+			"app"		: ( True, append_todo),
+			"append"	: ( True, append_todo),
 			"do"		: ( True, do_todo),
+			"p"			: ( True, prioritize_todo),
+			"pri"		: ( True, prioritize_todo),
+			"pre"		: ( True, prepend_todo),
+			"prepend"	: ( True, prepend_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
@@ -565,7 +658,13 @@ if __name__ == "__main__" :
 			if not commands[arg][0]:
 				commands[arg][1]()
 			else:
-				commands[arg][1](args.pop(0))
+				if re.match("app(end)?", arg):
+					#print("APPEND: " + " ".join(args))
+					commands[arg][1](args)
+				elif re.match("p(ri)?", arg) or re.match("pre(pend)?", arg):
+					commands[arg][1](args[:2])
+				else:
+					commands[arg][1](args.pop(0))
 		else:
 			commandsl.sort()
 			commandsl = ["\t" + i for i in commandsl]
