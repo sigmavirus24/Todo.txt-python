@@ -17,7 +17,9 @@
 
 #### TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import os, re, sys
+import os
+import re
+import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
@@ -28,16 +30,16 @@ try:
 except ImportError:
 	if sys.version_info < (3, 0):
 		print("You must download and install GitPython from:\
-	http://pypi.python.org/pypi/GitPython")
+http://pypi.python.org/pypi/GitPython")
 	else:
 		print("GitPython is not available for Python3 last I checked.")
 	sys.exit(52)
 
-TERM_COLORS = { 
-		"black" : "\033[0;30m", "red" : "\033[0;31m", 
-		"green" : "\033[0;32m", "brown" : "\033[0;33m", 
-		"blue" : "\033[0;34m", "purple" : "\033[0;35m", 
-		"cyan" : "\033[0;36m", "light grey" : "\033[0;37m", 
+TERM_COLORS = {
+		"black" : "\033[0;30m", "red" : "\033[0;31m",
+		"green" : "\033[0;32m", "brown" : "\033[0;33m",
+		"blue" : "\033[0;34m", "purple" : "\033[0;35m",
+		"cyan" : "\033[0;36m", "light grey" : "\033[0;37m",
 		"dark grey" : "\033[1;30m", "light red" : "\033[1;31m",
 		"light green" : "\033[1;32m", "yellow" : "\033[1;33m",
 		"light blue" : "\033[1;34m", "light purple" : "\033[1;35m",
@@ -71,18 +73,21 @@ CONFIG = {
 		"PRI_X" : ""
 		}
 
-### Helper Functions 
+
+### Helper Functions
 def get_todos():
 	fd = open(CONFIG["TODO_FILE"])
 	lines = fd.readlines()
 	fd.close()
 	return lines
 
+
 def _git_err(g):
 	if g.stderr:
-		print(g.stderr) 
+		print(g.stderr)
 	else:
 		print(g)
+
 
 def _git_pull():
 	try:
@@ -90,15 +95,17 @@ def _git_pull():
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 
+
 def _git_push():
 	try:
 		s = CONFIG["GIT"].push()
 		if s:
-			print(s) 
+			print(s)
 		else:
 			print("TODO: 'git push' executed.")
 	except git.exc.GitCommandError, g:
 		_git_err(g)
+
 
 def _git_status():
 	try:
@@ -106,22 +113,24 @@ def _git_status():
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 
+
 def _git_log():
 	lines = CONFIG["GIT"].log("-2")
 	flines = []
 	for line in lines.split("\n"):
 		if re.match("commit", line):
-			flines.append(TERM_COLORS["yellow"] + line[:-1] + 
-					TERM_COLORS["default"] + "\n")
+			flines.append(''.join([TERM_COLORS["yellow"],
+				line[:-1], TERM_COLORS["default"], "\n"])
 		else:
 			flines.append(line + "\n")
 	flines[-1] = flines[-1][:-1]
 	print("".join(flines))
 
+
 def _git_commit(files, message):
 	"""
 	Make a commit to the git repository.
-	 * files should be a list like ['file_a', 'file_b'] or ['-a']
+		* files should be a list like ['file_a', 'file_b'] or ['-a']
 	"""
 	CONFIG["GIT"].commit(files, "-m", message)
 	if "-a" not in files:
@@ -129,9 +138,11 @@ def _git_commit(files, message):
 	else:
 		print("TODO: " + CONFIG["TODO_DIR"] + " archived.")
 
+
 def print_x_of_y(x, y):
 	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
 ### End Helper Functions
+
 
 ### Configuration Functions
 def get_config(config_name=""):
@@ -162,7 +173,7 @@ def get_config(config_name=""):
 					items[1] = items[1][:i]
 				if re.match("PRI_[ABCX]", items[0]):
 					CONFIG[items[0]] = FROM_CONFIG[items[1]]
-				elif '/' in items[1] and '$' in items[1]: # elision for path names
+				elif '/' in items[1] and '$' in items[1]:  # elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = CONFIG[items[1][1:i]] + items[1][i:]
@@ -174,6 +185,7 @@ def get_config(config_name=""):
 	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
+
 def parse_valid(valid_opts):
 	"""
 	Set configuration options based that are set from the command-line.
@@ -181,6 +193,7 @@ def parse_valid(valid_opts):
 	CONFIG["PLAIN"] = valid_opts.plain
 	CONFIG["NO_PRI"] = valid_opts.priority
 	CONFIG["PRE_DATE"] = valid.prepend_date
+
 
 def repo_config():
 	"""
@@ -212,7 +225,7 @@ def repo_config():
 
 	# remote configuration
 	ret = raw_input("Would you like to add a remote repository? ")
-	if re.match(ret, "yes", flags = re.I):
+	if re.match(ret, "yes", flags=re.I):
 		remote_host = None
 		remote_path = None
 		remote_user = None
@@ -272,10 +285,9 @@ def default_config():
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
 			print(repo.init())
-			val = raw_input(
-	"Would you like {prog} to help you configure your new git repository? [y/n] ".format(
-				prog = CONFIG["TODO_PY"]
-				)
+			val = raw_input(''.join(
+	["Would you like {prog} to help you".format(prog = CONFIG["TODO_PY"]),
+	" configure your new git repository? [y/n] "]
 			)
 			if val == 'y':
 				repo_config()
@@ -304,6 +316,7 @@ def default_config():
 	#repo.push()
 ### End Config Functions
 
+
 ### New todo Functions
 def add_todo(line):
 	"""
@@ -314,7 +327,7 @@ def add_todo(line):
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
 	if re.match("(\([ABC]\))", line) and prepend:
-		line = re.sub("(\([ABC]\))", "\g<1>" + datetime.now().strftime(" %Y-%m-%d "), 
+		line = re.sub("(\([ABC]\))", "\g<1>" + datetime.now().strftime(" %Y-%m-%d "),
 			line)
 	elif prepend:
 		line = datetime.now().strftime("%Y-%m-%d ") + line
@@ -327,6 +340,7 @@ def add_todo(line):
 	print(s)
 	_git_commit([CONFIG["TODO_FILE"]], s)
 
+
 def addm_todo(todo):
 	"""
 	Add new items to the list of things todo.
@@ -334,6 +348,7 @@ def addm_todo(todo):
 	lines = todo.split("\n")
 	for line in lines:
 		add_todo(line)
+
 
 def do_todo(mark_done):
 	"""
@@ -361,6 +376,7 @@ def do_todo(mark_done):
 		_git_commit([CONFIG["DONE_FILE"]], removed)
 ### End new todo Functions
 
+
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
 	if arg2:
@@ -370,11 +386,13 @@ def post_error(command, arg1, arg2):
 		print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a(n) " +\
 			arg1 + ".")
 
+
 def post_success(item_no, old_line, new_line):
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
 		item_no + 1, old_line, new_line)
 	print(print_str)
 	_git_commit([CONFIG["TODO_FILE"]], print_str)
+
 
 def append_todo(args):
 	if args[0].isdigit():
@@ -392,6 +410,7 @@ def append_todo(args):
 	else:
 		post_error('append', 'NUMBER', 'string')
 	sys.exit(0)
+
 
 def prioritize_todo(args):
 	if args[0].isdigit():
@@ -416,6 +435,7 @@ def prioritize_todo(args):
 		post_error('pri', 'NUMBER', 'capital letter')
 	sys.exit(0)
 
+
 def de_prioritize_todo(number):
 	if number.isdigit():
 		number = int(number) - 1
@@ -433,6 +453,7 @@ def de_prioritize_todo(number):
 		post_err('depri', 'NUMBER', None)
 	sys.exit(0)
 
+
 def prepend_todo(args):
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
@@ -441,7 +462,8 @@ def prepend_todo(args):
 		lines = fd.readlines()
 		old_line = lines[line_no][:-1]
 		if re.match("\([ABC]\)", lines[line_no]):
-			lines[line_no] = re.sub("^(\([ABC]\)\s)", "\g<1>" + prepend_str, lines[line_no])
+			lines[line_no] = re.sub("^(\([ABC]\)\s)",
+					''.join(["\g<1>", prepend_str]), lines[line_no])
 		else:
 			lines[line_no] = prepend_str + lines[line_no]
 		fd.seek(0, 0)
@@ -454,6 +476,7 @@ def prepend_todo(args):
 	sys.exit(0)
 
 ### End Post-production todo functions
+
 
 ### HELP
 def cmd_help():
@@ -472,7 +495,7 @@ Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
 		Adds each line as a separate item to your todo.txt file.
 
 	do NUMBER
-		Marks item with corresponding number as done and moves it to your 
+		Marks item with corresponding number as done and moves it to your
 		done.txt file.
 
 	list | ls
@@ -491,13 +514,14 @@ Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
 		Pushs to the remote for your git repository.
 
 	status
-		If using $(git --version) > 1.7, shows the status of your local 
+		If using $(git --version) > 1.7, shows the status of your local
 		git repository.
 
 	log
 		Shows the last two commits in your local git repository.""")
 	sys.exit(0)
 ### HELP
+
 
 ### List Printing Functions
 def format_lines(lines, color_only=False):
@@ -514,7 +538,7 @@ def format_lines(lines, color_only=False):
 	if color_only:
 		formatted = []
 	else:
-		formatted = { "A" : [], "B" : [], "C" : [], "X" : [] }
+		formatted = {"A" : [], "B" : [], "C" : [], "X" : []}
 
 	for line in lines:
 		r = re.match("\(([ABC])\)", line)
@@ -538,6 +562,7 @@ def format_lines(lines, color_only=False):
 		i += 1
 	return formatted
 
+
 def list_todo(plain = False, no_priority = False):
 	"""
 	Print the list of todo items in order of priority and position in the
@@ -550,6 +575,7 @@ def list_todo(plain = False, no_priority = False):
 			print(line)
 	print_x_of_y(lines, lines)
 
+
 def list_date():
 	"""
 	List todo items by date @{yyyy-mm-dd}.
@@ -557,12 +583,10 @@ def list_date():
 	lines = get_todos()
 	todo = {"nodate" : []}
 	dates = []
-	#i = 1
 
 	lines = format_lines(lines, color_only = True)
 	for line in lines:
 		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
-		#l = "{0} ".format(i) + line
 		line += "\n"
 		if _re:
 			tup = _re.groups()
@@ -574,7 +598,6 @@ def list_date():
 				todo[d].append(line)
 		else:
 			todo["nodate"].append(line)
-		#i += 1 
 
 	dates.sort()
 	sortedl = []
@@ -587,6 +610,7 @@ def list_date():
 	print("".join(sortedl)[:-1])
 	print_x_of_y(sortedl, lines)
 ### End LP Functions
+
 
 ### Callback functions for options
 def version(option, opt, value, parser):
@@ -612,12 +636,12 @@ if __name__ == "__main__" :
 
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
 	opts.add_option("-c", "--config", dest = "config",
-			type = "string", 
+			type = "string",
 			nargs = 1,
 			help = \
 			"Supply your own configuration file, must be an absolute path"
 			)
-	opts.add_option("-p", "--plain-mode", action = "store_true", 
+	opts.add_option("-p", "--plain-mode", action = "store_true",
 			dest = "plain",
 			default = False,
 			help = "Turn off colors"
@@ -676,7 +700,7 @@ if __name__ == "__main__" :
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 	while args:
 		# ensure this doesn't error because of a faulty CAPS LOCK key
-		arg = args.pop(0).lower() 
+		arg = args.pop(0).lower()
 		if arg in commandsl:
 			if not commands[arg][0]:
 				commands[arg][1]()
@@ -695,5 +719,6 @@ if __name__ == "__main__" :
 			print("Valid commands: ")
 			print("\n".join(commandsl))
 			sys.exit(1)
+
 
 # vim:set noet:
