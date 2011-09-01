@@ -14,3 +14,7 @@ project. I'm working solely from my experiences with the script and
 experimenting with the functionality while adding things I should probably write
 as patches and send upstream... I'll wait to finish my version of the project
 first though.
+
+This branch (crypto) will be used to experiment with encrypting the
+todo.txt related files and seeing how that will work with git. If you have any
+ideas, contributions please feel free to fork and make a pull request.
