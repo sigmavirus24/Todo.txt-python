@@ -83,6 +83,11 @@ def get_todos():
 	fd.close()
 	return lines
 
+def rewrite_file(fd, lines):
+	fd.seek(0, 0)
+	fd.truncate(0)
+	fd.writelines(lines)
+
 def _git_err(g):
 	if g.stderr:
 		print(g.stderr)
@@ -318,7 +323,7 @@ def default_config():
 				cfg.write(concat(["export ", k, '="', v, '"\n']))
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
-	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")  # Start concat here
+	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 ### End Config Functions
 
 
@@ -332,16 +337,15 @@ def add_todo(line):
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
 	if re.match("(\([ABC]\))", line) and prepend:
-		line = re.sub("(\([ABC]\))", "\g<1>" + datetime.now().strftime(" %Y-%m-%d "),
+		line = re.sub("(\([ABC]\))", concat(["\g<1>", 
+			datetime.now().strftime(" %Y-%m-%d ")]),
 			line)
 	elif prepend:
-		line = datetime.now().strftime("%Y-%m-%d ") + line
-	fd.write(line + "\n")
+		line = concat([datetime.now().strftime("%Y-%m-%d "), line])
+	fd.write(concat([line, "\n"]))
 	fd.close()
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
-	#_git.add(CONFIG["TODO_FILE"])
-	#_git.commit("-m", s)
 	print(s)
 	_git_commit([CONFIG["TODO_FILE"]], s)
 
@@ -366,9 +370,7 @@ def do_todo(mark_done):
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
 		removed = lines.pop(int(mark_done) - 1)
-		fd.seek(0, 0)
-		fd.truncate(0)
-		fd.writelines(lines)
+		rewrite_file(fd, lines)
 		fd.close()
 		today = datetime.now().strftime("%Y-%m-%d")
 		removed = re.sub("\(?[ABCX]\)?\s?", "", removed)
@@ -385,11 +387,11 @@ def do_todo(mark_done):
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
 	if arg2:
-		print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a(n) " +\
-			arg1 + " then a " + arg2 + ".")
+		print(concat(["'", CONFIG["TODO_PY"], " ", command, "' requires a(n) ",
+			arg1, " then a ", arg2, "."]))
 	else:
-		print("'" + CONFIG["TODO_PY"] + " " + command + "' requires a(n) " +\
-			arg1 + ".")
+		print(concat(["'", CONFIG["TODO_PY"], " ", command, "' requires a(n) ",
+			arg1, "."]))
 
 
 def post_success(item_no, old_line, new_line):
@@ -404,12 +406,10 @@ def append_todo(args):
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
-		fd.seek(0, 0)
-		fd.truncate(0)
 		old_line = lines[line_no][:-1]
-		lines[line_no] = old_line + " " + concat(args, " ") + "\n"
+		lines[line_no] = concat([old_line, concat(args, " "), "\n"], " ")
 		new_line = lines[line_no][:-1]
-		fd.writelines(lines)
+		rewrite_file(fd, lines)
 		fd.close()
 		post_success(line_no, old_line, new_line)
 	else:
@@ -422,10 +422,8 @@ def prioritize_todo(args):
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
-		fd.seek(0, 0)
-		fd.truncate(0)
 		old_line = lines[line_no][:-1]
-		new_pri = "(" + args[0] + ") "
+		new_pri = concat(["(", args[0], ") "])
 		r = re.match("(\([ABC]\)\s).*", old_line)
 		if r:
 			lines[line_no] = re.sub(re.escape(r.groups()[0]), new_pri,
@@ -433,7 +431,7 @@ def prioritize_todo(args):
 		else:
 			lines[line_no] = new_pri + lines[line_no]
 		new_line = lines[line_no][:-1]
-		fd.writelines(lines)
+		rewrite_file(fd, lines)
 		fd.close()
 		post_success(line_no, old_line, new_line)
 	else:
@@ -471,10 +469,8 @@ def prepend_todo(args):
 					concat(["\g<1>", prepend_str]), lines[line_no])
 		else:
 			lines[line_no] = prepend_str + lines[line_no]
-		fd.seek(0, 0)
-		fd.truncate(0)
 		new_line = lines[line_no][:-1]
-		fd.writelines(lines)
+		rewrite_file(fd, lines)
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('prepend', 'NUMBER', 'string')
@@ -485,9 +481,9 @@ def prepend_todo(args):
 
 ### HELP
 def cmd_help():
-	print("Use " + CONFIG["TODO_PY"] + """ -h for option help
+	print(concat(["Use", CONFIG["TODO_PY"], """-h for option help
 
-Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
+Usage:""", CONFIG["TODO_PY"], """command [arg(s)]
 	add "Item to do +project @context @{yyyy-mm-dd}"
 		Adds 'Item to do +project @context @{yyyy-mm-dd}' to your todo.txt
 		file.
@@ -535,7 +531,7 @@ Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
 		git repository.
 
 	log
-		Shows the last two commits in your local git repository.""")
+		Shows the last two commits in your local git repository."""], " "))
 	sys.exit(0)
 ### HELP
 
@@ -571,7 +567,7 @@ def format_lines(lines, color_only=False):
 			category = "X"
 			color = default
 
-		l = color + str(i) + " " + line[:-1] + default
+		l = concat([color, str(i), " ", line[:-1], default])
 		if color_only:
 			formatted.append(l)
 		else:
