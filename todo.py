@@ -81,12 +81,15 @@ def get_todos():
 	fd.close()
 	return lines
 
+def concat(list, separator=''):
+	return separator.join(list)
 
 def _git_err(g):
 	if g.stderr:
 		print(g.stderr)
 	else:
 		print(g)
+	sys.exit(g.status)
 
 
 def _git_pull():
@@ -99,12 +102,12 @@ def _git_pull():
 def _git_push():
 	try:
 		s = CONFIG["GIT"].push()
-		if s:
-			print(s)
-		else:
-			print("TODO: 'git push' executed.")
 	except git.exc.GitCommandError, g:
 		_git_err(g)
+	if s:
+		print(s)
+	else:
+		print("TODO: 'git push' executed.")
 
 
 def _git_status():
@@ -119,12 +122,12 @@ def _git_log():
 	flines = []
 	for line in lines.split("\n"):
 		if re.match("commit", line):
-			flines.append(''.join([TERM_COLORS["yellow"],
+			flines.append(concat([TERM_COLORS["yellow"],
 				line[:-1], TERM_COLORS["default"], "\n"]))
 		else:
 			flines.append(line + "\n")
 	flines[-1] = flines[-1][:-1]
-	print("".join(flines))
+	print(concat(flines))
 
 
 def _git_commit(files, message):
@@ -132,9 +135,12 @@ def _git_commit(files, message):
 	Make a commit to the git repository.
 		* files should be a list like ['file_a', 'file_b'] or ['-a']
 	"""
-	CONFIG["GIT"].commit(files, "-m", message)
+	try:
+		CONFIG["GIT"].commit(files, "-m", message)
+	except git.exc.GitCommandError, g:
+		_git_err(g)
 	if "-a" not in files:
-		print("TODO: " + " ".join(files) + " archived.")
+		print("TODO: " + concat(files, " ") + " archived.")
 	else:
 		print("TODO: " + CONFIG["TODO_DIR"] + " archived.")
 
@@ -285,7 +291,7 @@ def default_config():
 				CONFIG["TODO_DIR"] + "? [y/N] ")
 		if val == 'y':
 			print(repo.init())
-			val = raw_input(''.join(
+			val = raw_input(concat(
 	["Would you like {prog} to help you".format(prog = CONFIG["TODO_PY"]),
 	" configure your new git repository? [y/n] "]
 			))
@@ -402,7 +408,7 @@ def append_todo(args):
 		fd.seek(0, 0)
 		fd.truncate(0)
 		old_line = lines[line_no][:-1]
-		lines[line_no] = old_line + " " + " ".join(args) + "\n"
+		lines[line_no] = old_line + " " + concat(args, " ") + "\n"
 		new_line = lines[line_no][:-1]
 		fd.writelines(lines)
 		fd.close()
