@@ -120,7 +120,7 @@ def _git_log():
 	for line in lines.split("\n"):
 		if re.match("commit", line):
 			flines.append(''.join([TERM_COLORS["yellow"],
-				line[:-1], TERM_COLORS["default"], "\n"])
+				line[:-1], TERM_COLORS["default"], "\n"]))
 		else:
 			flines.append(line + "\n")
 	flines[-1] = flines[-1][:-1]
@@ -288,7 +288,7 @@ def default_config():
 			val = raw_input(''.join(
 	["Would you like {prog} to help you".format(prog = CONFIG["TODO_PY"]),
 	" configure your new git repository? [y/n] "]
-			)
+			))
 			if val == 'y':
 				repo_config()
 
