@@ -35,6 +35,8 @@ http://pypi.python.org/pypi/GitPython")
 		print("GitPython is not available for Python3 last I checked.")
 	sys.exit(52)
 
+concat = lambda str_list, sep='': sep.join(str_list)
+
 TERM_COLORS = {
 		"black" : "\033[0;30m", "red" : "\033[0;31m",
 		"green" : "\033[0;32m", "brown" : "\033[0;33m",
@@ -50,22 +52,22 @@ TERM_COLORS = {
 FROM_CONFIG = {}
 TO_CONFIG = {}
 for key in TERM_COLORS.keys():
-	bkey = "$" + re.sub(' ', '_', key).upper()
+	bkey = concat(["$", re.sub(' ', '_', key).upper()])
 	FROM_CONFIG[bkey] = key
 	TO_CONFIG[key] = bkey
 
 HOME = os.getenv("HOME")
-TODO_DIR = HOME + "/.todo"
+TODO_DIR = concat([HOME, "/.todo"])
 
 CONFIG = {
 		"HOME" : HOME,
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
 		"TODOTXT_CFG_FILE" : "",
-		"TODO_FILE" : TODO_DIR + "/todo.txt",
-		"TMP_FILE" : TODO_DIR + "/todo.tmp",
-		"DONE_FILE" : TODO_DIR + "/done.txt",
-		"REPORT_FILE" : TODO_DIR + "/report.txt",
+		"TODO_FILE" : concat([TODO_DIR, "/todo.txt"]),
+		"TMP_FILE" : concat([TODO_DIR, "/todo.tmp"]),
+		"DONE_FILE" : concat([TODO_DIR, "/done.txt"]),
+		"REPORT_FILE" : concat([TODO_DIR, "/report.txt"]),
 		"GIT" : git.Git(TODO_DIR),
 		"PRI_A" : "",
 		"PRI_B" : "",
@@ -80,9 +82,6 @@ def get_todos():
 	lines = fd.readlines()
 	fd.close()
 	return lines
-
-def concat(list, separator=''):
-	return separator.join(list)
 
 def _git_err(g):
 	if g.stderr:
@@ -140,9 +139,9 @@ def _git_commit(files, message):
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 	if "-a" not in files:
-		print("TODO: " + concat(files, " ") + " archived.")
+		print(concat(["TODO: ", concat(files, " "), " archived."]))
 	else:
-		print("TODO: " + CONFIG["TODO_DIR"] + " archived.")
+		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
 
 
 def print_x_of_y(x, y):
@@ -159,7 +158,7 @@ def get_config(config_name=""):
 		CONFIG["TODOTXT_CFG_FILE"] = config_name
 	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
-		config_file = CONFIG["TODO_DIR"] + "/config"
+		config_file = concat([CONFIG["TODO_DIR"], "/config"])
 	else:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
 	if not os.path.exists(CONFIG["TODO_DIR"]) or not os.path.exists(config_file):
@@ -182,7 +181,7 @@ def get_config(config_name=""):
 				elif '/' in items[1] and '$' in items[1]:  # elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
-						items[1] = CONFIG[items[1][1:i]] + items[1][i:]
+						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
 				else:
@@ -217,12 +216,12 @@ def repo_config():
 	try:
 		user_email = g.config("--global", "--get", "user.email")
 	except:
-		user_email = user.name + "@" + getenv("HOSTNAME")
+		user_email = concat([user.name, "@", getenv("HOSTNAME")])
 	print("First configure your local repository options.")
-	ret = raw_input("git config user.name " + user_name + "? ")
+	ret = raw_input(concat(["git config user.name ", user_name, "? "]))
 	if ret:
 		user_name = ret
-	ret = raw_input("git config user.email " + user_email + "? ")
+	ret = raw_input(concat(["git config user.email ", user_email, "? "]))
 	if ret:
 		user_email = ret
 
@@ -253,8 +252,8 @@ def repo_config():
 			remote_branch = raw_input("Remote branch: ")
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
-		raw_input("Press enter when you have initialized a bare" +\
-				"repository on the remote or are ready to proceed.")
+		raw_input(concat(["Press enter when you have initialized a bare",
+				"repository on the remote or are ready to proceed."]))
 		local_branch = g.branch()
 		if not local_branch:
 			local_branch = "master"
@@ -264,11 +263,11 @@ def repo_config():
 					local_branch = re.sub("^\*\s", "", l)
 					break
 
-		g.remote("add", "origin", remote_user + "@" + remote_host +\
-				":" + remote_path)
-		g.config("branch." + local_branch + ".remote", "origin")
-		g.config("branch." + local_branch + ".merge", "refs/heads/" +\
-				remote_branch)
+		g.remote("add", "origin", concat([remote_user, "@", remote_host,
+				":", remote_path]))
+		g.config(concat(["branch.", local_branch, ".remote"]), "origin")
+		g.config(concat(["branch.", local_branch, ".merge"]), 
+				concat(["refs/heads/", remote_branch]))
 
 
 def default_config():
@@ -287,8 +286,9 @@ def default_config():
 	try:
 		repo.status()
 	except git.exc.GitCommandError, g:
-		val = raw_input("Would you like to create a new git repository in " + \
-				CONFIG["TODO_DIR"] + "? [y/N] ")
+		val = raw_input(
+			concat(["Would you like to create a new git repository in ",
+				CONFIG["TODO_DIR"], "? [y/N] "]))
 		if val == 'y':
 			print(repo.init())
 			val = raw_input(concat(
@@ -302,7 +302,7 @@ def default_config():
 	for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
 		touch(CONFIG[item])
 
-	cfg = open(CONFIG["TODO_DIR"] + "/config", 'w')
+	cfg = open(concat([CONFIG["TODO_DIR"], "/config"]), 'w')
 
 	# set the defaults for the colors
 	CONFIG["PRI_A"] = "yellow"
@@ -313,13 +313,12 @@ def default_config():
 	for k, v in CONFIG.items():
 		if k != "GIT":
 			if v in TO_CONFIG.keys():
-				cfg.write("export " + k + "=" + TO_CONFIG[v] + "\n")
+				cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
 			else:
-				cfg.write("export " + k + '="' + v + '"\n')
+				cfg.write(concat(["export ", k, '="', v, '"\n']))
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
-	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
-	#repo.push()
+	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")  # Start concat here
 ### End Config Functions
 
 
@@ -463,13 +462,13 @@ def de_prioritize_todo(number):
 def prepend_todo(args):
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
-		prepend_str = " ".join(args) + " "
+		prepend_str = concat(args, " ") + " "
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
 		old_line = lines[line_no][:-1]
 		if re.match("\([ABC]\)", lines[line_no]):
 			lines[line_no] = re.sub("^(\([ABC]\)\s)",
-					''.join(["\g<1>", prepend_str]), lines[line_no])
+					concat(["\g<1>", prepend_str]), lines[line_no])
 		else:
 			lines[line_no] = prepend_str + lines[line_no]
 		fd.seek(0, 0)
@@ -500,6 +499,12 @@ Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
 		Last item to do +project @context @{yyyy-mm-dd}"
 		Adds each line as a separate item to your todo.txt file.
 
+	append | app NUMBER "text to append"
+		Append "text to append" to item NUMBER.
+
+	depri | dp NUMBER
+		Remove the priority of the item on line NUMBER.
+
 	do NUMBER
 		Marks item with corresponding number as done and moves it to your
 		done.txt file.
@@ -512,6 +517,12 @@ Usage: """ + CONFIG["TODO_PY"] + """ command [arg(s)]
 
 	help | h
 		Shows this message and exits.
+
+	prepend | pre NUMBER "text to prepend"
+		Add "text to prepend" to the beginning of the item.
+
+	pri | p NUMBER [ABC]
+		Add priority specified (A, B, or C) to item NUMBER.
 
 	pull
 		Pulls from the remote for your git repository.
@@ -613,7 +624,7 @@ def list_date():
 			sortedl.append(l)
 
 	sortedl += todo["nodate"]
-	print("".join(sortedl)[:-1])
+	print(concat(sortedl)[:-1])
 	print_x_of_y(sortedl, lines)
 ### End LP Functions
 
@@ -712,7 +723,6 @@ if __name__ == "__main__" :
 				commands[arg][1]()
 			else:
 				if re.match("app(end)?", arg):
-					#print("APPEND: " + " ".join(args))
 					commands[arg][1](args)
 				elif re.match("p(ri)?", arg) or re.match("pre(pend)?", arg):
 					commands[arg][1](args[:2])
@@ -723,7 +733,7 @@ if __name__ == "__main__" :
 			commandsl = ["\t" + i for i in commandsl]
 			print("Unable to find command: {0}".format(arg))
 			print("Valid commands: ")
-			print("\n".join(commandsl))
+			print(concat(commandsl, "\n"))
 			sys.exit(1)
 
 
