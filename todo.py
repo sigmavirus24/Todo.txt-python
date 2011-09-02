@@ -129,7 +129,7 @@ def _git_log():
 			flines.append(concat([TERM_COLORS["yellow"],
 				line[:-1], TERM_COLORS["default"], "\n"]))
 		else:
-			flines.append(line + "\n")
+			flines.append(concat([line, "\n"]))
 	flines[-1] = flines[-1][:-1]
 	print(concat(flines))
 
@@ -429,7 +429,7 @@ def prioritize_todo(args):
 			lines[line_no] = re.sub(re.escape(r.groups()[0]), new_pri,
 					lines[line_no])
 		else:
-			lines[line_no] = new_pri + lines[line_no]
+			lines[line_no] = concat([new_pri, lines[line_no]])
 		new_line = lines[line_no][:-1]
 		rewrite_file(fd, lines)
 		fd.close()
@@ -447,9 +447,7 @@ def de_prioritize_todo(number):
 		old_line = lines[number][:-1]
 		lines[number] = re.sub("(\([ABC]\)\s)", "", lines[number])
 		new_line = lines[number][:-1]
-		fd.seek(0, 0)
-		fd.truncate(0)
-		fd.writelines(lines)
+		rewrite_file(fd, lines)
 		fd.close()
 		post_success(number, old_line, new_line)
 	else:
@@ -468,7 +466,7 @@ def prepend_todo(args):
 			lines[line_no] = re.sub("^(\([ABC]\)\s)",
 					concat(["\g<1>", prepend_str]), lines[line_no])
 		else:
-			lines[line_no] = prepend_str + lines[line_no]
+			lines[line_no] = concat([prepend_str, lines[line_no]])
 		new_line = lines[line_no][:-1]
 		rewrite_file(fd, lines)
 		post_success(line_no, old_line, new_line)
@@ -708,7 +706,7 @@ if __name__ == "__main__" :
 			"log"		: (False, _git_log),
 			}
 	commandsl = commands.keys()
-	#list_todo()
+
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 	while args:
