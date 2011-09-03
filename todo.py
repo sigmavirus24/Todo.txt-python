@@ -56,6 +56,7 @@ for key in TERM_COLORS.keys():
 	bkey = concat(["$", re.sub(' ', '_', key).upper()])
 	FROM_CONFIG[bkey] = key
 	TO_CONFIG[key] = bkey
+del(key, bkey)  # If someone were to import this as a module, these show up.
 
 HOME = os.getenv("HOME")
 TODO_DIR = concat([HOME, "/.todo"])
@@ -178,7 +179,12 @@ def _git_commit(files, message):
 
 
 def print_x_of_y(x, y):
-	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
+	t_str = "--\nTODO: {0} of {1} tasks shown"
+	if len(x) > len(y):  # EXTREMELY hack-ish
+		print(t_str.format(len(y), len(y)))  # There can't logically be more
+			# lines of items to do than there actually are.
+	else:
+		print(t_str.format(len(x), len(y)))
 ### End Helper Functions
 
 
@@ -414,6 +420,11 @@ def do_todo(mark_done):
 
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
+	"""
+	If one of the post-production todo functions isn't given the proper
+	arguments, the function calls this to notify the user of what they need to
+	supply.
+	"""
 	if arg2:
 		print(concat(["'", CONFIG["TODO_PY"], " ", command, "' requires a(n) ",
 			arg1, " then a ", arg2, "."]))
@@ -423,6 +434,9 @@ def post_error(command, arg1, arg2):
 
 
 def post_success(item_no, old_line, new_line):
+	"""
+	After changing a line, pring a standard line and commit the change.
+	"""
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
 		item_no + 1, old_line, new_line)
 	print(print_str)
@@ -430,6 +444,9 @@ def post_success(item_no, old_line, new_line):
 
 
 def append_todo(args):
+	"""
+	Append text to the item specified.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -446,6 +463,9 @@ def append_todo(args):
 
 
 def prioritize_todo(args):
+	"""
+	Add or modify the priority of the specified item.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -468,6 +488,10 @@ def prioritize_todo(args):
 
 
 def de_prioritize_todo(number):
+	"""
+	Remove priority markings from the beginning of the line if they're there.
+	Don't complain otherwise.
+	"""
 	if number.isdigit():
 		number = int(number) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -484,6 +508,10 @@ def de_prioritize_todo(number):
 
 
 def prepend_todo(args):
+	"""
+	Take in the line number and prepend the rest of the arguments to the item
+	specified by the line number.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		prepend_str = concat(args, " ") + " "
@@ -615,39 +643,92 @@ def list_todo(plain=False, no_priority=False):
 	print_x_of_y(lines, lines)
 
 
+def _list_by_(by, regexp):
+	lines = get_todos()
+	nonetype = concat(["no", by])
+	todo = {nonetype : []}
+	by_list = []
+
+	lines = format_lines(lines, color_only=True)
+	for line in lines:
+		#r = re.search(regexp, line)
+		r = re.findall(regexp, line)
+		line = concat([line, "\n"])
+		if r:
+			line = concat(["\t", line])
+			if by == "date":
+				for tup in r:
+					#tup = r.groups()
+					d = date(int(tup[0]), int(tup[1]), int(tup[2]))
+					if d not in by_list:
+						by_list.append(d)
+						todo[d] = [line]
+					else:
+						todo[d].append(line)
+			elif by == "project":
+				for project in r:
+					if project not in by_list:
+						by_list.append(project)
+						todo[project] = [line]
+					else:
+						todo[project].append(line)
+		else:
+			todo[nonetype].append(line)
+	
+	by_list.sort()
+	sorted = []
+
+	for b in by_list:
+		sorted.append(concat([str(b), ":\n"]))
+		sorted.extend(todo[b])
+	
+	sorted.extend(todo[nonetype])
+	return (lines, sorted)
+
+
 def list_date():
 	"""
 	List todo items by date @{yyyy-mm-dd}.
 	"""
-	lines = get_todos()
-	todo = {"nodate" : []}
-	dates = []
+	#lines = get_todos()
+	#todo = {"nodate" : []}
+	#dates = []
 
-	lines = format_lines(lines, color_only=True)
-	for line in lines:
-		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
-		line += "\n"
-		if _re:
-			tup = _re.groups()
-			d = date(int(tup[0]), int(tup[1]), int(tup[2]))
-			if d not in dates:
-				dates.append(d)
-				todo[d] = [line]
-			else:
-				todo[d].append(line)
-		else:
-			todo["nodate"].append(line)
+	#lines = format_lines(lines, color_only=True)
+	#for line in lines:
+	#	_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
+	#	line += "\n"
+	#	if _re:
+	#		tup = _re.groups()
+	#		d = date(int(tup[0]), int(tup[1]), int(tup[2]))
+	#		if d not in dates:
+	#			dates.append(d)
+	#			todo[d] = [line]
+	#		else:
+	#			todo[d].append(line)
+	#	else:
+	#		todo["nodate"].append(line)
 
-	dates.sort()
-	sortedl = []
+	#dates.sort()
+	#sortedl = []
 
-	for d in dates:
-		for l in todo[d]:
-			sortedl.append(l)
+	#for d in dates:
+	#	for l in todo[d]:
+	#		sortedl.append(l)
 
-	sortedl += todo["nodate"]
+	#sortedl += todo["nodate"]
+	lines, sortedl = _list_by_("date", "@\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
 	print(concat(sortedl)[:-1])
 	print_x_of_y(sortedl, lines)
+
+
+def list_project():
+	"""
+	Organizes items by project +prj they belong to.
+	"""
+	lines, sorted = _list_by_("project", "\+(\w+)")
+	print(concat(sorted)[:-1])
+	print_x_of_y(sorted, lines)
 ### End LP Functions
 
 
@@ -725,6 +806,8 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
+			"lsp"		: (False, list_project),
+			"listproj"	: (False, list_project),
 			"h"			: (False, cmd_help),
 			"help"		: (False, cmd_help),
 			# Git functions:
