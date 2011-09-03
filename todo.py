@@ -690,33 +690,6 @@ def list_date():
 	"""
 	List todo items by date @{yyyy-mm-dd}.
 	"""
-	#lines = get_todos()
-	#todo = {"nodate" : []}
-	#dates = []
-
-	#lines = format_lines(lines, color_only=True)
-	#for line in lines:
-	#	_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
-	#	line += "\n"
-	#	if _re:
-	#		tup = _re.groups()
-	#		d = date(int(tup[0]), int(tup[1]), int(tup[2]))
-	#		if d not in dates:
-	#			dates.append(d)
-	#			todo[d] = [line]
-	#		else:
-	#			todo[d].append(line)
-	#	else:
-	#		todo["nodate"].append(line)
-
-	#dates.sort()
-	#sortedl = []
-
-	#for d in dates:
-	#	for l in todo[d]:
-	#		sortedl.append(l)
-
-	#sortedl += todo["nodate"]
 	lines, sortedl = _list_by_("date", "@\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
 	print(concat(sortedl)[:-1])
 	print_x_of_y(sortedl, lines)
