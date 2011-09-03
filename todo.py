@@ -35,6 +35,7 @@ http://pypi.python.org/pypi/GitPython")
 		print("GitPython is not available for Python3 last I checked.")
 	sys.exit(52)
 
+# concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
 
 TERM_COLORS = {
@@ -78,17 +79,31 @@ CONFIG = {
 
 ### Helper Functions
 def get_todos():
+	"""
+	Opens the file in read-only mode, reads all the lines and then closes the
+	file before returning the lines.
+	"""
 	fd = open(CONFIG["TODO_FILE"])
 	lines = fd.readlines()
 	fd.close()
 	return lines
 
+
 def rewrite_file(fd, lines):
+	"""
+	Simple wrapper for three lines used all too frequently.
+	Sets the access position to the beginning of the file, truncates the file's
+	length to 0 and then writes all the lines to the file.
+	"""
 	fd.seek(0, 0)
 	fd.truncate(0)
 	fd.writelines(lines)
 
+
 def _git_err(g):
+	"""
+	Print any errors that result from GitPython and exit.
+	"""
 	if g.stderr:
 		print(g.stderr)
 	else:
@@ -97,6 +112,9 @@ def _git_err(g):
 
 
 def _git_pull():
+	"""
+	Pull any commits that exist on the remote to the local repository.
+	"""
 	try:
 		print(CONFIG["GIT"].pull())
 	except git.exc.GitCommandError, g:
@@ -104,6 +122,9 @@ def _git_pull():
 
 
 def _git_push():
+	"""
+	Push commits made locally to the remote.
+	"""
 	try:
 		s = CONFIG["GIT"].push()
 	except git.exc.GitCommandError, g:
@@ -115,6 +136,10 @@ def _git_push():
 
 
 def _git_status():
+	"""
+	Print the status of the local repository if the version of git is 1.7 or
+	later.
+	"""
 	try:
 		print(CONFIG["GIT"].status())
 	except git.exc.GitCommandError, g:
@@ -122,6 +147,9 @@ def _git_status():
 
 
 def _git_log():
+	"""
+	Print the two latest commits in the local repository's log.
+	"""
 	lines = CONFIG["GIT"].log("-2")
 	flines = []
 	for line in lines.split("\n"):
@@ -144,7 +172,7 @@ def _git_commit(files, message):
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 	if "-a" not in files:
-		print(concat(["TODO: ", concat(files, " "), " archived."]))
+		print(concat(["TODO: ", concat(files, ", "), " archived."]))
 	else:
 		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
 
@@ -271,7 +299,7 @@ def repo_config():
 		g.remote("add", "origin", concat([remote_user, "@", remote_host,
 				":", remote_path]))
 		g.config(concat(["branch.", local_branch, ".remote"]), "origin")
-		g.config(concat(["branch.", local_branch, ".merge"]), 
+		g.config(concat(["branch.", local_branch, ".merge"]),
 				concat(["refs/heads/", remote_branch]))
 
 
@@ -297,7 +325,7 @@ def default_config():
 		if val == 'y':
 			print(repo.init())
 			val = raw_input(concat(
-	["Would you like {prog} to help you".format(prog = CONFIG["TODO_PY"]),
+	["Would you like {prog} to help you".format(prog=CONFIG["TODO_PY"]),
 	" configure your new git repository? [y/n] "]
 			))
 			if val == 'y':
@@ -337,7 +365,7 @@ def add_todo(line):
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
 	if re.match("(\([ABC]\))", line) and prepend:
-		line = re.sub("(\([ABC]\))", concat(["\g<1>", 
+		line = re.sub("(\([ABC]\))", concat(["\g<1>",
 			datetime.now().strftime(" %Y-%m-%d ")]),
 			line)
 	elif prepend:
@@ -574,7 +602,7 @@ def format_lines(lines, color_only=False):
 	return formatted
 
 
-def list_todo(plain = False, no_priority = False):
+def list_todo(plain=False, no_priority=False):
 	"""
 	Print the list of todo items in order of priority and position in the
 	todo.txt file.
@@ -595,7 +623,7 @@ def list_date():
 	todo = {"nodate" : []}
 	dates = []
 
-	lines = format_lines(lines, color_only = True)
+	lines = format_lines(lines, color_only=True)
 	for line in lines:
 		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
 		line += "\n"
@@ -637,7 +665,7 @@ https://github.com/sigmavirus24/Todo.txt-python/network
 License: GPLv3
 Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
-	version = VERSION))
+	version=VERSION))
 	sys.exit(0)
 ### End callback functions
 
@@ -646,32 +674,32 @@ if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
 
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
-	opts.add_option("-c", "--config", dest = "config",
-			type = "string",
-			nargs = 1,
-			help = \
+	opts.add_option("-c", "--config", dest="config",
+			type="string",
+			nargs=1,
+			help=\
 			"Supply your own configuration file, must be an absolute path"
 			)
-	opts.add_option("-p", "--plain-mode", action = "store_true",
-			dest = "plain",
-			default = False,
-			help = "Turn off colors"
+	opts.add_option("-p", "--plain-mode", action="store_true",
+			dest="plain",
+			default=False,
+			help="Turn off colors"
 			)
-	opts.add_option("-P", "--no-priority", action = "store_true",
-			dest = "priority",
-			default = False,
-			help = "Hide priority labels in list output"
+	opts.add_option("-P", "--no-priority", action="store_true",
+			dest="priority",
+			default=False,
+			help="Hide priority labels in list output"
 			)
-	opts.add_option("-t", "--prepend-date", action = "store_true",
-			dest = "prepend_date",
-			default = False,
-			help = \
+	opts.add_option("-t", "--prepend-date", action="store_true",
+			dest="prepend_date",
+			default=False,
+			help=\
 			"Prepend the current date to a task automattically when it's added."
 			)
-	opts.add_option("-V", "--version", action = "callback",
-			callback = version,
-			nargs = 0,
-			help = "Print version, license, and credits"
+	opts.add_option("-V", "--version", action="callback",
+			callback=version,
+			nargs=0,
+			help="Print version, license, and credits"
 			)
 
 	valid, args = opts.parse_args()
