@@ -35,6 +35,7 @@ http://pypi.python.org/pypi/GitPython")
 		print("GitPython is not available for Python3 last I checked.")
 	sys.exit(52)
 
+# concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
 
 TERM_COLORS = {
@@ -55,6 +56,7 @@ for key in TERM_COLORS.keys():
 	bkey = concat(["$", re.sub(' ', '_', key).upper()])
 	FROM_CONFIG[bkey] = key
 	TO_CONFIG[key] = bkey
+del(key, bkey)  # If someone were to import this as a module, these show up.
 
 HOME = os.getenv("HOME")
 TODO_DIR = concat([HOME, "/.todo"])
@@ -78,17 +80,31 @@ CONFIG = {
 
 ### Helper Functions
 def get_todos():
+	"""
+	Opens the file in read-only mode, reads all the lines and then closes the
+	file before returning the lines.
+	"""
 	fd = open(CONFIG["TODO_FILE"])
 	lines = fd.readlines()
 	fd.close()
 	return lines
 
+
 def rewrite_file(fd, lines):
+	"""
+	Simple wrapper for three lines used all too frequently.
+	Sets the access position to the beginning of the file, truncates the file's
+	length to 0 and then writes all the lines to the file.
+	"""
 	fd.seek(0, 0)
 	fd.truncate(0)
 	fd.writelines(lines)
 
+
 def _git_err(g):
+	"""
+	Print any errors that result from GitPython and exit.
+	"""
 	if g.stderr:
 		print(g.stderr)
 	else:
@@ -97,6 +113,9 @@ def _git_err(g):
 
 
 def _git_pull():
+	"""
+	Pull any commits that exist on the remote to the local repository.
+	"""
 	try:
 		print(CONFIG["GIT"].pull())
 	except git.exc.GitCommandError, g:
@@ -104,6 +123,9 @@ def _git_pull():
 
 
 def _git_push():
+	"""
+	Push commits made locally to the remote.
+	"""
 	try:
 		s = CONFIG["GIT"].push()
 	except git.exc.GitCommandError, g:
@@ -115,6 +137,10 @@ def _git_push():
 
 
 def _git_status():
+	"""
+	Print the status of the local repository if the version of git is 1.7 or
+	later.
+	"""
 	try:
 		print(CONFIG["GIT"].status())
 	except git.exc.GitCommandError, g:
@@ -122,6 +148,9 @@ def _git_status():
 
 
 def _git_log():
+	"""
+	Print the two latest commits in the local repository's log.
+	"""
 	lines = CONFIG["GIT"].log("-2")
 	flines = []
 	for line in lines.split("\n"):
@@ -144,13 +173,18 @@ def _git_commit(files, message):
 	except git.exc.GitCommandError, g:
 		_git_err(g)
 	if "-a" not in files:
-		print(concat(["TODO: ", concat(files, " "), " archived."]))
+		print(concat(["TODO: ", concat(files, ", "), " archived."]))
 	else:
 		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
 
 
 def print_x_of_y(x, y):
-	print("--\nTODO: {0} of {1} tasks shown".format(len(x), len(y)))
+	t_str = "--\nTODO: {0} of {1} tasks shown"
+	if len(x) > len(y):  # EXTREMELY hack-ish
+		print(t_str.format(len(y), len(y)))  # There can't logically be more
+			# lines of items to do than there actually are.
+	else:
+		print(t_str.format(len(x), len(y)))
 ### End Helper Functions
 
 
@@ -271,7 +305,7 @@ def repo_config():
 		g.remote("add", "origin", concat([remote_user, "@", remote_host,
 				":", remote_path]))
 		g.config(concat(["branch.", local_branch, ".remote"]), "origin")
-		g.config(concat(["branch.", local_branch, ".merge"]), 
+		g.config(concat(["branch.", local_branch, ".merge"]),
 				concat(["refs/heads/", remote_branch]))
 
 
@@ -297,7 +331,7 @@ def default_config():
 		if val == 'y':
 			print(repo.init())
 			val = raw_input(concat(
-	["Would you like {prog} to help you".format(prog = CONFIG["TODO_PY"]),
+	["Would you like {prog} to help you".format(prog=CONFIG["TODO_PY"]),
 	" configure your new git repository? [y/n] "]
 			))
 			if val == 'y':
@@ -337,7 +371,7 @@ def add_todo(line):
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
 	if re.match("(\([ABC]\))", line) and prepend:
-		line = re.sub("(\([ABC]\))", concat(["\g<1>", 
+		line = re.sub("(\([ABC]\))", concat(["\g<1>",
 			datetime.now().strftime(" %Y-%m-%d ")]),
 			line)
 	elif prepend:
@@ -386,6 +420,11 @@ def do_todo(mark_done):
 
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
+	"""
+	If one of the post-production todo functions isn't given the proper
+	arguments, the function calls this to notify the user of what they need to
+	supply.
+	"""
 	if arg2:
 		print(concat(["'", CONFIG["TODO_PY"], " ", command, "' requires a(n) ",
 			arg1, " then a ", arg2, "."]))
@@ -395,6 +434,9 @@ def post_error(command, arg1, arg2):
 
 
 def post_success(item_no, old_line, new_line):
+	"""
+	After changing a line, pring a standard line and commit the change.
+	"""
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
 		item_no + 1, old_line, new_line)
 	print(print_str)
@@ -402,6 +444,9 @@ def post_success(item_no, old_line, new_line):
 
 
 def append_todo(args):
+	"""
+	Append text to the item specified.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -418,6 +463,9 @@ def append_todo(args):
 
 
 def prioritize_todo(args):
+	"""
+	Add or modify the priority of the specified item.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -440,6 +488,10 @@ def prioritize_todo(args):
 
 
 def de_prioritize_todo(number):
+	"""
+	Remove priority markings from the beginning of the line if they're there.
+	Don't complain otherwise.
+	"""
 	if number.isdigit():
 		number = int(number) - 1
 		fd = open(CONFIG["TODO_FILE"], "r+")
@@ -456,6 +508,10 @@ def de_prioritize_todo(number):
 
 
 def prepend_todo(args):
+	"""
+	Take in the line number and prepend the rest of the arguments to the item
+	specified by the line number.
+	"""
 	if args[0].isdigit():
 		line_no = int(args.pop(0)) - 1
 		prepend_str = concat(args, " ") + " "
@@ -574,7 +630,7 @@ def format_lines(lines, color_only=False):
 	return formatted
 
 
-def list_todo(plain = False, no_priority = False):
+def list_todo(plain=False, no_priority=False):
 	"""
 	Print the list of todo items in order of priority and position in the
 	todo.txt file.
@@ -587,39 +643,65 @@ def list_todo(plain = False, no_priority = False):
 	print_x_of_y(lines, lines)
 
 
+def _list_by_(by, regexp):
+	lines = get_todos()
+	nonetype = concat(["no", by])
+	todo = {nonetype : []}
+	by_list = []
+
+	lines = format_lines(lines, color_only=True)
+	for line in lines:
+		#r = re.search(regexp, line)
+		r = re.findall(regexp, line)
+		line = concat([line, "\n"])
+		if r:
+			line = concat(["\t", line])
+			if by == "date":
+				for tup in r:
+					#tup = r.groups()
+					d = date(int(tup[0]), int(tup[1]), int(tup[2]))
+					if d not in by_list:
+						by_list.append(d)
+						todo[d] = [line]
+					else:
+						todo[d].append(line)
+			elif by == "project":
+				for project in r:
+					if project not in by_list:
+						by_list.append(project)
+						todo[project] = [line]
+					else:
+						todo[project].append(line)
+		else:
+			todo[nonetype].append(line)
+	
+	by_list.sort()
+	sorted = []
+
+	for b in by_list:
+		sorted.append(concat([str(b), ":\n"]))
+		sorted.extend(todo[b])
+	
+	sorted.extend(todo[nonetype])
+	return (lines, sorted)
+
+
 def list_date():
 	"""
 	List todo items by date @{yyyy-mm-dd}.
 	"""
-	lines = get_todos()
-	todo = {"nodate" : []}
-	dates = []
-
-	lines = format_lines(lines, color_only = True)
-	for line in lines:
-		_re = re.search("@\{(\d{4})-(\d{1,2})-(\d{1,2})\}", line)
-		line += "\n"
-		if _re:
-			tup = _re.groups()
-			d = date(int(tup[0]), int(tup[1]), int(tup[2]))
-			if d not in dates:
-				dates.append(d)
-				todo[d] = [line]
-			else:
-				todo[d].append(line)
-		else:
-			todo["nodate"].append(line)
-
-	dates.sort()
-	sortedl = []
-
-	for d in dates:
-		for l in todo[d]:
-			sortedl.append(l)
-
-	sortedl += todo["nodate"]
+	lines, sortedl = _list_by_("date", "@\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
 	print(concat(sortedl)[:-1])
 	print_x_of_y(sortedl, lines)
+
+
+def list_project():
+	"""
+	Organizes items by project +prj they belong to.
+	"""
+	lines, sorted = _list_by_("project", "\+(\w+)")
+	print(concat(sorted)[:-1])
+	print_x_of_y(sorted, lines)
 ### End LP Functions
 
 
@@ -637,7 +719,7 @@ https://github.com/sigmavirus24/Todo.txt-python/network
 License: GPLv3
 Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
-	version = VERSION))
+	version=VERSION))
 	sys.exit(0)
 ### End callback functions
 
@@ -646,32 +728,32 @@ if __name__ == "__main__" :
 	CONFIG["TODO_PY"] = sys.argv[0]
 
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
-	opts.add_option("-c", "--config", dest = "config",
-			type = "string",
-			nargs = 1,
-			help = \
+	opts.add_option("-c", "--config", dest="config",
+			type="string",
+			nargs=1,
+			help=\
 			"Supply your own configuration file, must be an absolute path"
 			)
-	opts.add_option("-p", "--plain-mode", action = "store_true",
-			dest = "plain",
-			default = False,
-			help = "Turn off colors"
+	opts.add_option("-p", "--plain-mode", action="store_true",
+			dest="plain",
+			default=False,
+			help="Turn off colors"
 			)
-	opts.add_option("-P", "--no-priority", action = "store_true",
-			dest = "priority",
-			default = False,
-			help = "Hide priority labels in list output"
+	opts.add_option("-P", "--no-priority", action="store_true",
+			dest="priority",
+			default=False,
+			help="Hide priority labels in list output"
 			)
-	opts.add_option("-t", "--prepend-date", action = "store_true",
-			dest = "prepend_date",
-			default = False,
-			help = \
+	opts.add_option("-t", "--prepend-date", action="store_true",
+			dest="prepend_date",
+			default=False,
+			help=\
 			"Prepend the current date to a task automattically when it's added."
 			)
-	opts.add_option("-V", "--version", action = "callback",
-			callback = version,
-			nargs = 0,
-			help = "Print version, license, and credits"
+	opts.add_option("-V", "--version", action="callback",
+			callback=version,
+			nargs=0,
+			help="Print version, license, and credits"
 			)
 
 	valid, args = opts.parse_args()
@@ -697,6 +779,8 @@ if __name__ == "__main__" :
 			"list"		: (False, list_todo),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
+			"lsp"		: (False, list_project),
+			"listproj"	: (False, list_project),
 			"h"			: (False, cmd_help),
 			"help"		: (False, cmd_help),
 			# Git functions:
