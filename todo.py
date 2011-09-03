@@ -565,6 +565,9 @@ Usage:""", CONFIG["TODO_PY"], """command [arg(s)]
 	listdate | lsd
 		Lists all items in your todo.txt file sorted by date.
 
+	listproj | lsp
+		Lists all items in your todo.txt file sorted by project title.
+
 	help | h
 		Shows this message and exits.
 
