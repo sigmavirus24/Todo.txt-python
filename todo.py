@@ -22,6 +22,7 @@ import re
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
+from calendar import month
 
 VERSION = "0.0-master_dev"
 
@@ -47,7 +48,8 @@ TERM_COLORS = {
 		"light green" : "\033[1;32m", "yellow" : "\033[1;33m",
 		"light blue" : "\033[1;34m", "light purple" : "\033[1;35m",
 		"light cyan" : "\033[1;36m", "white" : "\033[1;37m",
-		"default" : "\033[0m"
+		"default" : "\033[0m", "reverse" : "\033[7m",
+		"bold" : "\033[1m",
 		}
 
 FROM_CONFIG = {}
@@ -237,6 +239,7 @@ def parse_valid(valid_opts):
 	CONFIG["PLAIN"] = valid_opts.plain
 	CONFIG["NO_PRI"] = valid_opts.priority
 	CONFIG["PRE_DATE"] = valid.prepend_date
+	CONFIG["CALENDAR"] = valid.month
 
 
 def repo_config():
@@ -605,10 +608,7 @@ def format_lines(lines, color_only=False):
 	no_priority = CONFIG["NO_PRI"]
 	category = ""
 
-	if color_only:
-		formatted = []
-	else:
-		formatted = {"A" : [], "B" : [], "C" : [], "X" : []}
+	formatted = [] if color_only else {"A" : [], "B" : [], "C" : [], "X" : []}
 
 	for line in lines:
 		r = re.match("\(([ABC])\)", line)
@@ -686,6 +686,43 @@ def _list_by_(by, regexp):
 		sorted.extend(todo[b])
 	
 	sorted.extend(todo[nonetype])
+
+	if CONFIG["CALENDAR"] and by == "date":
+		this_year = d.today().year
+		this_month = d.today().month
+		marked = {}
+		default = TERM_COLORS["default"]
+		pri = {"A" : TERM_COLORS[CONFIG["PRI_A"]],
+				"B" : TERM_COLORS[CONFIG["PRI_B"]],
+				"C" : TERM_COLORS[CONFIG["PRI_C"]],
+				"X" : TERM_COLORS["reverse"]}
+		months = {this_month : month(this_year, this_month)}
+
+		def calsub(m, d, p):
+			return re.sub(concat(["(\s)(", str(d), ")(\s)"]), 
+				concat(["\g<1>", pri[p], "\g<2>", default, 
+				"\g<3>"]), months[m])
+
+		for d in by_list:
+			if d.year == this_year:
+				if d.month in months.keys():
+					for t in todo[d]:
+						if re.search("\(A\).*", t):
+							months[d.month] = calsub(d.month, d.day, "A")
+							marked[d] = "A"
+						elif re.search("\(B\).*", t):
+							if marked.get(d, "D") not in ["A", "B"]:
+								months[d.month] = calsub(d.month, d.day, "B")
+								marked[d] = "B"
+						elif re.search("\(C\).*", t):
+							if marked.get(d, "D") not in ["A", "B", "C"]:
+								months[d.month] = calsub(d.month, d.day, "C")
+								marked[d] = "C"
+						else:
+							if marked.get(d, "D") not in ["A", "B", "C", "X"]:
+								months[d.month] = calsub(d.month, d.day, "X")
+								marked[d] = "X"
+		sorted.append(months[this_month])
 	return (lines, sorted)
 
 
@@ -727,9 +764,8 @@ https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
 ### End callback functions
 
 
-if __name__ == "__main__" :
-	CONFIG["TODO_PY"] = sys.argv[0]
-
+### Main components
+def opt_setup():
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
 	opts.add_option("-c", "--config", dest="config",
 			type="string",
@@ -758,6 +794,17 @@ if __name__ == "__main__" :
 			nargs=0,
 			help="Print version, license, and credits"
 			)
+	opts.add_option("-m", "--month", action="store_true",
+			dest="month",
+			default=False,
+			help="Print this month's calendar"
+			)
+	return opts
+
+
+if __name__ == "__main__" :
+	CONFIG["TODO_PY"] = sys.argv[0]
+	opts = opt_setup()
 
 	valid, args = opts.parse_args()
 
