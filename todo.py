@@ -20,6 +20,7 @@
 import os
 import re
 import sys
+import readline
 from optparse import OptionParser
 from datetime import datetime, date
 
@@ -82,8 +83,8 @@ CONFIG = {
 ### Helper Functions
 def get_todos():
 	"""
-	Opens the file in read-only mode, reads all the lines and then closes the
-	file before returning the lines.
+	Opens the file in read-only mode, reads all the lines and then closes 
+	the file before returning the lines.
 	"""
 	fd = open(CONFIG["TODO_FILE"])
 	lines = fd.readlines()
@@ -94,8 +95,8 @@ def get_todos():
 def rewrite_file(fd, lines):
 	"""
 	Simple wrapper for three lines used all too frequently.
-	Sets the access position to the beginning of the file, truncates the file's
-	length to 0 and then writes all the lines to the file.
+	Sets the access position to the beginning of the file, truncates the 
+	file's length to 0 and then writes all the lines to the file.
 	"""
 	fd.seek(0, 0)
 	fd.truncate(0)
@@ -139,8 +140,8 @@ def _git_push():
 
 def _git_status():
 	"""
-	Print the status of the local repository if the version of git is 1.7 or
-	later.
+	Print the status of the local repository if the version of git is 1.7
+	or later.
 	"""
 	try:
 		print(CONFIG["GIT"].status())
@@ -179,11 +180,19 @@ def _git_commit(files, message):
 		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
 
 
+def _raw_sanitation(input):
+	"""
+	Sanitize input collected with raw_input().
+	Prevents someone from entering 'y\' to attempt to break the program.
+	"""
+	return re.sub(re.escape("\\"), "", input)
+
+
 def print_x_of_y(x, y):
 	t_str = "--\nTODO: {0} of {1} tasks shown"
 	if len(x) > len(y):  # EXTREMELY hack-ish
-		print(t_str.format(len(y), len(y)))  # There can't logically be more
-			# lines of items to do than there actually are.
+		print(t_str.format(len(y), len(y)))  # There can't logically be
+			# more lines of items to do than there actually are.
 	else:
 		print(t_str.format(len(x), len(y)))
 ### End Helper Functions
@@ -201,7 +210,8 @@ def get_config(config_name=""):
 		config_file = concat([CONFIG["TODO_DIR"], "/config"])
 	else:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
-	if not os.path.exists(CONFIG["TODO_DIR"]) or not os.path.exists(config_file):
+	if not (os.path.exists(CONFIG["TODO_DIR"]) and \
+			os.path.exists(config_file)):
 		default_config()
 	else:
 		f = open(config_file, 'r')
@@ -218,7 +228,8 @@ def get_config(config_name=""):
 					items[1] = items[1][:i]
 				if re.match("PRI_[ABCX]", items[0]):
 					CONFIG[items[0]] = FROM_CONFIG[items[1]]
-				elif '/' in items[1] and '$' in items[1]:  # elision for path names
+				elif '/' in items[1] and '$' in items[1]:
+					# elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
@@ -258,10 +269,14 @@ def repo_config():
 	except:
 		user_email = concat([user.name, "@", getenv("HOSTNAME")])
 	print("First configure your local repository options.")
-	ret = raw_input(concat(["git config user.name ", user_name, "? "]))
+	ret = _raw_sanitation(
+			raw_input(concat(["git config user.name ", user_name, "? "]))
+			)
 	if ret:
 		user_name = ret
-	ret = raw_input(concat(["git config user.email ", user_email, "? "]))
+	ret = _raw_sanitation(
+			raw_input(concat(["git config user.email ", user_email, "? "]))
+			)
 	if ret:
 		user_email = ret
 
@@ -269,30 +284,32 @@ def repo_config():
 	g.config("user.email", user_email)
 
 	# remote configuration
-	ret = raw_input("Would you like to add a remote repository? ")
-	if re.match(ret, "yes", flags=re.I):
+	ret = _raw_sanitation(
+			raw_input("Would you like to add a remote repository? ")
+			)
+	if re.match("y(es)?", ret, flags=re.I):
 		remote_host = None
 		remote_path = None
 		remote_user = None
 		remote_branch = None
 
 		while not remote_host:
-			remote_host = raw_input("Remote hostname: ")
+			remote_host = _raw_sanitation(raw_input("Remote hostname: "))
 			if not remote_host:
 				print("Please enter the remote's hostname.")
 		while not remote_path:
-			remote_path = raw_input("Remote path: ")
+			remote_path = _raw_sanitation(raw_input("Remote path: "))
 			if not remote_path:
 				print("Please enter the path to the remote's repository.")
 		while not remote_user:
-			remote_user = raw_input("Remote user: ")
+			remote_user = _raw_sanitation(raw_input("Remote user: "))
 			if not remote_user:
 				print("Please enter the user on the remote machine.")
 		while not remote_branch:
-			remote_branch = raw_input("Remote branch: ")
+			remote_branch = _raw_sanitation(raw_input("Remote branch: "))
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
-		raw_input(concat(["Press enter when you have initialized a bare",
+		raw_input(concat(["Press enter when you have initialized a bare ",
 				"repository on the remote or are ready to proceed."]))
 		local_branch = g.branch()
 		if not local_branch:
@@ -326,16 +343,16 @@ def default_config():
 	try:
 		repo.status()
 	except git.exc.GitCommandError, g:
-		val = raw_input(
+		val = _raw_sanitation(raw_input(
 			concat(["Would you like to create a new git repository in ",
-				CONFIG["TODO_DIR"], "? [y/N] "]))
-		if val == 'y':
+				CONFIG["TODO_DIR"], "? [y/N] "])))
+		if re.match('y(es)?', val, re.I):
 			print(repo.init())
-			val = raw_input(concat(
+			val = _raw_sanitation(raw_input(concat(
 	["Would you like {prog} to help you".format(prog=CONFIG["TODO_PY"]),
 	" configure your new git repository? [y/n] "]
-			))
-			if val == 'y':
+			)))
+			if re.match('y(es)?', val, re.I):
 				repo_config()
 
 	# touch/create files needed for the operation of the script
@@ -359,6 +376,10 @@ def default_config():
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
+	print(concat(["Default configuration completed. Please ", 
+		"re-run {prog} with '-h' and 'help' separately.".format(
+			prog=CONFIG["TODO_PY"])]))
+	sys.exit(0)
 ### End Config Functions
 
 
