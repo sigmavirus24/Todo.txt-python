@@ -20,11 +20,17 @@
 import os
 import re
 import sys
-import readline
 from optparse import OptionParser
 from datetime import datetime, date
 
 VERSION = "0.0-master_dev"
+
+try:
+	import readline
+except ImportError:
+	# This isn't crucial to the execution of the script.
+	# But it is a nice feature to have. Sucks to be an OSX user.
+	pass
 
 try:
 	import git
