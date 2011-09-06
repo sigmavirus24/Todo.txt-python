@@ -36,7 +36,7 @@ try:
 	import git
 except ImportError:
 	if sys.version_info < (3, 0):
-		print("You must download and install GitPython from:\
+		print("You must download and install GitPython from: \
 http://pypi.python.org/pypi/GitPython")
 	else:
 		print("GitPython is not available for Python3 last I checked.")
@@ -66,18 +66,16 @@ for key in TERM_COLORS.keys():
 	TO_CONFIG[key] = bkey
 del(key, bkey)  # If someone were to import this as a module, these show up.
 
-HOME = os.getenv("HOME")
-TODO_DIR = concat([HOME, "/.todo"])
+TODO_DIR = os.path.abspath(os.path.expanduser('~/.todo'))
 
 CONFIG = {
-		"HOME" : HOME,
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
 		"TODOTXT_CFG_FILE" : "",
-		"TODO_FILE" : concat([TODO_DIR, "/todo.txt"]),
-		"TMP_FILE" : concat([TODO_DIR, "/todo.tmp"]),
-		"DONE_FILE" : concat([TODO_DIR, "/done.txt"]),
-		"REPORT_FILE" : concat([TODO_DIR, "/report.txt"]),
+		"TODO_FILE" : os.path.abspath(concat([TODO_DIR, "/todo.txt"])),
+		"TMP_FILE" : os.path.abspath(concat([TODO_DIR, "/todo.tmp"])),
+		"DONE_FILE" : os.path.abspath(concat([TODO_DIR, "/done.txt"])),
+		"REPORT_FILE" : os.path.abspath(concat([TODO_DIR, "/report.txt"])),
 		"GIT" : git.Git(TODO_DIR),
 		"PRI_A" : "",
 		"PRI_B" : "",
@@ -222,7 +220,7 @@ def get_config(config_name=""):
 	else:
 		f = open(config_file, 'r')
 		for line in f.readlines():
-			if not (re.match('#', line) or re.match('^$', line)):
+			if not (re.match('#', line) or re.match('$', line)):
 				line = line.strip()
 				i = line.find(' ') + 1
 				if i > 0:
@@ -239,6 +237,9 @@ def get_config(config_name=""):
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
+					elif re.match("home", items[1][1:i], re.I):
+						items[1] = os.path.expanduser(concat(['~',
+							items[1][i:]])) 
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
 				else:
