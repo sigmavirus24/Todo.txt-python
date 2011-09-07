@@ -92,10 +92,8 @@ def get_todos():
 	Opens the file in read-only mode, reads all the lines and then closes 
 	the file before returning the lines.
 	"""
-	fd = open(CONFIG["TODO_FILE"])
-	lines = fd.readlines()
-	fd.close()
-	return lines
+	with open(CONFIG["TODO_FILE"]) as fd:
+		return fd.readlines()
 
 
 def rewrite_file(fd, lines):
@@ -191,7 +189,7 @@ def _raw_sanitation(input):
 	Sanitize input collected with raw_input().
 	Prevents someone from entering 'y\' to attempt to break the program.
 	"""
-	return re.sub(re.escape("\\"), "", input)
+	return re.sub(r"\\", "", input)
 
 
 def print_x_of_y(x, y):
