@@ -481,14 +481,14 @@ def append_todo(args):
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
 		old_line = lines[line_no][:-1]
-		lines[line_no] = concat([old_line, concat(args, " "), "\n"], " ")
-		new_line = lines[line_no][:-1]
+		lines[line_no] = concat([concat([old_line, concat(args, " ")], " "),
+			"\n"],)
+		new_line = lines[line_no].rstrip()
 		rewrite_file(fd, lines)
 		fd.close()
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('append', 'NUMBER', 'string')
-	sys.exit(0)
 
 
 def prioritize_todo(args):
@@ -513,7 +513,6 @@ def prioritize_todo(args):
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('pri', 'NUMBER', 'capital letter')
-	sys.exit(0)
 
 
 def de_prioritize_todo(number):
@@ -533,7 +532,6 @@ def de_prioritize_todo(number):
 		post_success(number, old_line, new_line)
 	else:
 		post_err('depri', 'NUMBER', None)
-	sys.exit(0)
 
 
 def prepend_todo(args):
@@ -557,7 +555,6 @@ def prepend_todo(args):
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('prepend', 'NUMBER', 'string')
-	sys.exit(0)
 
 ### End Post-production todo functions
 
@@ -686,20 +683,19 @@ def _list_by_(by, regexp):
 			line = concat(["\t", line])
 			if by == "date":
 				for tup in r:
-					#tup = r.groups()
 					d = date(int(tup[0]), int(tup[1]), int(tup[2]))
 					if d not in by_list:
 						by_list.append(d)
 						todo[d] = [line]
 					else:
 						todo[d].append(line)
-			elif by == "project":
-				for project in r:
-					if project not in by_list:
-						by_list.append(project)
-						todo[project] = [line]
+			elif by in ["project", "context"]:
+				for i in r:
+					if i not in by_list:
+						by_list.append(i)
+						todo[i] = [line]
 					else:
-						todo[project].append(line)
+						todo[i].append(line)
 		else:
 			todo[nonetype].append(line)
 	
@@ -716,11 +712,11 @@ def _list_by_(by, regexp):
 
 def list_date():
 	"""
-	List todo items by date @{yyyy-mm-dd}.
+	List todo items by date #{yyyy-mm-dd}.
 	"""
-	lines, sortedl = _list_by_("date", "@\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
-	print(concat(sortedl)[:-1])
-	print_x_of_y(sortedl, lines)
+	lines, sorted = _list_by_("date", "#\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
+	print(concat(sorted)[:-1])
+	print_x_of_y(sorted, lines)
 
 
 def list_project():
@@ -728,6 +724,15 @@ def list_project():
 	Organizes items by project +prj they belong to.
 	"""
 	lines, sorted = _list_by_("project", "\+(\w+)")
+	print(concat(sorted)[:-1])
+	print_x_of_y(sorted, lines)
+
+
+def list_context():
+	"""
+	Organizes items by context @context associated with them.
+	"""
+	lines, sorted = _list_by_("context", "@(\w+)")
 	print(concat(sorted)[:-1])
 	print_x_of_y(sorted, lines)
 ### End LP Functions
@@ -810,6 +815,8 @@ if __name__ == "__main__" :
 			"depri"		: ( True, de_prioritize_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
+			"lsc"		: (False, list_context),
+			"listcon"	: (False, list_context),
 			"lsd"		: (False, list_date),
 			"listdate"	: (False, list_date),
 			"lsp"		: (False, list_project),
@@ -835,8 +842,10 @@ if __name__ == "__main__" :
 			else:
 				if re.match("app(end)?", arg):
 					commands[arg][1](args)
+					args = None
 				elif re.match("p(ri)?", arg) or re.match("pre(pend)?", arg):
 					commands[arg][1](args[:2])
+					args = args[2:]
 				else:
 					commands[arg][1](args.pop(0))
 		else:
