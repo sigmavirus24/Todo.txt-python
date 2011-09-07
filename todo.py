@@ -564,15 +564,15 @@ def cmd_help():
 	print(concat(["Use", CONFIG["TODO_PY"], """-h for option help
 
 Usage:""", CONFIG["TODO_PY"], """command [arg(s)]
-	add "Item to do +project @context @{yyyy-mm-dd}"
-		Adds 'Item to do +project @context @{yyyy-mm-dd}' to your todo.txt
+	add "Item to do +project @context #{yyyy-mm-dd}"
+		Adds 'Item to do +project @context #{yyyy-mm-dd}' to your todo.txt
 		file.
-		+project, @context, @{yyyy-mm-dd} are optional
+		+project, @context, #{yyyy-mm-dd} are optional
 
-	addm "First item to do +project @context @{yyyy-mm-dd}
-		Second item to do +project @context @{yyyy-mm-dd}
+	addm "First item to do +project @context #{yyyy-mm-dd}
+		Second item to do +project @context #{yyyy-mm-dd}
 		...
-		Last item to do +project @context @{yyyy-mm-dd}"
+		Last item to do +project @context #{yyyy-mm-dd}"
 		Adds each line as a separate item to your todo.txt file.
 
 	append | app NUMBER "text to append"
@@ -587,6 +587,9 @@ Usage:""", CONFIG["TODO_PY"], """command [arg(s)]
 
 	list | ls
 		Lists all items in your todo.txt file sorted by priority.
+
+	listcon | lsc
+		LIsts all items in your todo.txt file sorted by context.
 
 	listdate | lsd
 		Lists all items in your todo.txt file sorted by date.
