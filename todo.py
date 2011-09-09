@@ -256,6 +256,7 @@ def parse_valid(valid_opts):
 	CONFIG["PLAIN"] = valid_opts.plain
 	CONFIG["NO_PRI"] = valid_opts.priority
 	CONFIG["PRE_DATE"] = valid.prepend_date
+	CONFIG["INVERT"] = valid.invert
 
 
 def repo_config():
@@ -633,6 +634,7 @@ def format_lines(lines, color_only=False):
 	plain = CONFIG["PLAIN"]
 	no_priority = CONFIG["NO_PRI"]
 	category = ""
+	invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
 
 	formatted = [] if color_only else {"A" : [], "B" : [], "C" : [], "X" : []}
 
@@ -650,7 +652,7 @@ def format_lines(lines, color_only=False):
 			category = "X"
 			color = default
 
-		l = concat([color, str(i), " ", line[:-1], default])
+		l = concat([color, invert, str(i), " ", line[:-1], default])
 		if color_only:
 			formatted.append(l)
 		else:
@@ -789,6 +791,13 @@ def opt_setup():
 			callback=version,
 			nargs=0,
 			help="Print version, license, and credits"
+			)
+	opts.add_option("-i", "--invert-colors", action="store_true",
+			dest="invert",
+			default=False,
+			help=concat([
+			"Instead of having the text appear a certain color, make the items",
+			"appear highlighted."])
 			)
 	return opts
 
