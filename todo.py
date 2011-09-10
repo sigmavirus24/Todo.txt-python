@@ -266,16 +266,6 @@ def get_config(config_name=""):
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
 
-def parse_valid(valid_opts):
-	"""
-	Set configuration options based that are set from the command-line.
-	"""
-	if valid_opts.plain: CONFIG["PLAIN"] = not CONFIG["PLAIN"]
-	if valid_opts.priority: CONFIG["NO_PRI"] = not CONFIG["NO_PRI"]
-	if valid.prepend_date: CONFIG["PRE_DATE"] = not CONFIG["PRE_DATE"]
-	if valid.invert: CONFIG["INVERT"] = not CONFIG["INVERT"]
-
-
 def repo_config():
 	"""
 	Help the user configure their git repository.
@@ -784,12 +774,19 @@ https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
 
 def toggle_opt(option, opt_str, val, parser):
 	"""
-	Check opt_str to see if it's one of ['-+', '-@', '-#'] and toggle that
-	option in CONFIG.
+	Check opt_str to see if it's one of ['-+', '-@', '-#', '-p', '-P', '-t',
+	'--plain-mode', '--no-priority', '--prepend-date', '-i',
+	'--invert-colors'] and toggle that option in CONFIG.
 	"""
-	toggle_dict = {"-+" : "HIDE_PROJ", "-@" : "HIDE_CONT", "-#" : "HIDE_DATE"}
+	toggle_dict = {"-+" : "HIDE_PROJ", "-@" : "HIDE_CONT", "-#" : "HIDE_DATE",
+			"-p" : "PLAIN", "-P" : "NO_PRI", "-t" : "PRE_DATE", 
+			"--plain-mode" : "PLAIN", "--no-priority" : "NO_PRI",
+			"--prepend-date" : "PRE_DATE", "-i" : "INVERT",
+			"--invert-colors" : "INVERT",
+			}
 	if opt_str in toggle_dict.keys():
 		CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
+
 ### End callback functions
 
 
@@ -802,19 +799,16 @@ def opt_setup():
 			help=\
 			"Supply your own configuration file, must be an absolute path"
 			)
-	opts.add_option("-p", "--plain-mode", action="store_true",
-			dest="plain",
-			default=False,
+	opts.add_option("-p", "--plain-mode", action="callback",
+			callback=toggle_opt,
 			help="Turn off colors"
 			)
-	opts.add_option("-P", "--no-priority", action="store_true",
-			dest="priority",
-			default=False,
+	opts.add_option("-P", "--no-priority", action="callback",
+			callback=toggle_opt,
 			help="Hide priority labels in list output"
 			)
-	opts.add_option("-t", "--prepend-date", action="store_true",
-			dest="prepend_date",
-			default=False,
+	opts.add_option("-t", "--prepend-date", action="callback",
+			callback=toggle_opt,
 			help=\
 			"Prepend the current date to a task automattically when it's added."
 			)
@@ -823,9 +817,8 @@ def opt_setup():
 			nargs=0,
 			help="Print version, license, and credits"
 			)
-	opts.add_option("-i", "--invert-colors", action="store_true",
-			dest="invert",
-			default=False,
+	opts.add_option("-i", "--invert-colors", action="callback",
+			callback=toggle_opt,
 			help=concat([
 			"Instead of having the text appear a certain color, make the items",
 			"appear highlighted."])
@@ -852,8 +845,6 @@ if __name__ == "__main__" :
 
 	#print(concat(["HIDE_PROJ:", str(CONFIG["HIDE_PROJ"]), ", HIDE_CONT:",
 		#str(CONFIG["HIDE_CONT"]), ", HIDE_DATE:", str(CONFIG["HIDE_DATE"])]))
-
-	parse_valid(valid)
 
 	commands = {
 			# command 	: ( Args, Function),
