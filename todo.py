@@ -82,7 +82,15 @@ CONFIG = {
 		"PRI_A" : "",
 		"PRI_B" : "",
 		"PRI_C" : "",
-		"PRI_X" : ""
+		"PRI_X" : "",
+		"PLAIN" : False,
+		"NO_PRI" : False,
+		"PRE_DATE" : False,
+		"INVERT" : False,
+		"HIDE_PROJ" : False,
+		"HIDE_CONT" : False,
+		"HIDE_DATE" : False,
+		"LEGACY" : False,
 		}
 
 
@@ -262,10 +270,10 @@ def parse_valid(valid_opts):
 	"""
 	Set configuration options based that are set from the command-line.
 	"""
-	CONFIG["PLAIN"] = valid_opts.plain
-	CONFIG["NO_PRI"] = valid_opts.priority
-	CONFIG["PRE_DATE"] = valid.prepend_date
-	CONFIG["INVERT"] = valid.invert
+	if valid_opts.plain: CONFIG["PLAIN"] = not CONFIG["PLAIN"]
+	if valid_opts.priority: CONFIG["NO_PRI"] = not CONFIG["NO_PRI"]
+	if valid.prepend_date: CONFIG["PRE_DATE"] = not CONFIG["PRE_DATE"]
+	if valid.invert: CONFIG["INVERT"] = not CONFIG["INVERT"]
 
 
 def repo_config():
@@ -655,7 +663,7 @@ def format_lines(lines, color_only=False):
 			category = "X"
 			color = default
 
-		l = concat([color, invert, str(i), " ", line[:-1], default])
+		l = concat([color, invert, str(i), " ", line[:-1], default, "\n"])
 		if color_only:
 			formatted.append(l)
 		else:
@@ -665,59 +673,67 @@ def format_lines(lines, color_only=False):
 	return formatted
 
 
-def list_todo(plain=False, no_priority=False):
-	"""
-	Print the list of todo items in order of priority and position in the
-	todo.txt file.
-	"""
-	lines = get_todos()
-	formatted_lines = format_lines(lines)
-	for category in ["A", "B", "C", "X"]:
-		for line in formatted_lines[category]:
-			print(line)
-
-	print_x_of_y(lines, lines)
-
-
 def _list_by_(by, regexp):
 	lines = get_todos()
 	nonetype = concat(["no", by])
 	todo = {nonetype : []}
 	by_list = []
-
-	lines = format_lines(lines, color_only=True)
-	for line in lines:
-		r = re.findall(regexp, line)
-		line = concat([line, "\n"])
-		if r:
-			line = concat(["\t", line])
-			if by == "date":
-				for tup in r:
-					d = date(int(tup[0]), int(tup[1]), int(tup[2]))
-					if d not in by_list:
-						by_list.append(d)
-						todo[d] = [line]
-					else:
-						todo[d].append(line)
-			elif by in ["project", "context"]:
-				for i in r:
-					if i not in by_list:
-						by_list.append(i)
-						todo[i] = [line]
-					else:
-						todo[i].append(line)
-		else:
-			todo[nonetype].append(line)
-
-	by_list.sort()
 	sorted = []
 
+	if by in ["date", "project", "context"]:
+		lines = format_lines(lines, color_only=True)
+		for line in lines:
+			r = re.findall(regexp, line)
+			if r:
+				line = concat(["\t", line])
+				if by == "date":
+					for tup in r:
+						d = date(int(tup[0]), int(tup[1]), int(tup[2]))
+						if d not in by_list:
+							by_list.append(d)
+							todo[d] = [line]
+						else:
+							todo[d].append(line)
+				elif by in ["project", "context"]:
+					for i in r:
+						if i not in by_list:
+							by_list.append(i)
+							todo[i] = [line]
+						else:
+							todo[i].append(line)
+			else:
+				todo[nonetype].append(line)
+
+	elif by == "pri":
+		lines = format_lines(lines)
+		todo.update(lines)
+		by_list = ["A", "B", "C", "X"]
+		
+	by_list.sort()
+
 	for b in by_list:
-		sorted.append(concat([str(b), ":\n"]))
+		if CONFIG["HIDE_PROJ"]:
+			todo[b] = [re.sub("(\+\w+\s?)", "", l) for l in todo[b]]
+		if CONFIG["HIDE_CONT"]:
+			todo[b] = [re.sub("(@\w+\s?)", "", l) for l in todo[b]]
+		if CONFIG["HIDE_DATE"]:
+			todo[b] = [re.sub("(#\{\d+-\d+-\d+\}\s?)", "", l) for l in todo[b]]
+		if by != "pri":
+			sorted.append(concat([str(b), ":\n"]))
 		sorted.extend(todo[b])
 
 	sorted.extend(todo[nonetype])
 	return (lines, sorted)
+
+
+def list_todo(plain=False, no_priority=False):
+	"""
+	Print the list of todo items in order of priority and position in the
+	todo.txt file.
+	"""
+	lines, sorted = _list_by_("pri", "")
+	print(concat(sorted)[:-1])
+	print_x_of_y(lines, lines)
 
 
 def list_date():
@@ -764,6 +780,16 @@ Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
 	version=VERSION))
 	sys.exit(0)
+
+
+def toggle_opt(option, opt_str, val, parser):
+	"""
+	Check opt_str to see if it's one of ['-+', '-@', '-#'] and toggle that
+	option in CONFIG.
+	"""
+	toggle_dict = {"-+" : "HIDE_PROJ", "-@" : "HIDE_CONT", "-#" : "HIDE_DATE"}
+	if opt_str in toggle_dict.keys():
+		CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
 ### End callback functions
 
 
@@ -804,6 +830,15 @@ def opt_setup():
 			"Instead of having the text appear a certain color, make the items",
 			"appear highlighted."])
 			)
+	opts.add_option("-+", action="callback", callback=toggle_opt,
+			help="Toggle display of +projects in-line with items."
+			)
+	opts.add_option("-@", action="callback", callback=toggle_opt,
+			help="Toggle display of @contexts in-line with items."
+			)
+	opts.add_option("-#", action="callback", callback=toggle_opt,
+			help="Toggle display of #{dates} in-line with items."
+			)
 	return opts
 
 
@@ -814,6 +849,9 @@ if __name__ == "__main__" :
 	valid, args = opts.parse_args()
 
 	get_config(valid.config)
+
+	#print(concat(["HIDE_PROJ:", str(CONFIG["HIDE_PROJ"]), ", HIDE_CONT:",
+		#str(CONFIG["HIDE_CONT"]), ", HIDE_DATE:", str(CONFIG["HIDE_DATE"])]))
 
 	parse_valid(valid)
 
