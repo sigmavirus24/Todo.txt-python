@@ -1,0 +1,9 @@
+# Ironic that a project about managing a todo.txt file has a TODO text file
+
+* Allow user to organize the todo's like the original (item based
+    alphabetical sorting)
+* Add -[+@#] flags to allow user to hide associated contexts.
+* Rework toggling command line flags CONFIG["FLAG"] = Default, 
+    if valid.flag: CONFIG["FLAG"] = not CONFIG["FLAG"]
+* Research what happens when one flag is supplied multiple times with
+    optparse
