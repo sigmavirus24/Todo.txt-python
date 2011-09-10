@@ -89,7 +89,7 @@ CONFIG = {
 ### Helper Functions
 def get_todos():
 	"""
-	Opens the file in read-only mode, reads all the lines and then closes 
+	Opens the file in read-only mode, reads all the lines and then closes
 	the file before returning the lines.
 	"""
 	with open(CONFIG["TODO_FILE"]) as fd:
@@ -99,7 +99,7 @@ def get_todos():
 def rewrite_file(fd, lines):
 	"""
 	Simple wrapper for three lines used all too frequently.
-	Sets the access position to the beginning of the file, truncates the 
+	Sets the access position to the beginning of the file, truncates the
 	file's length to 0 and then writes all the lines to the file.
 	"""
 	fd.seek(0, 0)
@@ -165,6 +165,7 @@ def _git_log():
 				line[:-1], TERM_COLORS["default"], "\n"]))
 		else:
 			flines.append(concat([line, "\n"]))
+
 	flines[-1] = flines[-1][:-1]
 	print(concat(flines))
 
@@ -189,8 +190,8 @@ def prompt(*args, **kwargs):
 	Sanitize input collected with raw_input().
 	Prevents someone from entering 'y\' to attempt to break the program.
 
-	args can be any collection of strings that require formatting. 
-	kwargs will collect the tokens and values. 
+	args can be any collection of strings that require formatting.
+	kwargs will collect the tokens and values.
 	"""
 	args.append(' ')
 	prompt_str = concat(args)
@@ -246,11 +247,12 @@ def get_config(config_name=""):
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif re.match("home", items[1][1:i], re.I):
 						items[1] = os.path.expanduser(concat(['~',
-							items[1][i:]])) 
+							items[1][i:]]))
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
 				else:
 					CONFIG[items[0]] = items[1]
+
 		f.close()
 	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
 		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
@@ -319,7 +321,7 @@ def repo_config():
 			remote_branch = prompt("Remote branch:")
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
-		prompt("Press enter when you have initialized a bare", 
+		prompt("Press enter when you have initialized a bare",
 			"repository on the remote or are ready to proceed.")
 		local_branch = g.branch()
 		if not local_branch:
@@ -357,8 +359,9 @@ def default_config():
 				CONFIG["TODO_DIR"], "? [y/N]")
 		if re.match('y(es)?', val, re.I):
 			print(repo.init())
-			val = prompt("Would you like {prog} to help you", "configure
-			your new git repository? [y/n]", prog=CONFIG["TODO_PY"])
+			val = prompt("Would you like {prog} to help you",
+			"configure your new git repository? [y/n]",
+			prog=CONFIG["TODO_PY"])
 			if re.match('y(es)?', val, re.I):
 				repo_config()
 
@@ -380,10 +383,11 @@ def default_config():
 				cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
 			else:
 				cfg.write(concat(["export ", k, '="', v, '"\n']))
+
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
-	print(concat(["Default configuration completed. Please ", 
+	print(concat(["Default configuration completed. Please ",
 		"re-run {prog} with '-h' and 'help' separately.".format(
 			prog=CONFIG["TODO_PY"])]))
 	sys.exit(0)
@@ -657,6 +661,7 @@ def format_lines(lines, color_only=False):
 		else:
 			formatted[category].append(l)
 		i += 1
+
 	return formatted
 
 
@@ -670,6 +675,7 @@ def list_todo(plain=False, no_priority=False):
 	for category in ["A", "B", "C", "X"]:
 		for line in formatted_lines[category]:
 			print(line)
+
 	print_x_of_y(lines, lines)
 
 
@@ -702,14 +708,14 @@ def _list_by_(by, regexp):
 						todo[i].append(line)
 		else:
 			todo[nonetype].append(line)
-	
+
 	by_list.sort()
 	sorted = []
 
 	for b in by_list:
 		sorted.append(concat([str(b), ":\n"]))
 		sorted.extend(todo[b])
-	
+
 	sorted.extend(todo[nonetype])
 	return (lines, sorted)
 
