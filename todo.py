@@ -184,11 +184,18 @@ def _git_commit(files, message):
 		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
 
 
-def _raw_sanitation(input):
+def prompt(*args, **kwargs):
 	"""
 	Sanitize input collected with raw_input().
 	Prevents someone from entering 'y\' to attempt to break the program.
+
+	args can be any collection of strings that require formatting. 
+	kwargs will collect the tokens and values. 
 	"""
+	args.append(' ')
+	prompt_str = concat(args)
+	prompt_str = prompt_str.format(**kwargs)
+	input = raw_input(prompt_str)
 	return re.sub(r"\\", "", input)
 
 
@@ -276,15 +283,12 @@ def repo_config():
 		user_email = g.config("--global", "--get", "user.email")
 	except:
 		user_email = concat([user.name, "@", getenv("HOSTNAME")])
+
 	print("First configure your local repository options.")
-	ret = _raw_sanitation(
-			raw_input(concat(["git config user.name ", user_name, "? "]))
-			)
+	ret = prompt("git config user.name", user_name, "?")
 	if ret:
 		user_name = ret
-	ret = _raw_sanitation(
-			raw_input(concat(["git config user.email ", user_email, "? "]))
-			)
+	ret = prompt("git config user.email", user_email, "?")
 	if ret:
 		user_email = ret
 
@@ -292,9 +296,7 @@ def repo_config():
 	g.config("user.email", user_email)
 
 	# remote configuration
-	ret = _raw_sanitation(
-			raw_input("Would you like to add a remote repository? ")
-			)
+	ret = prompt("Would you like to add a remote repository?")
 	if re.match("y(es)?", ret, flags=re.I):
 		remote_host = None
 		remote_path = None
@@ -302,23 +304,23 @@ def repo_config():
 		remote_branch = None
 
 		while not remote_host:
-			remote_host = _raw_sanitation(raw_input("Remote hostname: "))
+			remote_host = prompt("Remote hostname:")
 			if not remote_host:
 				print("Please enter the remote's hostname.")
 		while not remote_path:
-			remote_path = _raw_sanitation(raw_input("Remote path: "))
+			remote_path = prompt("Remote path:")
 			if not remote_path:
 				print("Please enter the path to the remote's repository.")
 		while not remote_user:
-			remote_user = _raw_sanitation(raw_input("Remote user: "))
+			remote_user = prompt("Remote user:")
 			if not remote_user:
 				print("Please enter the user on the remote machine.")
 		while not remote_branch:
-			remote_branch = _raw_sanitation(raw_input("Remote branch: "))
+			remote_branch = prompt("Remote branch:")
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
-		raw_input(concat(["Press enter when you have initialized a bare ",
-				"repository on the remote or are ready to proceed."]))
+		prompt("Press enter when you have initialized a bare", 
+			"repository on the remote or are ready to proceed.")
 		local_branch = g.branch()
 		if not local_branch:
 			local_branch = "master"
@@ -351,15 +353,12 @@ def default_config():
 	try:
 		repo.status()
 	except git.exc.GitCommandError, g:
-		val = _raw_sanitation(raw_input(
-			concat(["Would you like to create a new git repository in ",
-				CONFIG["TODO_DIR"], "? [y/N] "])))
+		val = prompt("Would you like to create a new git repository in",
+				CONFIG["TODO_DIR"], "? [y/N]")
 		if re.match('y(es)?', val, re.I):
 			print(repo.init())
-			val = _raw_sanitation(raw_input(concat(
-	["Would you like {prog} to help you".format(prog=CONFIG["TODO_PY"]),
-	" configure your new git repository? [y/n] "]
-			)))
+			val = prompt("Would you like {prog} to help you", "configure
+			your new git repository? [y/n]", prog=CONFIG["TODO_PY"])
 			if re.match('y(es)?', val, re.I):
 				repo_config()
 
