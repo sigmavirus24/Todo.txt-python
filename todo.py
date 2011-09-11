@@ -219,12 +219,14 @@ def print_x_of_y(x, y):
 
 
 ### Configuration Functions
-def get_config(config_name=""):
+def get_config(config_name="", dir_name=""):
 	"""
 	Read the config file
 	"""
 	if config_name:
 		CONFIG["TODOTXT_CFG_FILE"] = config_name
+	if dir_name:
+		CONFIG["TODO_DIR"] = dir_name
 	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = concat([CONFIG["TODO_DIR"], "/config"])
@@ -415,26 +417,25 @@ def add_todo(line):
 	_git_commit([CONFIG["TODO_FILE"]], s)
 
 
-def addm_todo(todo):
+def addm_todo(lines):
 	"""
 	Add new items to the list of things todo.
 	"""
-	lines = todo.split("\n")
+	lines = lines.split("\n")
 	for line in lines:
 		add_todo(line)
 
 
-def do_todo(mark_done):
+def do_todo(line):
 	"""
 	Mark an item on a specified line as done.
 	"""
-	if not mark_done.isdigit():
+	if not line.isdigit():
 		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
 	else:
-		_git = CONFIG["GIT"]
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
-		removed = lines.pop(int(mark_done) - 1)
+		removed = lines.pop(int(line) - 1)
 		rewrite_file(fd, lines)
 		fd.close()
 		today = datetime.now().strftime("%Y-%m-%d")
@@ -444,8 +445,26 @@ def do_todo(mark_done):
 		fd.write(removed)
 		fd.close()
 		print(removed[:-1])
-		print("TODO: Item {0} marked as done.".format(mark_done))
+		print("TODO: Item {0} marked as done.".format(line))
 		_git_commit([CONFIG["DONE_FILE"]], removed)
+
+
+def delete_todo(line):
+	"""
+	Delete an item without marking it as done.
+	"""
+	if not line.isdigit():
+		print("Usage: {0} (del|rm) item#".format(CONFIG["TODO_PY"]))
+	else:
+		fd = open(CONFIG["TODO_FILE"], "r+")
+		lines = fd.readlines()
+		removed = lines.pop(int(line) - 1)
+		rewrite_file(fd, lines)
+		fd.close()
+		removed = "'{0}' deleted.".format(removed[:-1])
+		print(removed)
+		print("TODO: Item {0} deleted.".format(line))
+		_git_commit([CONFIG["TODO_FILE"]], removed)
 ### End new todo Functions
 
 
@@ -663,7 +682,27 @@ def format_lines(lines, color_only=False):
 	return formatted
 
 
+def _legacy_sort(items):
+	"""
+	Sort items alphabetically, i.e.
+	# (pri_a) Abc
+	# (pri_a) Bcd
+	# (pri_b) Abc
+	# (pri_c) Bcd
+	etc., etc., etc.
+	"""
+	keys = [re.sub("^.*\d+\s(\([ABC]\)\s)?", "", i) for i in items]
+	# The .* in the regexp is needed for the \033[* codes
+	items_dict = dict(zip(keys, items))
+	keys.sort()
+	items = [items_dict[k] for k in keys]
+	return items
+
+
 def _list_by_(by, regexp):
+	"""
+	Master list_*() function.
+	"""
 	lines = get_todos()
 	nonetype = concat(["no", by])
 	todo = {nonetype : []}
@@ -698,7 +737,7 @@ def _list_by_(by, regexp):
 		lines = format_lines(lines)
 		todo.update(lines)
 		by_list = ["A", "B", "C", "X"]
-		
+
 	by_list.sort()
 
 	for b in by_list:
@@ -708,6 +747,8 @@ def _list_by_(by, regexp):
 			todo[b] = [re.sub("(@\w+\s?)", "", l) for l in todo[b]]
 		if CONFIG["HIDE_DATE"]:
 			todo[b] = [re.sub("(#\{\d+-\d+-\d+\}\s?)", "", l) for l in todo[b]]
+		if CONFIG["LEGACY"]:
+			todo[b] = _legacy_sort(todo[b])
 		if by != "pri":
 			sorted.append(concat([str(b), ":\n"]))
 		sorted.extend(todo[b])
@@ -779,38 +820,43 @@ def toggle_opt(option, opt_str, val, parser):
 	'--invert-colors'] and toggle that option in CONFIG.
 	"""
 	toggle_dict = {"-+" : "HIDE_PROJ", "-@" : "HIDE_CONT", "-#" : "HIDE_DATE",
-			"-p" : "PLAIN", "-P" : "NO_PRI", "-t" : "PRE_DATE", 
+			"-p" : "PLAIN", "-P" : "NO_PRI", "-t" : "PRE_DATE",
 			"--plain-mode" : "PLAIN", "--no-priority" : "NO_PRI",
 			"--prepend-date" : "PRE_DATE", "-i" : "INVERT",
-			"--invert-colors" : "INVERT",
+			"--invert-colors" : "INVERT", "-l" : "LEGACY",
+			"--legacy" : "LEGACY",
 			}
 	if opt_str in toggle_dict.keys():
 		CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
-
 ### End callback functions
 
 
 ### Main components
 def opt_setup():
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
-	opts.add_option("-c", "--config", dest="config",
+	opts.add_option("-c", "--config", dest="config", default=""
 			type="string",
 			nargs=1,
-			help=\
-			"Supply your own configuration file, must be an absolute path"
+			help=concat(["Supply your own configuration file,",
+				"must be an absolute path"])
+			)
+	opts.add_option("-d", "--dir", dest="todo_dir", default=""
+			type="string",
+			nargs=1,
+			help="Directory you wish {prog} to use.".format(
+				prog=CONFIG["TODO_PY"])
 			)
 	opts.add_option("-p", "--plain-mode", action="callback",
 			callback=toggle_opt,
-			help="Turn off colors"
+			help="Toggle coloring of items"
 			)
 	opts.add_option("-P", "--no-priority", action="callback",
 			callback=toggle_opt,
-			help="Hide priority labels in list output"
+			help="Toggle display of priority labels"
 			)
 	opts.add_option("-t", "--prepend-date", action="callback",
 			callback=toggle_opt,
-			help=\
-			"Prepend the current date to a task automattically when it's added."
+			help="Toggle whether the date is prepended to new items."
 			)
 	opts.add_option("-V", "--version", action="callback",
 			callback=version,
@@ -819,9 +865,11 @@ def opt_setup():
 			)
 	opts.add_option("-i", "--invert-colors", action="callback",
 			callback=toggle_opt,
-			help=concat([
-			"Instead of having the text appear a certain color, make the items",
-			"appear highlighted."])
+			help="Toggle coloring the text of items or background of items."
+			)
+	opts.add_option("-l", "--legacy", action="callback",
+			callback=toggle_opt,
+			help="Toggle organization of items in the old manner."
 			)
 	opts.add_option("-+", action="callback", callback=toggle_opt,
 			help="Toggle display of +projects in-line with items."
@@ -841,7 +889,7 @@ if __name__ == "__main__" :
 
 	valid, args = opts.parse_args()
 
-	get_config(valid.config)
+	get_config(valid.config, valid.todo_dir)
 
 	commands = {
 			# command 	: ( Args, Function),
@@ -856,6 +904,8 @@ if __name__ == "__main__" :
 			"prepend"	: ( True, prepend_todo),
 			"dp"		: ( True, de_prioritize_todo),
 			"depri"		: ( True, de_prioritize_todo),
+			"del"		: ( True, delete_todo),
+			"rm"		: ( True, delete_todo),
 			"ls"		: (False, list_todo),
 			"list"		: (False, list_todo),
 			"lsc"		: (False, list_context),

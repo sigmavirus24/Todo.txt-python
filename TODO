@@ -1,8 +1,3 @@
 # Ironic that a project about managing a todo.txt file has a TODO text file
 
-* Allow user to organize the todo's like the original (item based
-    alphabetical sorting)
-* Add -d flag to allow a user to use a different directory (allows 
-    for multiple, non-intersecting, todo.txt files with different remote
-    repositories, i.e. one for work, one for one project, one for another,
-    etc.)
+NONE
