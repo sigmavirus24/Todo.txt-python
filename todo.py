@@ -46,6 +46,7 @@ http://pypi.python.org/pypi/GitPython")
 
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
+_path = lambda p: os.path.abspath(os.path.expanduser(p))
 
 TERM_COLORS = {
 		"black" : "\033[0;30m", "red" : "\033[0;31m",
@@ -68,16 +69,16 @@ for key in TERM_COLORS.keys():
 	TO_CONFIG[key] = bkey
 del(key, bkey)  # If someone were to import this as a module, these show up.
 
-TODO_DIR = os.path.abspath(os.path.expanduser('~/.todo'))
+TODO_DIR = _path('~/.todo')
 
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
 		"TODOTXT_CFG_FILE" : "",
-		"TODO_FILE" : os.path.abspath(concat([TODO_DIR, "/todo.txt"])),
-		"TMP_FILE" : os.path.abspath(concat([TODO_DIR, "/todo.tmp"])),
-		"DONE_FILE" : os.path.abspath(concat([TODO_DIR, "/done.txt"])),
-		"REPORT_FILE" : os.path.abspath(concat([TODO_DIR, "/report.txt"])),
+		"TODO_FILE" : _path(concat([TODO_DIR, "/todo.txt"])),
+		"TMP_FILE" : _path(concat([TODO_DIR, "/todo.tmp"])),
+		"DONE_FILE" : _path(concat([TODO_DIR, "/done.txt"])),
+		"REPORT_FILE" : _path(concat([TODO_DIR, "/report.txt"])),
 		"GIT" : git.Git(TODO_DIR),
 		"PRI_A" : "",
 		"PRI_B" : "",
@@ -226,14 +227,18 @@ def get_config(config_name="", dir_name=""):
 	if config_name:
 		CONFIG["TODOTXT_CFG_FILE"] = config_name
 	if dir_name:
-		CONFIG["TODO_DIR"] = dir_name
+		CONFIG["TODO_DIR"] = _path(dir_name)
+
 	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = concat([CONFIG["TODO_DIR"], "/config"])
 	else:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
-	if not (os.path.exists(CONFIG["TODO_DIR"]) and \
-			os.path.exists(config_file)):
+
+	config_file = _path(config_file)
+	if not (os.access(CONFIG["TODO_DIR"], 
+		os.F_OK | os.R_OK | os.W_OK | os.X_OK) and \
+			os.access(config_file, os.F_OK | os.R_OK | os.W_OK)):
 		default_config()
 	else:
 		f = open(config_file, 'r')
@@ -256,7 +261,7 @@ def get_config(config_name="", dir_name=""):
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif re.match("home", items[1][1:i], re.I):
-						items[1] = os.path.expanduser(concat(['~',
+						items[1] = _path(concat(['~',
 							items[1][i:]]))
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
@@ -834,13 +839,13 @@ def toggle_opt(option, opt_str, val, parser):
 ### Main components
 def opt_setup():
 	opts = OptionParser("Usage: %prog [options] action [arg(s)]")
-	opts.add_option("-c", "--config", dest="config", default=""
+	opts.add_option("-c", "--config", dest="config", default="",
 			type="string",
 			nargs=1,
 			help=concat(["Supply your own configuration file,",
 				"must be an absolute path"])
 			)
-	opts.add_option("-d", "--dir", dest="todo_dir", default=""
+	opts.add_option("-d", "--dir", dest="todo_dir", default="",
 			type="string",
 			nargs=1,
 			help="Directory you wish {prog} to use.".format(
