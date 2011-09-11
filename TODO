@@ -2,11 +2,6 @@
 
 * Allow user to organize the todo's like the original (item based
     alphabetical sorting)
-* Add -[+@#] flags to allow user to hide associated contexts.
-* Rework toggling command line flags CONFIG["FLAG"] = Default, 
-    if valid.flag: CONFIG["FLAG"] = not CONFIG["FLAG"]
-* Research what happens when one flag is supplied multiple times with
-    optparse
 * Add -d flag to allow a user to use a different directory (allows 
     for multiple, non-intersecting, todo.txt files with different remote
     repositories, i.e. one for work, one for one project, one for another,

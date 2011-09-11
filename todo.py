@@ -843,9 +843,6 @@ if __name__ == "__main__" :
 
 	get_config(valid.config)
 
-	#print(concat(["HIDE_PROJ:", str(CONFIG["HIDE_PROJ"]), ", HIDE_CONT:",
-		#str(CONFIG["HIDE_CONT"]), ", HIDE_DATE:", str(CONFIG["HIDE_DATE"])]))
-
 	commands = {
 			# command 	: ( Args, Function),
 			"add"		: ( True, add_todo),
