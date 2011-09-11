@@ -47,6 +47,7 @@ http://pypi.python.org/pypi/GitPython")
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
 _path = lambda p: os.path.abspath(os.path.expanduser(p))
+_pathc = lambda plist: _path(concat(plist))
 
 TERM_COLORS = {
 		"black" : "\033[0;30m", "red" : "\033[0;31m",
@@ -75,10 +76,10 @@ CONFIG = {
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
 		"TODOTXT_CFG_FILE" : "",
-		"TODO_FILE" : _path(concat([TODO_DIR, "/todo.txt"])),
-		"TMP_FILE" : _path(concat([TODO_DIR, "/todo.tmp"])),
-		"DONE_FILE" : _path(concat([TODO_DIR, "/done.txt"])),
-		"REPORT_FILE" : _path(concat([TODO_DIR, "/report.txt"])),
+		"TODO_FILE" : _pathc([TODO_DIR, "/todo.txt"]),
+		"TMP_FILE" : _pathc([TODO_DIR, "/todo.tmp"]),
+		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
+		"REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
 		"GIT" : git.Git(TODO_DIR),
 		"PRI_A" : "",
 		"PRI_B" : "",
@@ -261,8 +262,7 @@ def get_config(config_name="", dir_name=""):
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif re.match("home", items[1][1:i], re.I):
-						items[1] = _path(concat(['~',
-							items[1][i:]]))
+						items[1] = _pathc(['~', items[1][i:]])
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
 				else:
