@@ -593,63 +593,63 @@ def prepend_todo(args):
 
 ### HELP
 def cmd_help():
-	print(concat(["Use", CONFIG["TODO_PY"], """-h for option help
-
-Usage:""", CONFIG["TODO_PY"], """command [arg(s)]
-	add "Item to do +project @context #{yyyy-mm-dd}"
-		Adds 'Item to do +project @context #{yyyy-mm-dd}' to your todo.txt
-		file.
-		+project, @context, #{yyyy-mm-dd} are optional
-
-	addm "First item to do +project @context #{yyyy-mm-dd}
-		Second item to do +project @context #{yyyy-mm-dd}
-		...
-		Last item to do +project @context #{yyyy-mm-dd}"
-		Adds each line as a separate item to your todo.txt file.
-
-	append | app NUMBER "text to append"
-		Append "text to append" to item NUMBER.
-
-	depri | dp NUMBER
-		Remove the priority of the item on line NUMBER.
-
-	do NUMBER
-		Marks item with corresponding number as done and moves it to your
-		done.txt file.
-
-	list | ls
-		Lists all items in your todo.txt file sorted by priority.
-
-	listcon | lsc
-		LIsts all items in your todo.txt file sorted by context.
-
-	listdate | lsd
-		Lists all items in your todo.txt file sorted by date.
-
-	listproj | lsp
-		Lists all items in your todo.txt file sorted by project title.
-
-	help | h
-		Shows this message and exits.
-
-	prepend | pre NUMBER "text to prepend"
-		Add "text to prepend" to the beginning of the item.
-
-	pri | p NUMBER [ABC]
-		Add priority specified (A, B, or C) to item NUMBER.
-
-	pull
-		Pulls from the remote for your git repository.
-
-	push
-		Pushs to the remote for your git repository.
-
-	status
-		If using $(git --version) > 1.7, shows the status of your local
-		git repository.
-
-	log
-		Shows the last two commits in your local git repository."""], " "))
+	print(concat(["Use", CONFIG["TODO_PY"], "-h for option help"], " "))
+	print("")
+	print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
+	print('\tadd "Item to do +project @context #{yyyy-mm-dd}"')
+	print("\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}' to your todo.txt")
+	print("\t\tfile.")
+	print("\t\t+project, @context, #{yyyy-mm-dd} are optional")
+	print("")
+	print('\taddm "First item to do +project @context #{yyyy-mm-dd}')
+	print("\t\tSecond item to do +project @context #{yyyy-mm-dd}")
+	print("\t\t...")
+	print("\t\tLast item to do +project @context #{yyyy-mm-dd}")
+	print("\t\tAdds each line as a separate item to your todo.txt file.")
+	print("")
+	print('\tappend | app NUMBER "text to append"')
+	print('\t\tAppend "text to append" to item NUMBER.')
+	print("")
+#	depri | dp NUMBER
+#		Remove the priority of the item on line NUMBER.
+#
+#	do NUMBER
+#		Marks item with corresponding number as done and moves it to your
+#		done.txt file.
+#
+#	list | ls
+#		Lists all items in your todo.txt file sorted by priority.
+#
+#	listcon | lsc
+#		LIsts all items in your todo.txt file sorted by context.
+#
+#	listdate | lsd
+#		Lists all items in your todo.txt file sorted by date.
+#
+#	listproj | lsp
+#		Lists all items in your todo.txt file sorted by project title.
+#
+#	help | h
+#		Shows this message and exits.
+#
+#	prepend | pre NUMBER "text to prepend"
+#		Add "text to prepend" to the beginning of the item.
+#
+#	pri | p NUMBER [ABC]
+#		Add priority specified (A, B, or C) to item NUMBER.
+#
+#	pull
+#		Pulls from the remote for your git repository.
+#
+#	push
+#		Pushs to the remote for your git repository.
+#
+#	status
+#		If using $(git --version) > 1.7, shows the status of your local
+#		git repository.
+#
+#	log
+#		Shows the last two commits in your local git repository."""], " "))
 	sys.exit(0)
 ### HELP
 
