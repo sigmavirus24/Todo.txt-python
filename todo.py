@@ -35,6 +35,12 @@ except ImportError:
 	pass
 
 try:
+	intern = intern
+except NameError:
+	# Python 3 moved the built-in intern() to sys.intern()
+	intern = sys.intern
+
+try:
 	import git
 except ImportError:
 	if sys.version_info < (3, 0):
