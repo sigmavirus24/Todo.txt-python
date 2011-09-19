@@ -1,16 +1,3 @@
 # Ironic that a project about managing a todo.txt file has a TODO text file
 
-Just watched video at todotxt.com and realized ls needs to take arguments, i.e.
-    todo.py ls @context +project #{yyyy-mm-dd} +project2
-and each one is matched against the lines so that if the items are
-    (A) Spam bar @blue +favorite_color
-    (B) Eggs & Spam +favorite_color
-    (A) Foo spam @green expires #{2011-09-20}
-    etc., etc.
-spam@foo:~/ todo.py ls @blue +favorite_color
-1 (A) Spam bar @blue +favorite_color
-spam@foo:~/ todo.py ls +favorite_color
-1 (A) Spam bar @blue +favorite_color
-2 (B) Eggs & Spam +favorite_color
-spam@foo:~/ todo.py ls #{2011-09-20}
-3 (A) Foo spam @ green expires #{2011-09-20}
+Resolve Issue #1
