@@ -12,7 +12,7 @@ while [[ $# -gt 0 ]] ; do
 			;;
 		"--install-dir" ) shift; INSTALL_DIR=$1
 			;;
-		"--alias-file" ) shift; BASH_ALIAS_FILE=$1
+		"--alias-file" ) shift; BASH_ALIAS_FILE=${1:1:${#1}-2} #[1]
 			;;
 		"--" ) break
 			;;
@@ -20,22 +20,30 @@ while [[ $# -gt 0 ]] ; do
 	esac
 done
 
-[[ -d $INSTALL_DIR ]] || mkdir -p $INSTALL_DIR
-echo "$INSTALL_DIR check passed."
+prog="[""$(basename $0)""] "
 
-[[ -s $BASH_ALIAS_FILE ]] || echo "# Bash RC File" >> $BASH_ALIAS_FILE
-echo "$BASH_ALIAS_FILE check passed."
+[[ -d $INSTALL_DIR ]] || mkdir -p $INSTALL_DIR
+echo $prog"$INSTALL_DIR check passed."
+
+[[ -s $BASH_ALIAS_FILE ]] || echo "# Bash RC File" #>> $BASH_ALIAS_FILE
+echo $prog"$BASH_ALIAS_FILE check passed."
 ## Believe it or not, >> is faster than >.
 
-echo "[install.sh] Copying todo.py to $INSTALL_DIR/todo.py"
-#cp ./todo.py $INSTALL_DIR
+echo $prog"Copying todo.py to $INSTALL_DIR/todo.py"
+cp ./todo.py $INSTALL_DIR
 
 ## Establish alias
-if grep -q "todo.sh" $BASH_ALIAS_FILE ; then
-	ALIAS="\n\nalias tpy='$INSTALL_DIR/todo.py'\n"
+pre="\n\nAlias for todo.py\n"
+if grep -q "todo.sh" "$BASH_ALIAS_FILE" ; then
+	ALIAS=$pre"alias tpy='$INSTALL_DIR/todo.py'\n"
 else
-	ALIAS="\n\nalias t='$INSTALL_DIR/todo.py'\n"
+	ALIAS=$pre"alias t='$INSTALL_DIR/todo.py'\n"
 fi
 
-echo $ALIAS
-#echo -e $ALIAS >> $BASH_ALIAS_FILE
+echo -e $ALIAS >> $BASH_ALIAS_FILE
+
+### Footnote(s)
+#[1] the argument is actually passed as "'/path/to/file'" so that instead of
+#	- checking /path/to/file or using that, it uses '/path/to/file' (with the
+#	- apostrophes). So to remove then you need to start at index 1 take a
+#	- substring up until length - 2
