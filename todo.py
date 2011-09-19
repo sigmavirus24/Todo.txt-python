@@ -610,46 +610,46 @@ def cmd_help():
 	print('\tappend | app NUMBER "text to append"')
 	print('\t\tAppend "text to append" to item NUMBER.')
 	print("")
-#	depri | dp NUMBER
-#		Remove the priority of the item on line NUMBER.
-#
-#	do NUMBER
-#		Marks item with corresponding number as done and moves it to your
-#		done.txt file.
-#
-#	list | ls
-#		Lists all items in your todo.txt file sorted by priority.
-#
-#	listcon | lsc
-#		LIsts all items in your todo.txt file sorted by context.
-#
-#	listdate | lsd
-#		Lists all items in your todo.txt file sorted by date.
-#
-#	listproj | lsp
-#		Lists all items in your todo.txt file sorted by project title.
-#
-#	help | h
-#		Shows this message and exits.
-#
-#	prepend | pre NUMBER "text to prepend"
-#		Add "text to prepend" to the beginning of the item.
-#
-#	pri | p NUMBER [ABC]
-#		Add priority specified (A, B, or C) to item NUMBER.
-#
-#	pull
-#		Pulls from the remote for your git repository.
-#
-#	push
-#		Pushs to the remote for your git repository.
-#
-#	status
-#		If using $(git --version) > 1.7, shows the status of your local
-#		git repository.
-#
-#	log
-#		Shows the last two commits in your local git repository."""], " "))
+	print("\tdepri | dp NUMBER")
+	print("\t\tRemove the priority of the item on line NUMBER.")
+	print("")
+	print("\tdo NUMBER")
+	print("\t\tMarks item with corresponding number as done and moves it to")
+	print("\t\tyour done.txt file.")
+	print("")
+	print("\tlist | ls")
+	print("\t\tLists all items in your todo.txt file sorted by priority.")
+	print("")
+	print("\tlistcon | lsc")
+	print("\t\tLists all items in your todo.txt file sorted by context.")
+	print("")
+	print("\tlistdate | lsd")
+	print("\t\tLists all items in your todo.txt file sorted by date.")
+	print("")
+	print("\tlistproj | lsp")
+	print("\t\tLists all items in your todo.txt file sorted by project title.")
+	print("")
+	print("\thelp | h")
+	print("\t\tShows this message and exits.")
+	print("")
+	print('\tprepend | pre NUMBER "text to prepend"')
+	print('\t\tAdd "text to prepend" to the beginning of the item.')
+	print("")
+	print("\tpri | p NUMBER [ABC]")
+	print("\t\tAdd priority specified (A, B, or C) to item NUMBER.")
+	print("")
+	print("\tpull")
+	print("\t\tPulls from the remote for your git repository.")
+	print("")
+	print("\tpush")
+	print("\t\tPushs to the remote for your git repository.")
+	print("")
+	print("\tstatus")
+	print("\t\tIf using $(git --version) > 1.7, shows the status of your")
+	print("\t\tlocal git repository.")
+	print("")
+	print("\tlog")
+	print("\t\tShows the last two commits in your local git repository.")
 	sys.exit(0)
 ### HELP
 
