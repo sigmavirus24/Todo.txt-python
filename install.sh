@@ -2,13 +2,23 @@
 INSTALL_DIR=$HOME/bin
 BASH_ALIAS_FILE=$HOME/.bashrc
 
+Usage(){
+	echo "Usage: $(basename $0) [options]"
+	echo
+	echo "Options:"
+	echo -e " -h, --help\tdisplays this message and exits"
+	echo -e " --install-dir=/path/to/dir [Default: $INSTALL_DIR]
+		Uses path provided as home directory for todo.py"
+	echo -e " --alias-file=/path/to/file [Default: $BASH_ALIAS_FILE]
+		Uses file to store alias for \$INSTALL_DIR/todo.py"
+	exit
+}
+
 set -- $(getopt -l "help,install-dir::,alias-file::" "h" "$@")
 
 while [[ $# -gt 0 ]] ; do 
 	case "$1" in
-		"-h" | "--help" ) echo -e \
-			"Usage: $(basename $0) -h[--help] [--install-dir] [--alias-file]\n"
-			exit
+		"-h" | "--help" ) Usage
 			;;
 		"--install-dir" ) shift; INSTALL_DIR=$1
 			;;
@@ -35,12 +45,12 @@ cp ./todo.py $INSTALL_DIR
 ## Establish alias
 pre="\n\nAlias for todo.py\n"
 if grep -q "todo.sh" "$BASH_ALIAS_FILE" ; then
-	ALIAS=$pre"alias tpy='$INSTALL_DIR/todo.py'\n"
+	alias=$pre"alias tpy='$INSTALL_DIR/todo.py'\n"
 else
-	ALIAS=$pre"alias t='$INSTALL_DIR/todo.py'\n"
+	alias=$pre"alias t='$INSTALL_DIR/todo.py'\n"
 fi
 
-echo -e $ALIAS >> $BASH_ALIAS_FILE
+echo -e $alias >> $BASH_ALIAS_FILE
 
 ### Footnote(s)
 #[1] the argument is actually passed as "'/path/to/file'" so that instead of
