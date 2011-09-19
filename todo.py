@@ -587,7 +587,6 @@ def prepend_todo(args):
 		post_success(line_no, old_line, new_line)
 	else:
 		post_error('prepend', 'NUMBER', 'string')
-
 ### End Post-production todo functions
 
 
@@ -773,7 +772,8 @@ def _list_by_(*args):
 	print lines matching items in args
 	"""
 	relist = [re.compile(concat(["\s?", arg, "\s?"])) for arg in args]
-	lines = get_todos()
+	alines = get_todos()  # all lines
+	lines = alines[:]
 	matched_lines = []
 
 	for regexp in relist:
@@ -783,10 +783,11 @@ def _list_by_(*args):
 		lines = matched_lines[:]
 	
 	d = format_lines(lines)
-	lines = []
+	flines = []
 	for p in ["A", "B", "C", "X"]:
-		lines.extend(d[p])
-	print(concat(lines)[:-1])
+		flines.extend(d[p])
+	print(concat(flines)[:-1])
+	print_x_of_y(flines, alines)
 
 
 def list_todo(args=None, plain=False, no_priority=False):
