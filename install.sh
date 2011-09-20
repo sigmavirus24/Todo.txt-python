@@ -43,7 +43,7 @@ echo $prog"Copying todo.py to $INSTALL_DIR/todo.py"
 cp ./todo.py $INSTALL_DIR
 
 ## Establish alias
-pre="\n\nAlias for todo.py\n"
+pre="\n\n#Alias for todo.py\n"
 if grep -q "todo.sh" "$BASH_ALIAS_FILE" ; then
 	alias=$pre"alias tpy='$INSTALL_DIR/todo.py'\n"
 else
