@@ -450,7 +450,7 @@ def do_todo(line):
 		rewrite_file(fd, lines)
 		fd.close()
 		today = datetime.now().strftime("%Y-%m-%d")
-		removed = re.sub("\(?[ABCX]\)?\s?", "", removed)
+		removed = re.sub("\([ABCX]\)\s?", "", removed)
 		removed = "x " + today + " " + removed
 		fd = open(CONFIG["DONE_FILE"], "a")
 		fd.write(removed)
