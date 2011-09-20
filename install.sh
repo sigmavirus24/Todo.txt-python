@@ -11,23 +11,31 @@ Usage(){
 		Uses path provided as home directory for todo.py"
 	echo -e " --alias-file=/path/to/file [Default: $ALIAS_FILE]
 		Uses file to store alias for \$INSTALL_DIR/todo.py"
-	exit
 }
 
-set $(getopt -l "help,install-dir:,alias-file:" "h" "$@")
+die(){
+    Usage
+    exit
+}
 
-[[ $? -ne 0 ]] || echo ; Usage ; exit  # If you fail to give me parameters
+set -- $(getopt -l "help,install-dir:,alias-file:" "h" "$@")
+
+[[ $? -gt 0 ]] && die  # If you fail to give me parameters
                         # I'll fail to install it for you. Simple as that.
 
 while [[ $# -gt 0 ]] ; do 
 	case "$1" in
-		"-h" | "--help" ) Usage
+		"-h" | "--help" ) die
 			;;
-		"--install-dir" ) shift; [[ ! -z "$1" ]] && INSTALL_DIR=$1 || exit
+		"--install-dir" ) shift 
+            [[ ! -z "$1" ]] && INSTALL_DIR=${1:1:${#1}-2} || die
 			;;
-		"--alias-file" ) shift; [[ ! -z "$1" ]] && ALIAS_FILE=${1:1:${#1}-2} || exit
+		"--alias-file" ) shift
+            [[ ! -z "$1" ]] && ALIAS_FILE=${1:1:${#1}-2} || die
             #[1]
 			;;
+        "--" ) break
+            ;;
 		* ) shift
 	esac
 done
