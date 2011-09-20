@@ -33,10 +33,10 @@ done
 prog="[""$(basename $0)""] "
 
 [[ -d $INSTALL_DIR ]] || mkdir -p $INSTALL_DIR
-echo $prog"$INSTALL_DIR check passed."
+echo $prog"$INSTALL_DIR exists."
 
-[[ -s $BASH_ALIAS_FILE ]] || echo "# Bash RC File" #>> $BASH_ALIAS_FILE
-echo $prog"$BASH_ALIAS_FILE check passed."
+[[ -s $BASH_ALIAS_FILE ]] || echo "# Bash RC File" >> $BASH_ALIAS_FILE
+echo $prog"$BASH_ALIAS_FILE exists."
 ## Believe it or not, >> is faster than >.
 
 echo $prog"Copying todo.py to $INSTALL_DIR/todo.py"
@@ -45,12 +45,18 @@ cp ./todo.py $INSTALL_DIR
 ## Establish alias
 pre="\n\n#Alias for todo.py\n"
 if grep -q "todo.sh" "$BASH_ALIAS_FILE" ; then
-	alias=$pre"alias tpy='$INSTALL_DIR/todo.py'\n"
+	alias="tpy"
 else
-	alias=$pre"alias t='$INSTALL_DIR/todo.py'\n"
+	alias="t"
 fi
 
-echo -e $alias >> $BASH_ALIAS_FILE
+alias_rc=$pre"alias "$alias"='$INSTALL_DIR/todo.py'\n"
+
+echo -e $alias_rc >> $BASH_ALIAS_FILE
+echo $prog"Alias '$alias' added to $BASH_ALIAS_FILE."
+echo $prog"To use alias, please run \`source $BASH_ALIAS_FILE\`."
+echo $prog"You can also add '$INSTALL_DIR' to your PATH variable."
+echo $prog"Installation complete."
 
 ### Footnote(s)
 #[1] the argument is actually passed as "'/path/to/file'" so that instead of
