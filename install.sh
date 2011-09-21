@@ -1,6 +1,8 @@
 #!/bin/bash
 INSTALL_DIR=$HOME/bin
 ALIAS_FILE=$HOME/.bashrc
+prog="[""$(basename $0)""] "
+
 
 Usage(){
 	echo "Usage: $(basename $0) [options]"
@@ -11,6 +13,17 @@ Usage(){
 		Uses path provided as home directory for todo.py"
 	echo -e " --alias-file=/path/to/file [Default: $ALIAS_FILE]
 		Uses file to store alias for \$INSTALL_DIR/todo.py"
+}
+
+Update(){
+	if ! [[ -z "$(diff $INSTALL_DIR/todo.py todo.py)" ]] && \
+		[[ todo.py -nt $INSTALL_DIR/todo.py ]]; then
+		cp -u todo.py $INSTALL_DIR/todo.py
+		echo $prog"An old version of todo.py was found and updated."
+	else
+		echo $prog"todo.py is already installed. Exiting..."
+	fi
+	exit
 }
 
 die(){
@@ -40,10 +53,10 @@ while [[ $# -gt 0 ]] ; do
 	esac
 done
 
-prog="[""$(basename $0)""] "
-
 [[ -d $INSTALL_DIR ]] || mkdir -p $INSTALL_DIR
 echo $prog"$INSTALL_DIR exists."
+
+[[ -s $INSTALL_DIR/todo.py ]] && Update
 
 [[ -s $ALIAS_FILE ]] || echo "# Bash RC File" >> $ALIAS_FILE
 echo $prog"$ALIAS_FILE exists."
