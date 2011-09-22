@@ -457,7 +457,7 @@ def do_todo(line):
 		fd.close()
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(line))
-		_git_commit([CONFIG["DONE_FILE"]], removed)
+		_git_commit([CONFIG["TODO_FILE"], CONFIG["DONE_FILE"]], removed)
 
 
 def delete_todo(line):
