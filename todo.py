@@ -798,7 +798,7 @@ def list_todo(args=None, plain=False, no_priority=False):
 	if not args:
 		lines, sorted = _list_("pri", "")
 		print(concat(sorted)[:-1])
-		print_x_of_y(lines, lines)
+		print_x_of_y(sorted, sorted)
 	else:
 		_list_by_(*args)
 
