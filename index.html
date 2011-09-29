@@ -76,7 +76,43 @@ Press enter when you have initialized a bare repository on the remote or are rea
 Default configuration completed. Please re-run /home/sigma/bin/todo.py with '-h' and 'help' separately.
 
 sigma@virus24:~/ t ls
+
+--
+TODO: 0 of 0 tasks shown
+sigma@virus24:~/ t add "(A) Work on bot.py +github +irc @sigmavirus24"
+TODO: '(A) Work on bot.py +github +irc @sigmavirus24' added on line 1.
+TODO: /home/sigma/.todo/todo.txt archived.
+sigma@virus24:~/ t add "(B) Work on school work for once +boring"
+TODO: '(B) Work on school work for once +boring' added on line 2.
+TODO: /home/sigma/.todo/todo.txt archived.
+sigma@virus24:~/ t ls +github
+1 (A) Work on bot.py +github +irc @sigmavirus24
+--
+TODO: 1 of 2 tasks shown
+sigma@virus24:~/ t ls
+1 (A) Work on bot.py +github +irc @sigmavirus24
+2 (B) Work on school work for once +boring
+--
+TODO: 2 of 2 tasks shown
+sigma@virus24:~/ t lsc
+sigmavirus24:
+		1 (A) Work on bot.py +github +irc @sigmavirus24
+2 (B) Work on school work for once +boring
+--
+TODO: 2 of 2 tasks shown
+sigma@virus24:~/ t lsp
+boring:
+        2 (B) Work on school work for once +boring
+github:
+        1 (A) Work on bot.py +github +irc @sigmavirus24
+irc:
+        1 (A) Work on bot.py +github +irc @sigmavirus24
+--
+TODO: 2 of 2 tasks shown
 </pre>
+And more commands can be seen by using 
+<pre> $ t help </pre>
+
 <h2>License</h2>
 <p>GPL v3 (Included in the source)</p>
 <h2>Authors</h2>
