@@ -299,10 +299,10 @@ def repo_config():
 		user_email = concat([user.name, "@", getenv("HOSTNAME")])
 
 	print("First configure your local repository options.")
-	ret = prompt("git config user.name", user_name, "?")
+	ret = prompt("git config user.name ", user_name, "?")
 	if ret:
 		user_name = ret
-	ret = prompt("git config user.email", user_email, "?")
+	ret = prompt("git config user.email ", user_email, "?")
 	if ret:
 		user_email = ret
 
@@ -333,7 +333,7 @@ def repo_config():
 			remote_branch = prompt("Remote branch:")
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
-		prompt("Press enter when you have initialized a bare",
+		prompt("Press enter when you have initialized a bare\n",
 			" repository on the remote or are ready to proceed.")
 		local_branch = g.branch()
 		if not local_branch:
@@ -367,11 +367,11 @@ def default_config():
 	try:
 		repo.status()
 	except git.exc.GitCommandError, g:
-		val = prompt("Would you like to create a new git repository in ",
+		val = prompt("Would you like to create a new git repository in\n ",
 				CONFIG["TODO_DIR"], "? [y/N]")
 		if re.match('y(es)?', val, re.I):
 			print(repo.init())
-			val = prompt("Would you like {prog} to help you",
+			val = prompt("Would you like {prog} to help\n you",
 			" configure your new git repository? [y/n]",
 			prog=CONFIG["TODO_PY"])
 			if re.match('y(es)?', val, re.I):
@@ -401,7 +401,7 @@ def default_config():
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 	print(concat(["Default configuration completed. Please ",
-		"re-run {prog} with '-h' and 'help' separately.".format(
+		"re-run\n {prog} with '-h' and 'help' separately.".format(
 			prog=CONFIG["TODO_PY"])]))
 	sys.exit(0)
 ### End Config Functions
