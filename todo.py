@@ -209,6 +209,7 @@ def prompt(*args, **kwargs):
 	args can be any collection of strings that require formatting.
 	kwargs will collect the tokens and values.
 	"""
+	args = [a for a in args]
 	args.append(' ')
 	prompt_str = concat(args)
 	prompt_str = prompt_str.format(**kwargs)
