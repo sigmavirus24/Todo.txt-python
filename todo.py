@@ -390,11 +390,12 @@ def default_config():
 	CONFIG["PRI_X"] = "white"
 
 	for k, v in CONFIG.items():
-		if k != "GIT":
+		if k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
+				"HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI"):
 			if v in TO_CONFIG.keys():
 				cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
 			else:
-				cfg.write(concat(["export ", k, '="', v, '"\n']))
+				cfg.write(concat(["export ", k, '="', str(v), '"\n']))
 
 	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
