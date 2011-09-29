@@ -334,7 +334,7 @@ def repo_config():
 			if not remote_branch:
 				print("Please enter the branch to push to on the remote machine.")
 		prompt("Press enter when you have initialized a bare",
-			"repository on the remote or are ready to proceed.")
+			" repository on the remote or are ready to proceed.")
 		local_branch = g.branch()
 		if not local_branch:
 			local_branch = "master"
@@ -367,12 +367,12 @@ def default_config():
 	try:
 		repo.status()
 	except git.exc.GitCommandError, g:
-		val = prompt("Would you like to create a new git repository in",
+		val = prompt("Would you like to create a new git repository in ",
 				CONFIG["TODO_DIR"], "? [y/N]")
 		if re.match('y(es)?', val, re.I):
 			print(repo.init())
 			val = prompt("Would you like {prog} to help you",
-			"configure your new git repository? [y/n]",
+			" configure your new git repository? [y/n]",
 			prog=CONFIG["TODO_PY"])
 			if re.match('y(es)?', val, re.I):
 				repo_config()
