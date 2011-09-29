@@ -773,7 +773,10 @@ def _list_by_(*args):
 	"""
 	print lines matching items in args
 	"""
-	relist = [re.compile(concat(["\s?", arg, "\s?"])) for arg in args]
+	e = re.escape  # keep line length down
+	relist = [re.compile(concat(["\s?", e(arg), "\s?"])) for arg in args]
+	del(e)  # don't need it anymore
+
 	alines = get_todos()  # all lines
 	lines = alines[:]
 	matched_lines = []
