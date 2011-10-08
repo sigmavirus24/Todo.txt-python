@@ -21,9 +21,9 @@ TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 """
 
 import pstats
-from os import system
+from subprocess import call
 
-system('python -m cProfile -o todo_py_profile todo.py')
+call(['python', '-m', 'cProfile', '-o', 'todo_py_profile', 'todo.py'])
 
 p = pstats.Stats('todo_py_profile')
 p.strip_dirs().sort_stats('cumulative').print_stats(25)
