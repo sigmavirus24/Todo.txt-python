@@ -1,23 +1,22 @@
 #!/usr/bin/env python
-"""
-TODO.TXT-CLI-python
-Copyright (C) 2011  Sigmavirus24
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-TLDR: This is licensed under the GPLv3. See LICENSE for more details.
-"""
+# TODO.TXT-CLI-python
+# Copyright (C) 2011  Sigmavirus24
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
+# TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 import os
 import re
@@ -112,6 +111,15 @@ def get_todos():
 		return fd.readlines()
 
 
+def iter_todos():
+	"""
+	Opens the file in read-only mode, and returns an iterator for the todos.
+	"""
+	with open(CONFIG["TODO_FILE"]) as fd:
+		for line in fd:
+			yield line
+
+
 def rewrite_file(fd, lines):
 	"""
 	Simple wrapper for three lines used all too frequently.
@@ -175,8 +183,9 @@ def _git_log():
 	"""
 	lines = CONFIG["GIT"].log("-2")
 	flines = []
+	commit_re = re.compile("commit")
 	for line in lines.split("\n"):
-		if re.match("commit", line):
+		if commit_re.match(line):
 			flines.append(concat([TERM_COLORS["yellow"],
 				line[:-1], TERM_COLORS["default"], "\n"]))
 		else:
@@ -250,25 +259,30 @@ def get_config(config_name="", dir_name=""):
 		default_config()
 	else:
 		f = open(config_file, 'r')
+		comment_re = re.compile('#')
+		bash_var_re = re.compile('$')
+		bash_val_re = re.compile('=')
+		pri_re = re.compile('PRI_[ABC]')
+		home_re = re.compile('home', re.I)
 		for line in f.readlines():
-			if not (re.match('#', line) or re.match('$', line)):
+			if not (comment_re.match(line) or bash_var_re.match(line)):
 				line = line.strip()
 				i = line.find(' ') + 1
 				if i > 0:
 					line = line[i:]
-				items = re.split('=', line)
+				items = bash_val_re.split(line)
 				items[1] = items[1].strip('"')
 				i = items[1].find(' ')
 				if i > 0:
 					items[1] = items[1][:i]
-				if re.match("PRI_[ABCX]", items[0]):
+				if pri_re.match(items[0]):
 					CONFIG[items[0]] = FROM_CONFIG[items[1]]
 				elif '/' in items[1] and '$' in items[1]:
 					# elision for path names
 					i = items[1].find('/')
 					if items[1][1:i] in CONFIG.keys():
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
-					elif re.match("home", items[1][1:i], re.I):
+					elif home_re.match(items[1][1:i]):
 						items[1] = _pathc(['~', items[1][i:]])
 				elif items[0] == "TODO_DIR":
 					CONFIG["GIT"] = git.Git(items[1])
@@ -311,7 +325,8 @@ def repo_config():
 
 	# remote configuration
 	ret = prompt("Would you like to add a remote repository?")
-	if re.match("y(es)?", ret, flags=re.I):
+	yes_re = re.compile("y(?:es)?", re.I)
+	if yes_re.match(ret):
 		remote_host = None
 		remote_path = None
 		remote_user = None
@@ -339,9 +354,10 @@ def repo_config():
 		if not local_branch:
 			local_branch = "master"
 		else:
+			branch_re = re.compile('^\*\s.*')
 			for l in local_branch.split("\n"):
-				if re.match("^\*\s.*", l):
-					local_branch = re.sub("^\*\s", "", l)
+				if branch_re.match(l):
+					local_branch = branch_re.sub("", l)
 					break
 
 		g.remote("add", "origin", concat([remote_user, "@", remote_host,
@@ -369,12 +385,13 @@ def default_config():
 	except git.exc.GitCommandError, g:
 		val = prompt("Would you like to create a new git repository in\n ",
 				CONFIG["TODO_DIR"], "? [y/N]")
-		if re.match('y(es)?', val, re.I):
+		yes_re = re.compile('y(?:es)?', re.I)
+		if yes_re.match(val):
 			print(repo.init())
 			val = prompt("Would you like {prog} to help\n you",
 			" configure your new git repository? [y/n]",
 			prog=CONFIG["TODO_PY"])
-			if re.match('y(es)?', val, re.I):
+			if yes_re.match(val):
 				repo_config()
 
 	# touch/create files needed for the operation of the script
@@ -416,8 +433,9 @@ def add_todo(line):
 	_git = CONFIG["GIT"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
-	if re.match("(\([ABC]\))", line) and prepend:
-		line = re.sub("(\([ABC]\))", concat(["\g<1>",
+	pri_re = re.compile('(\([ABC]\))')
+	if pri_re.match(line) and prepend:
+		line = pri_re.sub(concat(["\g<1>",
 			datetime.now().strftime(" %Y-%m-%d ")]),
 			line)
 	elif prepend:
@@ -579,9 +597,10 @@ def prepend_todo(args):
 		fd = open(CONFIG["TODO_FILE"], "r+")
 		lines = fd.readlines()
 		old_line = lines[line_no][:-1]
-		if re.match("\([ABC]\)", lines[line_no]):
-			lines[line_no] = re.sub("^(\([ABC]\)\s)",
-					concat(["\g<1>", prepend_str]), lines[line_no])
+		pri_re = re.compile('^(\([ABC]\)\s)')
+		if pri_re.match(lines[line_no]):
+			lines[line_no] = pri_re.sub(concat(
+				["\g<1>", prepend_str]), lines[line_no])
 		else:
 			lines[line_no] = concat([prepend_str, lines[line_no]])
 		new_line = lines[line_no][:-1]
@@ -656,7 +675,7 @@ def cmd_help():
 
 
 ### List Printing Functions
-def format_lines(lines, color_only=False):
+def format_lines(color_only=False):
 	"""
 	Take in a list of lines to do, return them formatted with the TERM_COLORS
 	and organized based upon priority.
@@ -670,8 +689,9 @@ def format_lines(lines, color_only=False):
 
 	formatted = [] if color_only else {"A" : [], "B" : [], "C" : [], "X" : []}
 
-	for line in lines:
-		r = re.match("\(([ABC])\)", line)
+	pri_re = re.compile('^\(([ABC])\)\s')
+	for line in iter_todos():
+		r = pri_re.match(line)
 		if r:
 			category = r.groups()[0]
 			if plain:
@@ -679,7 +699,7 @@ def format_lines(lines, color_only=False):
 			else:
 				color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
 			if no_priority:
-				line = re.sub("^\([ABC]\)\s", "", line)
+				line = pri_re.sub("", line)
 		else:
 			category = "X"
 			color = default
@@ -703,7 +723,8 @@ def _legacy_sort(items):
 	# (pri_c) Bcd
 	etc., etc., etc.
 	"""
-	keys = [re.sub("^.*\d+\s(\([ABC]\)\s)?", "", i) for i in items]
+	line_re = re.compile('^.*\d+\s(\([ABC]\)\s)?')
+	keys = [line_re.sub("", i) for i in items]
 	# The .* in the regexp is needed for the \033[* codes
 	items_dict = dict(zip(keys, items))
 	keys.sort()
@@ -722,9 +743,10 @@ def _list_(by, regexp):
 	sorted = []
 
 	if by in ["date", "project", "context"]:
-		lines = format_lines(lines, color_only=True)
+		lines = format_lines(color_only=True)
+		regexp = re.compile(regexp)
 		for line in lines:
-			r = re.findall(regexp, line)
+			r = regexp.findall(line)
 			if r:
 				line = concat(["\t", line])
 				if by == "date":
@@ -746,19 +768,23 @@ def _list_(by, regexp):
 				todo[nonetype].append(line)
 
 	elif by == "pri":
-		lines = format_lines(lines)
+		lines = format_lines()
 		todo.update(lines)
 		by_list = ["A", "B", "C", "X"]
 
 	by_list.sort()
 
+	hide_proj_re = re.compile('(\+\w+\s?)')
+	hide_cont_re = re.compile('(@\w+\s?)')
+	hide_date_re = re.compile('(#\{\d+-\d+-\d+\}\s?)')
+
 	for b in by_list:
 		if CONFIG["HIDE_PROJ"]:
-			todo[b] = [re.sub("(\+\w+\s?)", "", l) for l in todo[b]]
+			todo[b] = [hide_proj_re.sub("", l) for l in todo[b]]
 		if CONFIG["HIDE_CONT"]:
-			todo[b] = [re.sub("(@\w+\s?)", "", l) for l in todo[b]]
+			todo[b] = [hide_cont_re.sub("", l) for l in todo[b]]
 		if CONFIG["HIDE_DATE"]:
-			todo[b] = [re.sub("(#\{\d+-\d+-\d+\}\s?)", "", l) for l in todo[b]]
+			todo[b] = [hide_date_re.sub("", l) for l in todo[b]]
 		if CONFIG["LEGACY"]:
 			todo[b] = _legacy_sort(todo[b])
 		if by != "pri":
@@ -773,9 +799,9 @@ def _list_by_(*args):
 	"""
 	print lines matching items in args
 	"""
-	e = re.escape  # keep line length down
-	relist = [re.compile(concat(["\s?", e(arg), "\s?"])) for arg in args]
-	del(e)  # don't need it anymore
+	esc = re.escape  # keep line length down
+	relist = [re.compile(concat(["\s?", esc(arg), "\s?"])) for arg in args]
+	del(esc)  # don't need it anymore
 
 	alines = get_todos()  # all lines
 	lines = alines[:]
@@ -787,7 +813,7 @@ def _list_by_(*args):
 				matched_lines.append(line)
 		lines = matched_lines[:]
 	
-	d = format_lines(lines)
+	d = format_lines()
 	flines = []
 	for p in ["A", "B", "C", "X"]:
 		flines.extend(d[p])
@@ -967,6 +993,11 @@ if __name__ == "__main__" :
 
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
+
+	append_re = re.compile('append(?:end)?')
+	pri_re = re.compile('p(?:ri)?')
+	prepend_re = re.compile('pre(?:end)?')
+
 	while args:
 		# ensure this doesn't error because of a faulty CAPS LOCK key
 		arg = args.pop(0).lower()
@@ -974,10 +1005,10 @@ if __name__ == "__main__" :
 			if not commands[arg][0]:
 				commands[arg][1]()
 			else:
-				if re.match("app(end)?", arg) or arg in ["ls", "list"]:
+				if append_re.match(arg) or arg in ["ls", "list"]:
 					commands[arg][1](args)
 					args = None
-				elif re.match("p(ri)?", arg) or re.match("pre(pend)?", arg):
+				elif pri_re.match(arg) or prepend_re.match(arg):
 					commands[arg][1](args[:2])
 					args = args[2:]
 				else:
