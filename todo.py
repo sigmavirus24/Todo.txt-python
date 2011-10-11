@@ -102,15 +102,6 @@ CONFIG = {
 
 
 ### Helper Functions
-def get_todos():
-	"""
-	Opens the file in read-only mode, reads all the lines and then closes
-	the file before returning the lines.
-	"""
-	with open(CONFIG["TODO_FILE"]) as fd:
-		return fd.readlines()
-
-
 def iter_todos():
 	"""
 	Opens the file in read-only mode, and returns an iterator for the todos.
