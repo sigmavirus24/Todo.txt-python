@@ -111,6 +111,23 @@ def iter_todos():
 			yield line
 
 
+def separate_line(number):
+	"""
+	Takes an integer and returns a string and a list. The string is the item at
+	that position in the list. The list is the rest of the todos.
+	"""
+	i = 1
+	lines = []
+	for line in iter_todos():
+		if i != number:
+			lines.append(line)
+		else:
+			separate = line
+		i += 1
+	
+	return separate, lines
+
+
 def rewrite_file(fd, lines):
 	"""
 	Simple wrapper for three lines used all too frequently.
@@ -120,6 +137,15 @@ def rewrite_file(fd, lines):
 	fd.seek(0, 0)
 	fd.truncate(0)
 	fd.writelines(lines)
+
+
+def rewrite_and_post(line_no, old_line, new_line, lines):
+	"""
+	Wraps the following code used frequently in post-production functions.
+	"""
+	with open(CONFIG["TODO_FILE"], "w") as fd:
+		rewrite_file(fd, lines)
+	post_success(line_no, old_line, new_line)
 
 
 def _git_err(g):
@@ -446,8 +472,10 @@ def addm_todo(lines):
 	lines = lines.split("\n")
 	for line in lines:
 		add_todo(line)
+### End new todo functions
 
 
+### Start do/del functions
 def do_todo(line):
 	"""
 	Mark an item on a specified line as done.
@@ -455,17 +483,20 @@ def do_todo(line):
 	if not line.isdigit():
 		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
 	else:
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		removed = lines.pop(int(line) - 1)
+		removed, lines = separate_line(int(line))
+
+		fd = open(CONFIG["TODO_FILE"], "w")
 		rewrite_file(fd, lines)
 		fd.close()
+
 		today = datetime.now().strftime("%Y-%m-%d")
 		removed = re.sub("\([ABCX]\)\s?", "", removed)
 		removed = "x " + today + " " + removed
+
 		fd = open(CONFIG["DONE_FILE"], "a")
 		fd.write(removed)
 		fd.close()
+
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(line))
 		_git_commit([CONFIG["TODO_FILE"], CONFIG["DONE_FILE"]], removed)
@@ -478,16 +509,17 @@ def delete_todo(line):
 	if not line.isdigit():
 		print("Usage: {0} (del|rm) item#".format(CONFIG["TODO_PY"]))
 	else:
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		removed = lines.pop(int(line) - 1)
+		removed, lines = separate_line(int(line))
+
+		fd = open(CONFIG["TODO_FILE"], "w")
 		rewrite_file(fd, lines)
 		fd.close()
+
 		removed = "'{0}' deleted.".format(removed[:-1])
 		print(removed)
 		print("TODO: Item {0} deleted.".format(line))
 		_git_commit([CONFIG["TODO_FILE"]], removed)
-### End new todo Functions
+### End do/del Functions
 
 
 ### Post-production todo functions
@@ -509,8 +541,10 @@ def post_success(item_no, old_line, new_line):
 	"""
 	After changing a line, pring a standard line and commit the change.
 	"""
+	old_line = old_line.rstrip()
+	new_line = new_line.rstrip()
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
-		item_no + 1, old_line, new_line)
+		item_no, old_line, new_line)
 	print(print_str)
 	_git_commit([CONFIG["TODO_FILE"]], print_str)
 
@@ -520,16 +554,11 @@ def append_todo(args):
 	Append text to the item specified.
 	"""
 	if args[0].isdigit():
-		line_no = int(args.pop(0)) - 1
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		old_line = lines[line_no][:-1]
-		lines[line_no] = concat([concat([old_line, concat(args, " ")], " "),
-			"\n"],)
-		new_line = lines[line_no].rstrip()
-		rewrite_file(fd, lines)
-		fd.close()
-		post_success(line_no, old_line, new_line)
+		line_no = int(args.pop(0))
+		old_line, lines = separate_line(line_no)
+		new_line = concat([concat([old_line, concat(args, " ")],  " "), "\n"],)
+
+		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
 		post_error('append', 'NUMBER', 'string')
 
@@ -539,21 +568,18 @@ def prioritize_todo(args):
 	Add or modify the priority of the specified item.
 	"""
 	if args[0].isdigit():
-		line_no = int(args.pop(0)) - 1
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		old_line = lines[line_no][:-1]
+		line_no = int(args.pop(0))
+		old_line, lines = separate_line(line_no)
 		new_pri = concat(["(", args[0], ") "])
 		r = re.match("(\([ABC]\)\s).*", old_line)
 		if r:
-			lines[line_no] = re.sub(re.escape(r.groups()[0]), new_pri,
-					lines[line_no])
+			new_line = re.sub(re.escape(r.groups()[0]), new_pri, old_line)
 		else:
-			lines[line_no] = concat([new_pri, lines[line_no]])
-		new_line = lines[line_no][:-1]
-		rewrite_file(fd, lines)
-		fd.close()
-		post_success(line_no, old_line, new_line)
+			new_line = concat([new_pri, old_line])
+
+		lines.insert(line_no - 1, new_line)
+
+		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
 		post_error('pri', 'NUMBER', 'capital letter')
 
@@ -564,15 +590,12 @@ def de_prioritize_todo(number):
 	Don't complain otherwise.
 	"""
 	if number.isdigit():
-		number = int(number) - 1
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		old_line = lines[number][:-1]
-		lines[number] = re.sub("(\([ABC]\)\s)", "", lines[number])
-		new_line = lines[number][:-1]
-		rewrite_file(fd, lines)
-		fd.close()
-		post_success(number, old_line, new_line)
+		number = int(number)
+		old_line, lines = separate_line(number)
+		new_line = re.sub("(\([ABC]\)\s)", "", old_line)
+		lines.insert(number - 1, new_line)
+
+		rewrite_and_post(number, old_line, new_line, lines)
 	else:
 		post_err('depri', 'NUMBER', None)
 
@@ -583,20 +606,19 @@ def prepend_todo(args):
 	specified by the line number.
 	"""
 	if args[0].isdigit():
-		line_no = int(args.pop(0)) - 1
+		line_no = int(args.pop(0))
 		prepend_str = concat(args, " ") + " "
-		fd = open(CONFIG["TODO_FILE"], "r+")
-		lines = fd.readlines()
-		old_line = lines[line_no][:-1]
+		old_line, lines = separate_line(line_no)
 		pri_re = re.compile('^(\([ABC]\)\s)')
-		if pri_re.match(lines[line_no]):
-			lines[line_no] = pri_re.sub(concat(
-				["\g<1>", prepend_str]), lines[line_no])
+
+		if pri_re.match(old_line):
+			new_line = pri_re.sub(concat( ["\g<1>", prepend_str]), old_line)
 		else:
-			lines[line_no] = concat([prepend_str, lines[line_no]])
-		new_line = lines[line_no][:-1]
-		rewrite_file(fd, lines)
-		post_success(line_no, old_line, new_line)
+			new_line = concat([prepend_str, old_line])
+
+		lines.insert(line_no - 1, new_line)
+		
+		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
 		post_error('prepend', 'NUMBER', 'string')
 ### End Post-production todo functions
@@ -984,7 +1006,7 @@ if __name__ == "__main__" :
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
-	append_re = re.compile('append(?:end)?')
+	append_re = re.compile('app(?:end)?')
 	pri_re = re.compile('p(?:ri)?')
 	prepend_re = re.compile('pre(?:end)?')
 
