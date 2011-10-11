@@ -724,8 +724,8 @@ def _legacy_sort(items):
 	etc., etc., etc.
 	"""
 	line_re = re.compile('^.*\d+\s(\([ABC]\)\s)?')
-	keys = [line_re.sub("", i) for i in items]
 	# The .* in the regexp is needed for the \033[* codes
+	keys = [line_re.sub("", i) for i in items]
 	items_dict = dict(zip(keys, items))
 	keys.sort()
 	items = [items_dict[k] for k in keys]
@@ -736,7 +736,6 @@ def _list_(by, regexp):
 	"""
 	Master list_*() function.
 	"""
-	lines = get_todos()
 	nonetype = concat(["no", by])
 	todo = {nonetype : []}
 	by_list = []
@@ -800,11 +799,15 @@ def _list_by_(*args):
 	print lines matching items in args
 	"""
 	esc = re.escape  # keep line length down
-	relist = [re.compile(concat(["\s?", esc(arg), "\s?"])) for arg in args]
+	relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"])) for arg in args]
 	del(esc)  # don't need it anymore
 
-	alines = get_todos()  # all lines
-	lines = alines[:]
+	alines = format_lines() # Retrieves all lines.
+	lines = []
+	for p in ["A", "B", "C", "X"]:
+		lines.extend(alines[p])
+
+	alines = lines[:]
 	matched_lines = []
 
 	for regexp in relist:
@@ -813,12 +816,8 @@ def _list_by_(*args):
 				matched_lines.append(line)
 		lines = matched_lines[:]
 	
-	d = format_lines()
-	flines = []
-	for p in ["A", "B", "C", "X"]:
-		flines.extend(d[p])
-	print(concat(flines)[:-1])
-	print_x_of_y(flines, alines)
+	print(concat(lines)[:-1])
+	print_x_of_y(lines, alines)
 
 
 def list_todo(args=None, plain=False, no_priority=False):
