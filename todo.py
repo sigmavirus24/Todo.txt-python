@@ -102,6 +102,17 @@ CONFIG = {
 
 
 ### Helper Functions
+def todo_padding():
+	i = 0
+	with open(CONFIG["TODO_FILE"]) as fd:
+		for i, l in enumerate(fd):
+			pass
+	p = 1
+	while i > 10:
+		p = p + 1
+		i = i / 10
+	return p
+
 def iter_todos():
 	"""
 	Opens the file in read-only mode, and returns an iterator for the todos.
@@ -703,6 +714,7 @@ def format_lines(color_only=False):
 	formatted = [] if color_only else {"A" : [], "B" : [], "C" : [], "X" : []}
 
 	pri_re = re.compile('^\(([ABC])\)\s')
+	pad = todo_padding()
 	for line in iter_todos():
 		r = pri_re.match(line)
 		if r:
@@ -717,7 +729,7 @@ def format_lines(color_only=False):
 			category = "X"
 			color = default
 
-		l = concat([color, invert, str(i), " ", line[:-1], default, "\n"])
+		l = concat([color, invert, str(i).zfill(pad), " ", line[:-1], default, "\n"])
 		if color_only:
 			formatted.append(l)
 		else:
