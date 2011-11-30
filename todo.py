@@ -105,13 +105,13 @@ CONFIG = {
 def todo_padding():
 	i = 0
 	with open(CONFIG["TODO_FILE"]) as fd:
-		for i, l in enumerate(fd):
-			pass
-	p = 1
+		for l in fd:
+			i += 1  # This is just a little bit more obvious.
+	pad = 1
 	while i > 10:
-		p = p + 1
-		i = i / 10
-	return p
+		pad += 1
+		i /= 10
+	return pad
 
 def iter_todos():
 	"""
