@@ -20,6 +20,7 @@
 
 import os
 import re
+import string
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
@@ -289,7 +290,7 @@ def get_config(config_name="", dir_name=""):
 		comment_re = re.compile('#')
 		bash_var_re = re.compile('$')
 		bash_val_re = re.compile('=')
-		pri_re = re.compile('PRI_[ABC]')
+		pri_re = re.compile('PRI_[A-X]')
 		home_re = re.compile('home', re.I)
 		for line in f.readlines():
 			if not (comment_re.match(line) or bash_var_re.match(line)):
@@ -460,7 +461,7 @@ def add_todo(line):
 	_git = CONFIG["GIT"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
-	pri_re = re.compile('(\([ABC]\))')
+	pri_re = re.compile('(\([A-X]\))')
 	if pri_re.match(line) and prepend:
 		line = pri_re.sub(concat(["\g<1>",
 			datetime.now().strftime(" %Y-%m-%d ")]),
@@ -500,7 +501,7 @@ def do_todo(line):
 		fd.close()
 
 		today = datetime.now().strftime("%Y-%m-%d")
-		removed = re.sub("\([ABCX]\)\s?", "", removed)
+		removed = re.sub("\([A-X]\)\s?", "", removed)
 		removed = "x " + today + " " + removed
 
 		fd = open(CONFIG["DONE_FILE"], "a")
@@ -581,7 +582,7 @@ def prioritize_todo(args):
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
 		new_pri = concat(["(", args[0], ") "])
-		r = re.match("(\([ABC]\)\s).*", old_line)
+		r = re.match("(\([A-X]\)\s).*", old_line)
 		if r:
 			new_line = re.sub(re.escape(r.groups()[0]), new_pri, old_line)
 		else:
@@ -602,7 +603,7 @@ def de_prioritize_todo(number):
 	if number.isdigit():
 		number = int(number)
 		old_line, lines = separate_line(number)
-		new_line = re.sub("(\([ABC]\)\s)", "", old_line)
+		new_line = re.sub("(\([A-X]\)\s)", "", old_line)
 		lines.insert(number - 1, new_line)
 
 		rewrite_and_post(number, old_line, new_line, lines)
@@ -619,7 +620,7 @@ def prepend_todo(args):
 		line_no = int(args.pop(0))
 		prepend_str = concat(args, " ") + " "
 		old_line, lines = separate_line(line_no)
-		pri_re = re.compile('^(\([ABC]\)\s)')
+		pri_re = re.compile('^(\([A-X]\)\s)')
 
 		if pri_re.match(old_line):
 			new_line = pri_re.sub(concat( ["\g<1>", prepend_str]), old_line)
@@ -678,7 +679,7 @@ def cmd_help():
 	print('\tprepend | pre NUMBER "text to prepend"')
 	print('\t\tAdd "text to prepend" to the beginning of the item.')
 	print("")
-	print("\tpri | p NUMBER [ABC]")
+	print("\tpri | p NUMBER [A-X]")
 	print("\t\tAdd priority specified (A, B, or C) to item NUMBER.")
 	print("")
 	print("\tpull")
@@ -716,7 +717,7 @@ def format_lines(color_only=False):
 		for l in PRIORITIES:
 			formatted[l] = []
 
-	pri_re = re.compile('^\(([ABC])\)\s')
+	pri_re = re.compile('^\(([A-X])\)\s')
 	pad = todo_padding()
 	for line in iter_todos():
 		r = pri_re.match(line)
@@ -725,7 +726,10 @@ def format_lines(color_only=False):
 			if plain:
 				color = default
 			else:
-				color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
+				try:
+					color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
+				except:
+					color = TERM_COLORS[CONFIG["PRI_X"]]
 			if no_priority:
 				line = pri_re.sub("", line)
 		else:
@@ -751,7 +755,7 @@ def _legacy_sort(items):
 	# (pri_c) Bcd
 	etc., etc., etc.
 	"""
-	line_re = re.compile('^.*\d+\s(\([ABC]\)\s)?')
+	line_re = re.compile('^.*\d+\s(\([A-X]\)\s)?')
 	# The .* in the regexp is needed for the \033[* codes
 	keys = [line_re.sub("", i) for i in items]
 	items_dict = dict(zip(keys, items))
