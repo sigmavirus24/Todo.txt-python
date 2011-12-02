@@ -108,7 +108,7 @@ def todo_padding():
 		for l in fd:
 			i += 1  # This is just a little bit more obvious.
 	pad = 1
-	while i > 10:
+	while i >= 10:
 		pad += 1
 		i /= 10
 	return pad
