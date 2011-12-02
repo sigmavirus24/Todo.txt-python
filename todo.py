@@ -76,6 +76,7 @@ for key in TERM_COLORS.keys():
 del(key, bkey)  # If someone were to import this as a module, these show up.
 
 TODO_DIR = _path('~/.todo')
+PRIORITIES = string.uppercase[0:24]
 
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
@@ -86,10 +87,6 @@ CONFIG = {
 		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
 		"REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
 		"GIT" : git.Git(TODO_DIR),
-		"PRI_A" : "",
-		"PRI_B" : "",
-		"PRI_C" : "",
-		"PRI_X" : "",
 		"PLAIN" : False,
 		"NO_PRI" : False,
 		"PRE_DATE" : False,
@@ -99,6 +96,8 @@ CONFIG = {
 		"HIDE_DATE" : False,
 		"LEGACY" : False,
 		}
+for p in PRIORITIES: CONFIG["PRI_{0}".format(p)] = ""
+del(p)
 
 
 ### Helper Functions
@@ -711,7 +710,11 @@ def format_lines(color_only=False):
 	category = ""
 	invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
 
-	formatted = [] if color_only else {"A" : [], "B" : [], "C" : [], "X" : []}
+	formatted = []
+	if not color_only:
+		formatted = {}
+		for l in PRIORITIES:
+			formatted[l] = []
 
 	pri_re = re.compile('^\(([ABC])\)\s')
 	pad = todo_padding()
@@ -794,7 +797,7 @@ def _list_(by, regexp):
 	elif by == "pri":
 		lines = format_lines()
 		todo.update(lines)
-		by_list = ["A", "B", "C", "X"]
+		by_list = list(PRIORITIES)
 
 	by_list.sort()
 
@@ -829,7 +832,7 @@ def _list_by_(*args):
 
 	alines = format_lines() # Retrieves all lines.
 	lines = []
-	for p in ["A", "B", "C", "X"]:
+	for p in PRIORITIES:
 		lines.extend(alines[p])
 
 	alines = lines[:]
