@@ -246,7 +246,7 @@ def prompt(*args, **kwargs):
 	args can be any collection of strings that require formatting.
 	kwargs will collect the tokens and values.
 	"""
-	args = [a for a in args]
+	args = list(args)  # [a for a in args]
 	args.append(' ')
 	prompt_str = concat(args)
 	prompt_str = prompt_str.format(**kwargs)
@@ -640,7 +640,7 @@ def cmd_help():
 	print(concat(["Use", CONFIG["TODO_PY"], "-h for option help"], " "))
 	print("")
 	print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
-	print('\tadd "Item to do +project @context #{yyyy-mm-dd}"')
+	print('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"')
 	print("\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}' to your todo.txt")
 	print("\t\tfile.")
 	print("\t\t+project, @context, #{yyyy-mm-dd} are optional")
@@ -991,6 +991,7 @@ if __name__ == "__main__" :
 
 	commands = {
 			# command 	: ( Args, Function),
+			"a"			: ( True, add_todo),
 			"add"		: ( True, add_todo),
 			"addm"		: ( True, addm_todo),
 			"app"		: ( True, append_todo),
