@@ -705,7 +705,7 @@ def format_lines(color_only=False):
 	and organized based upon priority.
 	"""
 	i = 1
-	default = TERM_COLORS[CONFIG["DEFAULT"]] if "DEFAULT" in CONFIG else TERM_COLORS["default"] 
+	default = TERM_COLORS[CONFIG.get("DEFAULT", "default")]
 	plain = CONFIG["PLAIN"]
 	no_priority = CONFIG["NO_PRI"]
 	category = ""
