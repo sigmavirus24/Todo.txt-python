@@ -87,6 +87,7 @@ CONFIG = {
 		"TMP_FILE" : _pathc([TODO_DIR, "/todo.tmp"]),
 		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
 		"REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
+		"USE_GIT" : False,
 		"GIT" : git.Git(TODO_DIR),
 		"PLAIN" : False,
 		"NO_PRI" : False,
@@ -274,7 +275,6 @@ def get_config(config_name="", dir_name=""):
 	if dir_name:
 		CONFIG["TODO_DIR"] = _path(dir_name)
 
-	repo = CONFIG["GIT"]
 	if not CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = concat([CONFIG["TODO_DIR"], "/config"])
 	else:
@@ -312,87 +312,91 @@ def get_config(config_name="", dir_name=""):
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif home_re.match(items[1][1:i]):
 						items[1] = _pathc(['~', items[1][i:]])
-				elif items[0] == "TODO_DIR":
+				elif items[0] == "TODO_DIR" and CONFIG["USE_GIT"]:
 					CONFIG["GIT"] = git.Git(items[1])
 				else:
 					CONFIG[items[0]] = items[1]
 
 		f.close()
-	if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
-		repo.add([CONFIG["TODOTXT_CFG_FILE"]])
+
+	if CONFIG["USE_GIT"]:
+		repo = CONFIG["GIT"]
+		if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
+			repo.add([CONFIG["TODOTXT_CFG_FILE"]])
 
 
-def repo_config():
-	"""
-	Help the user configure their git repository.
-	"""
-	from getpass import getuser
-	from os import getenv
-	g = CONFIG["GIT"]
-	# local configuration
-	try:
-		user_name = g.config("--global", "--get", "user.name")
-	except:
-		user_name = getuser()
+if CONFIG["USE_GIT"]:
+	def repo_config():
+		"""
+		Help the user configure their git repository.
+		"""
+		from getpass import getuser
+		from os import getenv
+		g = CONFIG["GIT"]
+		# local configuration
+		try:
+			user_name = g.config("--global", "--get", "user.name")
+		except:
+			user_name = getuser()
 
-	try:
-		user_email = g.config("--global", "--get", "user.email")
-	except:
-		user_email = concat([user.name, "@", getenv("HOSTNAME")])
+		try:
+			user_email = g.config("--global", "--get", "user.email")
+		except:
+			user_email = concat([user.name, "@", getenv("HOSTNAME")])
 
-	print("First configure your local repository options.")
-	ret = prompt("git config user.name ", user_name, "?")
-	if ret:
-		user_name = ret
-	ret = prompt("git config user.email ", user_email, "?")
-	if ret:
-		user_email = ret
+		print("First configure your local repository options.")
+		ret = prompt("git config user.name ", user_name, "?")
+		if ret:
+			user_name = ret
+		ret = prompt("git config user.email ", user_email, "?")
+		if ret:
+			user_email = ret
 
-	g.config("user.name", user_name)
-	g.config("user.email", user_email)
+		g.config("user.name", user_name)
+		g.config("user.email", user_email)
 
-	# remote configuration
-	ret = prompt("Would you like to add a remote repository?")
-	yes_re = re.compile("y(?:es)?", re.I)
-	if yes_re.match(ret):
-		remote_host = None
-		remote_path = None
-		remote_user = None
-		remote_branch = None
+		# remote configuration
+		ret = prompt("Would you like to add a remote repository?")
+		yes_re = re.compile("y(?:es)?", re.I)
+		if yes_re.match(ret):
+			remote_host = None
+			remote_path = None
+			remote_user = None
+			remote_branch = None
 
-		while not remote_host:
-			remote_host = prompt("Remote hostname:")
-			if not remote_host:
-				print("Please enter the remote's hostname.")
-		while not remote_path:
-			remote_path = prompt("Remote path:")
-			if not remote_path:
-				print("Please enter the path to the remote's repository.")
-		while not remote_user:
-			remote_user = prompt("Remote user:")
-			if not remote_user:
-				print("Please enter the user on the remote machine.")
-		while not remote_branch:
-			remote_branch = prompt("Remote branch:")
-			if not remote_branch:
-				print("Please enter the branch to push to on the remote machine.")
-		prompt("Press enter when you have initialized a bare\n",
-			" repository on the remote or are ready to proceed.")
-		local_branch = g.branch()
-		if not local_branch:
-			local_branch = "master"
-		else:
-			branch_re = re.compile('^\*\s.*')
-			for l in local_branch.split("\n"):
-				if branch_re.match(l):
-					local_branch = branch_re.sub("", l)
-					break
+			while not remote_host:
+				remote_host = prompt("Remote hostname:")
+				if not remote_host:
+					print("Please enter the remote's hostname.")
+			while not remote_path:
+				remote_path = prompt("Remote path:")
+				if not remote_path:
+					print("Please enter the path to the remote's repository.")
+			while not remote_user:
+				remote_user = prompt("Remote user:")
+				if not remote_user:
+					print("Please enter the user on the remote machine.")
+			while not remote_branch:
+				remote_branch = prompt("Remote branch:")
+				if not remote_branch:
+					print("Please enter the branch to push to on the remote machine.")
+			prompt("Press enter when you have initialized a bare\n",
+				" repository on the remote or are ready to proceed.")
+			local_branch = g.branch()
+			if not local_branch:
+				local_branch = "master"
+			else:
+				branch_re = re.compile('^\*\s.*')
+				for l in local_branch.split("\n"):
+					if branch_re.match(l):
+						local_branch = branch_re.sub("", l)
+						break
 
-		g.remote("add", "origin", concat([remote_user, "@", remote_host,
-				":", remote_path]))
-		g.config(concat(["branch.", local_branch, ".remote"]), "origin")
-		g.config(concat(["branch.", local_branch, ".merge"]),
-				concat(["refs/heads/", remote_branch]))
+			g.remote("add", "origin", concat([remote_user, "@", remote_host,
+					":", remote_path]))
+			g.config(concat(["branch.", local_branch, ".remote"]), "origin")
+			g.config(concat(["branch.", local_branch, ".merge"]),
+					concat(["refs/heads/", remote_branch]))
 
 
 def default_config():
@@ -405,22 +409,8 @@ def default_config():
 		"""
 		open(filename, "w").close()
 
-	repo = CONFIG["GIT"]
 	if not os.path.exists(CONFIG["TODO_DIR"]):
 		os.makedirs(CONFIG["TODO_DIR"])
-	try:
-		repo.status()
-	except git.exc.GitCommandError, g:
-		val = prompt("Would you like to create a new git repository in\n ",
-				CONFIG["TODO_DIR"], "? [y/N]")
-		yes_re = re.compile('y(?:es)?', re.I)
-		if yes_re.match(val):
-			print(repo.init())
-			val = prompt("Would you like {prog} to help\n you",
-			" configure your new git repository? [y/n]",
-			prog=CONFIG["TODO_PY"])
-			if yes_re.match(val):
-				repo_config()
 
 	# touch/create files needed for the operation of the script
 	for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
@@ -442,9 +432,32 @@ def default_config():
 			else:
 				cfg.write(concat(["export ", k, '="', str(v), '"\n']))
 
-	repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
-	CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
-	repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
+	val = prompt("Would you like to use git with your to manage\n ",
+		CONFIG["TODO_DIR"], "? [y/N]")
+	if yes_re.match(val):
+		CONFIG["USE_GIT"] = True
+		cfg.write("export USE_GIT=True\n")
+		repo = CONFIG["GIT"]
+		try:
+			repo.status()
+		except git.exc.GitCommandError, g:
+			val = prompt("Would you like to create a new git repository in\n ",
+					CONFIG["TODO_DIR"], "? [y/N]")
+			yes_re = re.compile('y(?:es)?', re.I)
+			if yes_re.match(val):
+				print(repo.init())
+				val = prompt("Would you like {prog} to help\n you",
+				" configure your new git repository? [y/n]",
+				prog=CONFIG["TODO_PY"])
+				if yes_re.match(val):
+					repo_config()
+		repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
+		CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
+		repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
+	else:
+		cfg.write("export USE_GIT=False\n")
+
+	cfg.close()
 	print(concat(["Default configuration completed. Please ",
 		"re-run\n {prog} with '-h' and 'help' separately.".format(
 			prog=CONFIG["TODO_PY"])]))
