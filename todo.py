@@ -567,7 +567,8 @@ def append_todo(args):
 	if args[0].isdigit():
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
-		new_line = concat([concat([old_line, concat(args, " ")],  " "), "\n"],)
+		new_line = concat([concat([old_line[:-1], concat(args, " ")],  " "), "\n"],)
+		lines.insert(line_no - 1, new_line)
 
 		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
