@@ -25,7 +25,7 @@ import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
-VERSION = "0.1-master_dev"
+VERSION = "0.1-conditional_import_dev"
 
 try:
 	import readline
@@ -88,7 +88,7 @@ CONFIG = {
 		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
 		"REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
 		"USE_GIT" : False,
-		"GIT" : git.Git(TODO_DIR),
+		#"GIT" : git.Git(TODO_DIR),
 		"PLAIN" : False,
 		"NO_PRI" : False,
 		"PRE_DATE" : False,
@@ -98,7 +98,8 @@ CONFIG = {
 		"HIDE_DATE" : False,
 		"LEGACY" : False,
 		}
-for p in PRIORITIES: CONFIG["PRI_{0}".format(p)] = ""
+for p in PRIORITIES:
+	CONFIG["PRI_{0}".format(p)] = ""
 del(p)
 
 
@@ -312,17 +313,17 @@ def get_config(config_name="", dir_name=""):
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif home_re.match(items[1][1:i]):
 						items[1] = _pathc(['~', items[1][i:]])
-				elif items[0] == "TODO_DIR" and CONFIG["USE_GIT"]:
-					CONFIG["GIT"] = git.Git(items[1])
 				else:
 					CONFIG[items[0]] = items[1]
 
 		f.close()
 
 	if CONFIG["USE_GIT"]:
-		repo = CONFIG["GIT"]
-		if CONFIG["TODOTXT_CFG_FILE"] not in repo.ls_files():
-			repo.add([CONFIG["TODOTXT_CFG_FILE"]])
+		global git
+		import git
+		CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
+		if CONFIG["TODOTXT_CFG_FILE"] not in CONFIG["GIT"].ls_files():
+			CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"]])
 
 
 if CONFIG["USE_GIT"]:
@@ -471,7 +472,6 @@ def add_todo(line):
 	Add a new item to the list of things todo.
 	"""
 	prepend = CONFIG["PRE_DATE"]
-	_git = CONFIG["GIT"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
 	pri_re = re.compile('(\([A-X]\))')
@@ -486,7 +486,8 @@ def add_todo(line):
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
 	print(s)
-	_git_commit([CONFIG["TODO_FILE"]], s)
+	if CONFIG["USE_GIT"]:
+		_git_commit([CONFIG["TODO_FILE"]], s)
 
 
 def addm_todo(lines):
