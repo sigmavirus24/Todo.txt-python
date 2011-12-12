@@ -78,7 +78,6 @@ CONFIG = {
 		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
 		"REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
 		"USE_GIT" : False,
-		#"GIT" : git.Git(TODO_DIR),
 		"PLAIN" : False,
 		"NO_PRI" : False,
 		"PRE_DATE" : False,
@@ -1034,16 +1033,15 @@ if __name__ == "__main__" :
 			"listproj"	: (False, list_project),
 			"h"			: (False, cmd_help),
 			"help"		: (False, cmd_help),
-			# Git functions:
-			#"push"		: (False, _git_push),
-			#"pull"		: (False, _git_pull),
-			#"status"	: (False, _git_status),
-			#"log"		: (False, _git_log),
 			}
 	if CONFIG["USE_GIT"]:
-		commands.update([("push", (False, _git_push)), ("pull", (False,
-			_git_pull)), ("status", (False, _git_status)), ("log", (False,
-				_git_log))])
+		commands.update(
+				[("push", (False, _git_push)),
+				("pull", (False, _git_pull)),
+				("status", (False, _git_status)),
+				("log", (False, _git_log))]
+				)
+
 	commandsl = [intern(key) for key in commands.keys()]
 
 	if not len(args) > 0:
