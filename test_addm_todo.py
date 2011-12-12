@@ -19,34 +19,33 @@
 import todo
 import test
 
-def add_todo(n, print_count=True):
-	lines = test.test_lines(n)
-	for line in lines:
-		todo.add_todo(line)
+def addm_todo(n, print_count=True):
+	lines = "\n".join(test.test_lines(n))
+	todo.addm_todo(lines)
 
 	count = test.count_matches("Test\s\d+")
 
 	if print_count:
-		test._print("vanilla add_todo()", count, n)
+		test._print("vanilla addm_todo()", count, n)
 
 
-def add_todo_predate(n):
+def addm_todo_predate(n):
 	_pre = todo.CONFIG["PRE_DATE"]
 	todo.CONFIG["PRE_DATE"] = True
-	add_todo(n, False)
+	addm_todo(n, False)
 
 	count = test.count_matches("\d{4}-\d{2}-\d{2}.*Test \d+")
 
-	test._print("predate add_todo()", count, n)
+	test._print("predate addm_todo()", count, n)
 
 
 def main():
 	test.redirect_stdout()
 	n = 11
 	test.create_truncate()
-	add_todo(n)
+	addm_todo(n)
 	test.create_truncate()
-	add_todo_predate(n)
+	addm_todo_predate(n)
 	test.unlink(todo.CONFIG["TODO_FILE"])
 
 if __name__ == "__main__":

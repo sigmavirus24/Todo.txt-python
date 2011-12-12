@@ -16,38 +16,34 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
+# Common functions for test_*_todo.py
 import todo
-import test
+import sys
+import re
+from os import unlink
 
-def add_todo(n, print_count=True):
-	lines = test.test_lines(n)
-	for line in lines:
-		todo.add_todo(line)
+todo.CONFIG["TODO_FILE"] = "test_add_todo.txt"
 
-	count = test.count_matches("Test\s\d+")
+def count_matches(regexp):
+	count = 0
+	for line in todo.iter_todos():
+		if re.match(regexp, line):
+			count += 1
+	return count
 
-	if print_count:
-		test._print("vanilla add_todo()", count, n)
-
-
-def add_todo_predate(n):
-	_pre = todo.CONFIG["PRE_DATE"]
-	todo.CONFIG["PRE_DATE"] = True
-	add_todo(n, False)
-
-	count = test.count_matches("\d{4}-\d{2}-\d{2}.*Test \d+")
-
-	test._print("predate add_todo()", count, n)
+def redirect_stdout():
+	sys.stdout = open("/dev/null", "w")
 
 
-def main():
-	test.redirect_stdout()
-	n = 11
-	test.create_truncate()
-	add_todo(n)
-	test.create_truncate()
-	add_todo_predate(n)
-	test.unlink(todo.CONFIG["TODO_FILE"])
+def _print(title_string, x, y):
+	string = "Test [{function}]: {x} of {y} passed.\n".format(
+			function=title_string, x=x, y=y)
+	sys.stderr.write(string)
 
-if __name__ == "__main__":
-	main()
+
+def test_lines(num):
+	return ["Test {0}".format(i) for i in range(0, num)]
+
+
+def create_truncate():
+	open(todo.CONFIG["TODO_FILE"], "w+").close()
