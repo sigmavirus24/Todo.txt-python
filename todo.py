@@ -426,7 +426,7 @@ def default_config():
 	CONFIG["PRI_X"] = "white"
 
 	for k, v in CONFIG.items():
-		if k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
+		if v != "" and k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
 				"HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI"):
 			if v in TO_CONFIG.keys():
 				cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
