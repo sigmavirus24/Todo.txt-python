@@ -1,6 +1,7 @@
 import todo
 import sys
 import re
+from os import unlink
 
 sys.stdout = open("/dev/null", "w")
 todo.CONFIG["TODO_FILE"] = "test_add_todo.txt"
@@ -30,7 +31,6 @@ def add_todo(n, print_count=True):
 		if re.match("Test \d+", line):
 			count += 1
 	if print_count:
-		#_print("Test [vanilla add_todo()]: {0} of {1} passed.\n".format(count, n))
 		_print("vanilla add_todo()", count, n)
 
 
@@ -42,9 +42,8 @@ def add_todo_predate(n):
 
 	count = 0
 	for line in todo.iter_todos():
-		if re.match("\d+.*Test \d+", line):
+		if re.match("\d{4}-\d{2}-\d{2}.*Test \d+", line):
 			count += 1
-	#_print("Test [add_pre_date()]: {0} of {1} passed.\n".format(count, n))
 	_print("predate add_todo()", count, n)
 
 if __name__ == "__main__":
@@ -53,4 +52,4 @@ if __name__ == "__main__":
 	add_todo(n)
 	create_truncate()
 	add_todo_predate(n)
-	#create_truncate()
+	unlink(todo.CONFIG["TODO_FILE"])
