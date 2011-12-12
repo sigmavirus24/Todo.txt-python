@@ -28,7 +28,6 @@ todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
 donetxt = todo.CONFIG["DONE_FILE"] = "test_done.txt"
 
 class BaseTest(unittest.TestCase):
-
     def setUp(self):
         todo.CONFIG["PRE_DATE"] = False
         sys.stdout = open("/dev/null", "w")

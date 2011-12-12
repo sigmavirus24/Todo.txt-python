@@ -40,6 +40,5 @@ class TestAdd(base.BaseTest):
         todo.CONFIG["PRE_DATE"] = True
         self.add_todo(n)
 
-
 if __name__ == "__main__":
 	unittest.main()
