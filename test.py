@@ -48,7 +48,7 @@ def _print(title_string, x, y):
 		string = ''.join([string, " FAILED\n"])
 	else:
 		string = ''.join([string, " PASSED\n"])
-	sys.stderr.write(string)
+	print(string)
 
 
 def test_lines(num):

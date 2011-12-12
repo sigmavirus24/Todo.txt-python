@@ -20,7 +20,9 @@ import todo
 import test
 
 def addm_todo(n, print_count=True):
+	test.redirect_stdout()
 	todo.addm_todo("\n".join(test.test_lines(n)))
+	test.reset_stdout()
 
 	count = test.count_matches("Test\s\d+")
 
@@ -39,7 +41,6 @@ def addm_todo_predate(n):
 
 
 def main():
-	test.redirect_stdout()
 	n = 11
 	test.create_truncate()
 	addm_todo(n)
