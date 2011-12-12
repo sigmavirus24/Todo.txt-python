@@ -20,8 +20,7 @@ import todo
 import test
 
 def addm_todo(n, print_count=True):
-	lines = "\n".join(test.test_lines(n))
-	todo.addm_todo(lines)
+	todo.addm_todo("\n".join(test.test_lines(n)))
 
 	count = test.count_matches("Test\s\d+")
 
@@ -46,7 +45,7 @@ def main():
 	addm_todo(n)
 	test.create_truncate()
 	addm_todo_predate(n)
-	test.unlink(todo.CONFIG["TODO_FILE"])
 
 if __name__ == "__main__":
 	main()
+	test.cleanup()

@@ -18,35 +18,29 @@
 
 import todo
 import test
+import random
 
-def add_todo(n, print_count=True):
-	lines = test.test_lines(n)
-	for line in lines:
-		todo.add_todo(line)
+def do_todo(n):
+	test.redirect_stdout()
+	todo.addm_todo("\n".join(test.test_lines(n)))
+	test.reset_stdout()
+	ran = random.Random()
 
-	count = test.count_matches("Test\s\d+")
+	for i in range(n, 0, -1):
+		j = ran.randint(1, i)
+		todo.do_todo(str(j))
 
-	if print_count:
-		test._print("vanilla add_todo()", count, n)
-
-
-def add_todo_predate(n):
-	_pre = todo.CONFIG["PRE_DATE"]
-	todo.CONFIG["PRE_DATE"] = True
-	add_todo(n, False)
-
-	count = test.count_matches("\d{4}-\d{2}-\d{2}.*Test \d+")
-
-	test._print("predate add_todo()", count, n)
+	with open(test.todotxt, "r") as fd:
+		if fd.readlines():
+			print("Test [do_todo()]: FAILED.")
+		else:
+			print("Test [do_todo()]: PASSED.")
 
 
 def main():
-	test.redirect_stdout()
+	test.create_truncate()
 	n = 11
-	test.create_truncate()
-	add_todo(n)
-	test.create_truncate()
-	add_todo_predate(n)
+	do_todo(n)
 
 if __name__ == "__main__":
 	main()

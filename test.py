@@ -22,7 +22,8 @@ import sys
 import re
 from os import unlink
 
-todo.CONFIG["TODO_FILE"] = "test_add_todo.txt"
+todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
+donetxt = todo.CONFIG["DONE_FILE"] = "test_done.txt"
 
 def count_matches(regexp):
 	count = 0
@@ -31,13 +32,22 @@ def count_matches(regexp):
 			count += 1
 	return count
 
+
 def redirect_stdout():
 	sys.stdout = open("/dev/null", "w")
 
 
+def reset_stdout():
+	sys.stdout = sys.__stdout__
+
+
 def _print(title_string, x, y):
-	string = "Test [{function}]: {x} of {y} passed.\n".format(
+	string = "Test [{function}]: {x} of {y} passed.".format(
 			function=title_string, x=x, y=y)
+	if x < y:
+		string = ''.join([string, " FAILED\n"])
+	else:
+		string = ''.join([string, " PASSED\n"])
 	sys.stderr.write(string)
 
 
@@ -46,4 +56,9 @@ def test_lines(num):
 
 
 def create_truncate():
-	open(todo.CONFIG["TODO_FILE"], "w+").close()
+	open(todotxt, "w+").close()
+	open(donetxt, "w+").close()
+
+def cleanup():
+	unlink(todotxt)
+	unlink(donetxt)

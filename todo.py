@@ -120,6 +120,7 @@ def separate_line(number):
 	"""
 	i = 1
 	lines = []
+	separate = ''
 	for line in iter_todos():
 		if i != number:
 			lines.append(line)
