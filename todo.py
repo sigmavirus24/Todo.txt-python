@@ -1041,8 +1041,9 @@ if __name__ == "__main__" :
 			#"log"		: (False, _git_log),
 			}
 	if CONFIG["USE_GIT"]:
-		commands.update([("push", _git_push), ("pull", _git_pull), ("status",
-			_git_status), ("log", _git_log)])
+		commands.update([("push", (False, _git_push)), ("pull", (False,
+			_git_pull)), ("status", (False, _git_status)), ("log", (False,
+				_git_log))])
 	commandsl = [intern(key) for key in commands.keys()]
 
 	if not len(args) > 0:
