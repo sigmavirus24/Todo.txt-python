@@ -40,16 +40,6 @@ except NameError:
 	# Python 3 moved the built-in intern() to sys.intern()
 	intern = sys.intern
 
-try:
-	import git
-except ImportError:
-	if sys.version_info < (3, 0):
-		print("You must download and install GitPython from: \
-http://pypi.python.org/pypi/GitPython")
-	else:
-		print("GitPython is not available for Python3 last I checked.")
-	sys.exit(52)
-
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
 _path = lambda p: os.path.abspath(os.path.expanduser(p))
@@ -82,7 +72,7 @@ PRIORITIES = string.uppercase[0:24]
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
-		"TODOTXT_CFG_FILE" : "",
+		"TODOTXT_CFG_FILE" : _pathc([TODO_DIR, "/config"]),
 		"TODO_FILE" : _pathc([TODO_DIR, "/todo.txt"]),
 		"TMP_FILE" : _pathc([TODO_DIR, "/todo.tmp"]),
 		"DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
@@ -276,9 +266,7 @@ def get_config(config_name="", dir_name=""):
 	if dir_name:
 		CONFIG["TODO_DIR"] = _path(dir_name)
 
-	if not CONFIG["TODOTXT_CFG_FILE"]:
-		config_file = concat([CONFIG["TODO_DIR"], "/config"])
-	else:
+	if CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
 
 	config_file = _path(config_file)
@@ -313,6 +301,8 @@ def get_config(config_name="", dir_name=""):
 						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
 					elif home_re.match(items[1][1:i]):
 						items[1] = _pathc(['~', items[1][i:]])
+				elif items[0] == "USE_GIT":
+					CONFIG["USE_GIT"] = True if items[1] == "True" else False
 				else:
 					CONFIG[items[0]] = items[1]
 
@@ -320,13 +310,23 @@ def get_config(config_name="", dir_name=""):
 
 	if CONFIG["USE_GIT"]:
 		global git
-		import git
+		try:
+			import git
+		except ImportError:
+			if sys.version_info < (3, 0):
+				print("You must download and install GitPython from: \
+http://pypi.python.org/pypi/GitPython")
+			else:
+				print("GitPython is not available for Python3 last I checked.")
+			sys.exit(52)
 		CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
 		if CONFIG["TODOTXT_CFG_FILE"] not in CONFIG["GIT"].ls_files():
 			CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"]])
+		git_functions()
 
 
-if CONFIG["USE_GIT"]:
+def git_functions():
+	global repo_config
 	def repo_config():
 		"""
 		Help the user configure their git repository.
@@ -524,7 +524,8 @@ def do_todo(line):
 
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(line))
-		_git_commit([CONFIG["TODO_FILE"], CONFIG["DONE_FILE"]], removed)
+		if CONFIG["USE_GIT"]:
+			_git_commit([CONFIG["TODO_FILE"], CONFIG["DONE_FILE"]], removed)
 
 
 def delete_todo(line):
@@ -543,7 +544,8 @@ def delete_todo(line):
 		removed = "'{0}' deleted.".format(removed[:-1])
 		print(removed)
 		print("TODO: Item {0} deleted.".format(line))
-		_git_commit([CONFIG["TODO_FILE"]], removed)
+		if CONFIG["USE_GIT"]:
+			_git_commit([CONFIG["TODO_FILE"]], removed)
 ### End do/del Functions
 
 
@@ -571,7 +573,8 @@ def post_success(item_no, old_line, new_line):
 	print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
 		item_no, old_line, new_line)
 	print(print_str)
-	_git_commit([CONFIG["TODO_FILE"]], print_str)
+	if CONFIG["USE_GIT"]:
+		_git_commit([CONFIG["TODO_FILE"]], print_str)
 
 
 def append_todo(args):
@@ -581,7 +584,8 @@ def append_todo(args):
 	if args[0].isdigit():
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
-		new_line = concat([concat([old_line, concat(args, " ")],  " "), "\n"],)
+		new_line = concat([concat([old_line[:-1], concat(args, " ")],  " "), "\n"],)
+		lines.insert(line_no - 1, new_line)
 
 		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
@@ -695,19 +699,20 @@ def cmd_help():
 	print("")
 	print("\tpri | p NUMBER [A-X]")
 	print("\t\tAdd priority specified (A, B, or C) to item NUMBER.")
-	print("")
-	print("\tpull")
-	print("\t\tPulls from the remote for your git repository.")
-	print("")
-	print("\tpush")
-	print("\t\tPushs to the remote for your git repository.")
-	print("")
-	print("\tstatus")
-	print("\t\tIf using $(git --version) > 1.7, shows the status of your")
-	print("\t\tlocal git repository.")
-	print("")
-	print("\tlog")
-	print("\t\tShows the last two commits in your local git repository.")
+	if CONFIG["USE_GIT"]:
+		print("")
+		print("\tpull")
+		print("\t\tPulls from the remote for your git repository.")
+		print("")
+		print("\tpush")
+		print("\t\tPushs to the remote for your git repository.")
+		print("")
+		print("\tstatus")
+		print("\t\tIf using $(git --version) > 1.7, shows the status of your")
+		print("\t\tlocal git repository.")
+		print("")
+		print("\tlog")
+		print("\t\tShows the last two commits in your local git repository.")
 	sys.exit(0)
 ### HELP
 
@@ -1030,11 +1035,14 @@ if __name__ == "__main__" :
 			"h"			: (False, cmd_help),
 			"help"		: (False, cmd_help),
 			# Git functions:
-			"push"		: (False, _git_push),
-			"pull"		: (False, _git_pull),
-			"status"	: (False, _git_status),
-			"log"		: (False, _git_log),
+			#"push"		: (False, _git_push),
+			#"pull"		: (False, _git_pull),
+			#"status"	: (False, _git_status),
+			#"log"		: (False, _git_log),
 			}
+	if CONFIG["USE_GIT"]:
+		commands.update([("push", _git_push), ("pull", _git_pull), ("status",
+			_git_status), ("log", _git_log)])
 	commandsl = [intern(key) for key in commands.keys()]
 
 	if not len(args) > 0:
