@@ -17,48 +17,39 @@
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 # Common functions for test_*_todo.py
-import todo
-import sys
 import re
+import sys
+import unittest
 from os import unlink
+
+import todo
 
 todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
 donetxt = todo.CONFIG["DONE_FILE"] = "test_done.txt"
 
-def count_matches(regexp):
-	count = 0
-	for line in todo.iter_todos():
-		if re.match(regexp, line):
-			count += 1
-	return count
+class BaseTest(unittest.TestCase):
 
+    def setUp(self):
+        todo.CONFIG["PRE_DATE"] = False
+        sys.stdout = open("/dev/null", "w")
+        open(todotxt, "w+").close()
+        open(donetxt, "w+").close()
 
-def redirect_stdout():
-	sys.stdout = open("/dev/null", "w")
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+        unlink(todotxt)
+        unlink(donetxt)
 
+    def count_matches(self, regexp=None):
+        count = 0
+        for line in todo.iter_todos():
+            if regexp == None or re.match(regexp, line):
+                count += 1
+        return count
 
-def reset_stdout():
-	sys.stdout = sys.__stdout__
+    def _test_lines(self, num):
+        return ["Test {0}".format(i) for i in range(0, num)]
 
-
-def _print(title_string, x, y):
-	string = "Test [{function}]: {x} of {y} passed.".format(
-			function=title_string, x=x, y=y)
-	if x < y:
-		string = ''.join([string, " FAILED\n"])
-	else:
-		string = ''.join([string, " PASSED\n"])
-	sys.stderr.write(string)
-
-
-def test_lines(num):
-	return ["Test {0}".format(i) for i in range(0, num)]
-
-
-def create_truncate():
-	open(todotxt, "w+").close()
-	open(donetxt, "w+").close()
-
-def cleanup():
-	unlink(todotxt)
-	unlink(donetxt)
+    def assertNumLines(self, exp, regexp=None):
+        c = self.count_matches(regexp)
+        self.assertEqual(exp, c)

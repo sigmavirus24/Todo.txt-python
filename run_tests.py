@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 # TODO.TXT-CLI-python test script
-# Copyright (C) 2011  Sigmavirus24
+# Copyright (C) 2011  Jeff Stein
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,32 +17,9 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import todo
-import test
-import random
-
-def do_todo(n):
-	test.redirect_stdout()
-	todo.addm_todo("\n".join(test.test_lines(n)))
-	test.reset_stdout()
-	ran = random.Random()
-
-	for i in range(n, 0, -1):
-		j = ran.randint(1, i)
-		todo.do_todo(str(j))
-
-	with open(test.todotxt, "r") as fd:
-		if fd.readlines():
-			print("Test [do_todo()]: FAILED.")
-		else:
-			print("Test [do_todo()]: PASSED.")
-
-
-def main():
-	test.create_truncate()
-	n = 11
-	do_todo(n)
+import unittest
+import tests
 
 if __name__ == "__main__":
-	main()
-	test.cleanup()
+    tests = unittest.defaultTestLoader.discover("tests")
+    unittest.TextTestRunner(verbosity=2).run(tests)

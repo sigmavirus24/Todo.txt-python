@@ -16,36 +16,24 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
+import random
+import unittest
+
+import base
 import todo
-import test
 
-def addm_todo(n, print_count=True):
-	todo.addm_todo("\n".join(test.test_lines(n)))
+class DoTest(base.BaseTest):
+    num = 11
 
-	count = test.count_matches("Test\s\d+")
+    def test_do(self):
+        todo.addm_todo("\n".join(self._test_lines(self.num)))
+        ran = random.Random()
 
-	if print_count:
-		test._print("vanilla addm_todo()", count, n)
+        for i in range(self.num, 0, -1):
+            j = ran.randint(1, i)
+            todo.do_todo(str(j))
 
-
-def addm_todo_predate(n):
-	_pre = todo.CONFIG["PRE_DATE"]
-	todo.CONFIG["PRE_DATE"] = True
-	addm_todo(n, False)
-
-	count = test.count_matches("\d{4}-\d{2}-\d{2}.*Test \d+")
-
-	test._print("predate addm_todo()", count, n)
-
-
-def main():
-	test.redirect_stdout()
-	n = 11
-	test.create_truncate()
-	addm_todo(n)
-	test.create_truncate()
-	addm_todo_predate(n)
+        self.assertNumLines(0)
 
 if __name__ == "__main__":
-	main()
-	test.cleanup()
+	unittest.main()
