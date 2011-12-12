@@ -435,6 +435,7 @@ def default_config():
 
 	val = prompt("Would you like to use git with your to manage\n ",
 		CONFIG["TODO_DIR"], "? [y/N]")
+	yes_re = re.compile('y(?:es)?', re.I)
 	if yes_re.match(val):
 		CONFIG["USE_GIT"] = True
 		cfg.write("export USE_GIT=True\n")
@@ -444,7 +445,6 @@ def default_config():
 		except git.exc.GitCommandError, g:
 			val = prompt("Would you like to create a new git repository in\n ",
 					CONFIG["TODO_DIR"], "? [y/N]")
-			yes_re = re.compile('y(?:es)?', re.I)
 			if yes_re.match(val):
 				print(repo.init())
 				val = prompt("Would you like {prog} to help\n you",
