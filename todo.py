@@ -67,7 +67,10 @@ for key in TERM_COLORS.keys():
 del(key, bkey)  # If someone were to import this as a module, these show up.
 
 TODO_DIR = _path('~/.todo')
-PRIORITIES = string.uppercase[0:24]
+try:
+	PRIORITIES = string.uppercase[0:24]
+except AttributeError:
+	PRIORITIES = string.ascii_uppercase[0:24]
 
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
@@ -168,7 +171,7 @@ def _git_pull():
 	"""
 	try:
 		print(CONFIG["GIT"].pull())
-	except git.exc.GitCommandError, g:
+	except git.exc.GitCommandError as g:
 		_git_err(g)
 
 
@@ -178,7 +181,7 @@ def _git_push():
 	"""
 	try:
 		s = CONFIG["GIT"].push()
-	except git.exc.GitCommandError, g:
+	except git.exc.GitCommandError as g:
 		_git_err(g)
 	if s:
 		print(s)
@@ -193,7 +196,7 @@ def _git_status():
 	"""
 	try:
 		print(CONFIG["GIT"].status())
-	except git.exc.GitCommandError, g:
+	except git.exc.GitCommandError as g:
 		_git_err(g)
 
 
@@ -222,7 +225,7 @@ def _git_commit(files, message):
 	"""
 	try:
 		CONFIG["GIT"].commit(files, "-m", message)
-	except git.exc.GitCommandError, g:
+	except git.exc.GitCommandError as g:
 		_git_err(g)
 	if "-a" not in files:
 		print(concat(["TODO: ", concat(files, ", "), " archived."]))
@@ -442,7 +445,7 @@ def default_config():
 		repo = CONFIG["GIT"]
 		try:
 			repo.status()
-		except git.exc.GitCommandError, g:
+		except git.exc.GitCommandError as g:
 			val = prompt("Would you like to create a new git repository in\n ",
 					CONFIG["TODO_DIR"], "? [y/N]")
 			if yes_re.match(val):
