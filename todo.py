@@ -740,7 +740,7 @@ def format_lines(color_only=False):
 		for l in PRIORITIES:
 			formatted[l] = []
 
-	pri_re = re.compile('^\(([A-X])\)\s')
+	pri_re = re.compile('^\(([A-W])\)\s')
 	pad = todo_padding()
 	for line in iter_todos():
 		r = pri_re.match(line)
@@ -749,10 +749,11 @@ def format_lines(color_only=False):
 			if plain:
 				color = default
 			else:
-				try:
-					color = TERM_COLORS[CONFIG["PRI_{0}".format(category)]]
-				except:
-					color = TERM_COLORS[CONFIG["PRI_X"]]
+				k = CONFIG["PRI_{0}".format(category)]
+				if k in TERM_COLORS.keys():
+					color = TERM_COLORS[k]
+				else:
+					color = default
 			if no_priority:
 				line = pri_re.sub("", line)
 		else:
