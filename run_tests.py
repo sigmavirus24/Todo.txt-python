@@ -18,8 +18,23 @@
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 import unittest
+import sys
+import os
+import re
 import tests
 
 if __name__ == "__main__":
-    tests = unittest.defaultTestLoader.discover("tests")
-    unittest.TextTestRunner(verbosity=2).run(tests)
+	if sys.version_info >= (2, 7):
+		suite = unittest.defaultTestLoader.discover("tests")
+	else:
+		names = os.listdir("tests")
+		tmp = []
+		regex = re.compile("(?!_+)\w+\.py$")
+		for f in names:
+			if regex.match(f):
+				tmp.append(f)
+		tmp = [ a[:-3] for a in tmp ]
+		names = [ "".join(["tests.", a]) for a in tmp ]
+		suite = unittest.defaultTestLoader.loadTestsFromNames(names)
+
+	unittest.TextTestRunner(verbosity=2).run(suite)
