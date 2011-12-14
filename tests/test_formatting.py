@@ -31,7 +31,7 @@ class TestFormat(base.BaseTest):
 				i += 1
 		for k in todo.PRIORITIES[i:]:
 			todo.CONFIG["PRI_{0}".format(k)] = "default"
-		base.BaseTest.setUp()
+		super(TestFormat,self).setUp()
 
 	def test_formatted(self):
 		self.addm_todo_no_pri(self.num)
