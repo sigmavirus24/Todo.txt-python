@@ -22,15 +22,15 @@ import unittest
 import base
 import todo
 
-class DoTest(base.BaseTest):
+class DelTest(base.BaseTest):
 
-	def test_do(self):
+	def test_del(self):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
 		ran = random.Random()
 
 		for i in range(self.num, 0, -1):
 			j = ran.randint(1, i)
-			todo.do_todo(str(j))
+			todo.delete_todo(str(j))
 
 		self.assertNumLines(0)
 

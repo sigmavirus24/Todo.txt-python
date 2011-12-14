@@ -16,23 +16,29 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import random
 import unittest
-
 import base
 import todo
 
-class DoTest(base.BaseTest):
+try:
+	from string import uppercase
+except:
+	from string import ascii_uppercase as uppercase
 
-	def test_do(self):
-		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
-		ran = random.Random()
+class DeprioritizeTest(base.BaseTest):
 
-		for i in range(self.num, 0, -1):
-			j = ran.randint(1, i)
-			todo.do_todo(str(j))
+	def test_deprioritize(self):
+		todo.addm_todo("\n".join(self._test_lines_pri(self.num)))
 
-		self.assertNumLines(0)
+		for i in range(0, self.num):
+			todo.de_prioritize_todo(str(i + 1))
+
+		self.assertNumLines(self.num, "Test\s\d+")
+
+		for i in range(0, self.num):
+			todo.de_prioritize_todo(str(i + 1))
+
+		self.assertNumLines(self.num, "Test\s\d+")
 
 if __name__ == "__main__":
 	unittest.main()

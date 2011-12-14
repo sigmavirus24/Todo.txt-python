@@ -40,6 +40,11 @@ except NameError:
 	# Python 3 moved the built-in intern() to sys.intern()
 	intern = sys.intern
 
+try:
+	PRIORITIES = string.uppercase[0:24]
+except AttributeError:
+	PRIORITIES = string.ascii_uppercase[0:24]
+
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
 _path = lambda p: os.path.abspath(os.path.expanduser(p))
@@ -67,10 +72,6 @@ for key in TERM_COLORS.keys():
 del(key, bkey)  # If someone were to import this as a module, these show up.
 
 TODO_DIR = _path('~/.todo')
-try:
-	PRIORITIES = string.uppercase[0:24]
-except AttributeError:
-	PRIORITIES = string.ascii_uppercase[0:24]
 
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
@@ -599,7 +600,7 @@ def prioritize_todo(args):
 	"""
 	Add or modify the priority of the specified item.
 	"""
-	if args[0].isdigit():
+	if args[0].isdigit() and len(args[1]) == 1 and args[1] in PRIORITIES:
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
 		new_pri = concat(["(", args[0], ") "])
@@ -613,7 +614,7 @@ def prioritize_todo(args):
 
 		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
-		post_error('pri', 'NUMBER', 'capital letter')
+		post_error('pri', 'NUMBER', 'capital letter in [A-X]')
 
 
 def de_prioritize_todo(number):

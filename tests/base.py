@@ -28,27 +28,35 @@ todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
 donetxt = todo.CONFIG["DONE_FILE"] = "test_done.txt"
 
 class BaseTest(unittest.TestCase):
-    def setUp(self):
-        todo.CONFIG["PRE_DATE"] = False
-        sys.stdout = open("/dev/null", "w")
-        open(todotxt, "w+").close()
-        open(donetxt, "w+").close()
+	num = 11
 
-    def tearDown(self):
-        sys.stdout = sys.__stdout__
-        unlink(todotxt)
-        unlink(donetxt)
+	def setUp(self):
+		todo.CONFIG["PRE_DATE"] = False
+		todo.CONFIG["TODO_PY"] = "testing"
+		sys.stdout = open("/dev/null", "w")
+		open(todotxt, "w+").close()
+		open(donetxt, "w+").close()
 
-    def count_matches(self, regexp=None):
-        count = 0
-        for line in todo.iter_todos():
-            if regexp == None or re.match(regexp, line):
-                count += 1
-        return count
+	def tearDown(self):
+		sys.stdout = sys.__stdout__
+		unlink(todotxt)
+		unlink(donetxt)
 
-    def _test_lines(self, num):
-        return ["Test {0}".format(i) for i in range(0, num)]
+	def count_matches(self, regexp=None):
+		count = 0
+		for line in todo.iter_todos():
+			if regexp == None or re.match(regexp, line):
+				count += 1
+		return count
 
-    def assertNumLines(self, exp, regexp=None):
-        c = self.count_matches(regexp)
-        self.assertEqual(exp, c)
+	def _test_lines_no_pri(self, num):
+		return ["Test {0}".format(i) for i in range(0, num)]
+
+	def _test_lines_pri(self, num):
+		n = len(todo.PRIORITIES)
+		p = todo.PRIORITIES
+		return ["({0}) Test {1}".format(p[i % n], i) for i in range(0, num)]
+
+	def assertNumLines(self, exp, regexp=None):
+		c = self.count_matches(regexp)
+		self.assertEqual(exp, c)

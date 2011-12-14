@@ -16,23 +16,20 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import random
 import unittest
-
 import base
 import todo
 
-class DoTest(base.BaseTest):
+class AppendTest(base.BaseTest):
 
-	def test_do(self):
+	def test_append(self):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
-		ran = random.Random()
 
-		for i in range(self.num, 0, -1):
-			j = ran.randint(1, i)
-			todo.do_todo(str(j))
+		for i in range(1, self.num + 1):
+			todo.append_todo([str(i), "testing", "append"])
 
-		self.assertNumLines(0)
+		self.assertNumLines(self.num, "Test\s\d+\stesting\sappend")
+
 
 if __name__ == "__main__":
 	unittest.main()
