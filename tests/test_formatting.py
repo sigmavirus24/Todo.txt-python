@@ -17,6 +17,7 @@
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 import unittest
+import re
 
 import todo
 import base
@@ -35,8 +36,8 @@ class TestFormat(base.BaseTest):
 
 	def test_formatted(self):
 		self.addm_todo_no_pri(self.num)
-		#lines = todo.format_lines()
-		#self.assert_formatted(lines)
+		lines = todo.format_lines()
+		self.assert_formatted(lines)
 
 
 	def test_color_only(self):
@@ -63,13 +64,32 @@ class TestFormat(base.BaseTest):
 		# todo.TERM_COLORS["red"] and terminates with
 		# todo.TERM_COLORS["default"]\n for the proper colors based on priority
 		# also checks that the return value is a dictionary.
-		pass
+		self.assertIsInstance(lines, dict)
 
+		keys = lines.keys()
+		keys.sort()
+		self.assertEqual(todo.concat(keys), todo.PRIORITIES)
+
+		color_dict = {}  # Regular expressions for different priorities
+		e = re.escape
+		default = e(todo.TERM_COLORS["default"])
+
+		for k in keys:
+			c = todo.CONFIG["PRI_{0}".format(k)]
+			color_dict[k] = re.compile(todo.concat([e(todo.TERM_COLORS[c]), 
+				"\d+ .*", default]))
+		del(e, default, keys)
+
+		for k, v in lines.items():
+			#self.assertIsNotNone(color_dict[k].match(v))
+			for line in v:
+				if not color_dict[k].match(line):
+					self.fail(todo.concat([k, line], " "))
 
 	def assert_color_only(self, lines):
 		# This needs to check that the return value is only a list of strings
 		# colored by priority.
-		self.assertTrue(isinstance(lines, list))
+		self.assertIsInstance(lines, list)
 		# Not finished, just testing the above statement.
 
 
@@ -97,3 +117,6 @@ class TestFormat(base.BaseTest):
 
 if __name__ == "__main__":
 	unittest.main()
+
+
+# vim:set noet:

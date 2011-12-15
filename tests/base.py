@@ -60,3 +60,13 @@ class BaseTest(unittest.TestCase):
 	def assertNumLines(self, exp, regexp=None):
 		c = self.count_matches(regexp)
 		self.assertEqual(exp, c)
+	
+
+	def assertIsInstance(self, obj, cls, msg=None):
+		if sys.version_info >= (2, 7):
+			return super(BaseTest, self).assertIsInstance(obj, cls, msg)
+		else:
+			return self.assertTrue(isinstance(obj, cls))
+
+
+# vim:set noet:

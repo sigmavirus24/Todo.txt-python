@@ -33,3 +33,6 @@ class PrependTest(base.BaseTest):
 
 if __name__ == "__main__":
 	unittest.main()
+
+
+# vim:set noet:
