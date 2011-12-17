@@ -24,6 +24,28 @@ import base
 
 class TestFormat(base.BaseTest):
 
+	def _generate_re_dictionary(self, with_pri=False):
+		rd = {}
+		esc = re.escape
+		colors = todo.TERM_COLORS
+		default = esc(colors["default"])
+		concat = todo.concat
+
+		if not with_pri:
+			for p in todo.PRIORITIES[:-1]:
+				color = todo.CONFIG["PRI_{0}".format(p)]
+				rd[p] = re.compile(concat([esc(colors[color]), 
+					"\d+ (\({0}\)) .*".format(p), default]))
+		else:
+			for p in todo.PRIORITIES[:-1]:
+				color = todo.CONFIG["PRI_{0}".format(p)]
+				rd[p] = re.compile(concat([esc(colors[color]), 
+					"\d+ .*".format(p), default]))
+
+		rd["X"] = re.compile(concat([default, "\d+ .*", default]))
+		return rd
+
+
 	def setUp(self):
 		i = 0
 		for k in todo.TERM_COLORS.keys():
@@ -32,10 +54,11 @@ class TestFormat(base.BaseTest):
 				i += 1
 		for k in todo.PRIORITIES[i:]:
 			todo.CONFIG["PRI_{0}".format(k)] = "default"
-		super(TestFormat,self).setUp()
+		super(TestFormat, self).setUp()
+
 
 	def test_formatted(self):
-		self.addm_todo_no_pri(self.num)
+		self.addm_todo_with_pri(self.num)
 		lines = todo.format_lines()
 		self.assert_formatted(lines)
 
@@ -47,24 +70,10 @@ class TestFormat(base.BaseTest):
 
 
 	def test_formatted_remove_pri(self):
+		todo.CONFIG["NO_PRI"] = True
 		self.addm_todo_with_pri(self.num)
-		#self.assertNumLines(self.num, "Test \d+")
-
-
-	def _generate_re_dictionary(self):
-		rd = {}
-		esc = re.escape
-		colors = todo.TERM_COLORS
-		default = esc(colors["default"])
-		concat = todo.concat
-
-		for p in todo.PRIORITIES[:-1]:
-			color = todo.CONFIG["PRI_{0}".format(p)]
-			rd[p] = re.compile(concat([esc(colors[color]), 
-				"\d+ (\({0}\))? .*".format(p), default]))
-
-		rd["X"] = re.compile(concat([default, "\d+ .*", default]))
-		return rd
+		lines = todo.format_lines()
+		self.assert_nopri(lines)
 
 
 	def addm_todo_no_pri(self, n):
@@ -100,11 +109,13 @@ class TestFormat(base.BaseTest):
 		self.assertIsInstance(lines, list)
 
 		re_dict = self._generate_re_dictionary()
+		priority = re.compile(".*\(([A-X])\).*")
 
-		#for line in lines:
-		#	self.assertIsNotNone(re_dict.match(line), todo.concat([k, line], 
-		#		" "))
-		# Not finished, need to extract the priority in a smart way.
+		for line in lines:
+			line = line.strip()
+			p = priority.sub("\g<1>", line)
+			self.assertIsNotNone(re_dict[p].match(line), todo.concat([p, line], 
+				" "))
 
 
 	def assert_plain(self):
@@ -114,10 +125,21 @@ class TestFormat(base.BaseTest):
 		pass
 
 
-	def assert_nopri(self):
+	def assert_nopri(self, lines):
 		# This should check to make sure the function removes the priorities
 		# from the beginning of the lines (formatted or otherwise).
-		pass
+		self.assertIsInstance(lines, dict)
+
+		keys = lines.keys()
+		keys.sort()
+		self.assertEqual(todo.concat(keys), todo.PRIORITIES)
+
+		color_dict = self._generate_re_dictionary(True)
+
+		for k, v in lines.items():
+			for line in v:
+				self.assertIsNotNone(color_dict[k].match(line), todo.concat([k,
+					line], " "))
 
 
 	def assert_dated(self):
