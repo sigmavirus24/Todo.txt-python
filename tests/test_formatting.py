@@ -76,6 +76,14 @@ class TestFormat(base.BaseTest):
 		self.assert_nopri(lines)
 
 
+	def test_plain(self):
+		todo.CONFIG["PLAIN"] = True
+		self.addm_todo_with_pri(self.num)
+		lines = todo.format_lines()
+		self.assert_plain(lines, dict)
+		lines = todo.format_lines(True)
+		self.assert_plain(lines, list)
+
 	def addm_todo_no_pri(self, n):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
 
@@ -118,11 +126,21 @@ class TestFormat(base.BaseTest):
 				" "))
 
 
-	def assert_plain(self):
+	def assert_plain(self, lines, cls):
 		# This needs to check that only the todo.TERM_COLORS["default"] color
 		# has been applied to the beginning and end of the string. Also needs to
 		# check that the return value is a dictionary
-		pass
+		#pass
+		self.assertIsInstance(lines, cls)
+		reg = re.compile("\d+\s(\([A-X]\))?.*")
+
+		if cls == list:
+			for line in lines:
+				self.assertIsNotNone(reg.match(line))
+		elif cls == dict:
+			for val in lines.values():
+				for line in val:
+					self.assertIsNotNone(reg.match(line))
 
 
 	def assert_nopri(self, lines):
