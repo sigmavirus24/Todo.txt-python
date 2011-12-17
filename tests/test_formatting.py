@@ -51,6 +51,22 @@ class TestFormat(base.BaseTest):
 		#self.assertNumLines(self.num, "Test \d+")
 
 
+	def _generate_re_dictionary(self):
+		rd = {}
+		esc = re.escape
+		colors = todo.TERM_COLORS
+		default = esc(colors["default"])
+		concat = todo.concat
+
+		for p in todo.PRIORITIES[:-1]:
+			color = todo.CONFIG["PRI_{0}".format(p)]
+			rd[p] = re.compile(concat([esc(colors[color]), 
+				"\d+ (\({0}\))? .*".format(p), default]))
+
+		rd["X"] = re.compile(concat([default, "\d+ .*", default]))
+		return rd
+
+
 	def addm_todo_no_pri(self, n):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
 
@@ -70,27 +86,25 @@ class TestFormat(base.BaseTest):
 		keys.sort()
 		self.assertEqual(todo.concat(keys), todo.PRIORITIES)
 
-		color_dict = {}  # Regular expressions for different priorities
-		e = re.escape
-		default = e(todo.TERM_COLORS["default"])
-
-		for k in keys:
-			c = todo.CONFIG["PRI_{0}".format(k)]
-			color_dict[k] = re.compile(todo.concat([e(todo.TERM_COLORS[c]), 
-				"\d+ .*", default]))
-		del(e, default, keys)
+		color_dict = self._generate_re_dictionary()
 
 		for k, v in lines.items():
-			#self.assertIsNotNone(color_dict[k].match(v))
 			for line in v:
-				if not color_dict[k].match(line):
-					self.fail(todo.concat([k, line], " "))
+				self.assertIsNotNone(color_dict[k].match(line),
+						todo.concat([k, line], " "))
+
 
 	def assert_color_only(self, lines):
 		# This needs to check that the return value is only a list of strings
 		# colored by priority.
 		self.assertIsInstance(lines, list)
-		# Not finished, just testing the above statement.
+
+		re_dict = self._generate_re_dictionary()
+
+		#for line in lines:
+		#	self.assertIsNotNone(re_dict.match(line), todo.concat([k, line], 
+		#		" "))
+		# Not finished, need to extract the priority in a smart way.
 
 
 	def assert_plain(self):

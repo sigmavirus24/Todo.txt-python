@@ -37,10 +37,12 @@ class BaseTest(unittest.TestCase):
 		open(todotxt, "w+").close()
 		open(donetxt, "w+").close()
 
+
 	def tearDown(self):
 		sys.stdout = sys.__stdout__
 		unlink(todotxt)
 		unlink(donetxt)
+
 
 	def count_matches(self, regexp=None):
 		count = 0
@@ -49,13 +51,16 @@ class BaseTest(unittest.TestCase):
 				count += 1
 		return count
 
+
 	def _test_lines_no_pri(self, num):
 		return ["Test {0}".format(i) for i in range(0, num)]
+
 
 	def _test_lines_pri(self, num):
 		n = len(todo.PRIORITIES)
 		p = todo.PRIORITIES
 		return ["({0}) Test {1}".format(p[i % n], i) for i in range(0, num)]
+
 
 	def assertNumLines(self, exp, regexp=None):
 		c = self.count_matches(regexp)
@@ -64,9 +69,16 @@ class BaseTest(unittest.TestCase):
 
 	def assertIsInstance(self, obj, cls, msg=None):
 		if sys.version_info >= (2, 7):
-			return super(BaseTest, self).assertIsInstance(obj, cls, msg)
+			super(BaseTest, self).assertIsInstance(obj, cls, msg)
 		else:
-			return self.assertTrue(isinstance(obj, cls))
+			self.assertTrue(isinstance(obj, cls))
 
+	
+	def assertIsNotNone(self, expr, msg=None):
+		if sys.version_info >= (2, 7):
+			super(BaseTest, self).assertIsNotNone(expr, msg)
+		else:
+			if not expr:
+				self.fail(msg)
 
 # vim:set noet:
