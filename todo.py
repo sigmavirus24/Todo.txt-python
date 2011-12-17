@@ -740,6 +740,9 @@ def format_lines(color_only=False):
 		for l in PRIORITIES:
 			formatted[l] = []
 
+	if plain:
+		default = ""
+
 	pri_re = re.compile('^\(([A-W])\)\s')
 	pad = todo_padding()
 	for line in iter_todos():
