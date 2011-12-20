@@ -24,14 +24,14 @@ import base
 
 class TestFormat(base.BaseTest):
 
-	def _generate_re_dictionary(self, with_pri=False):
+	def _generate_re_dictionary(self, with_lookbehind=False):
 		rd = {}
 		esc = re.escape
 		colors = todo.TERM_COLORS
 		default = esc(colors["default"])
 		concat = todo.concat
 
-		if not with_pri:
+		if not with_lookbehind:
 			for p in todo.PRIORITIES[:-1]:
 				color = todo.CONFIG["PRI_{0}".format(p)]
 				rd[p] = re.compile(concat([esc(colors[color]), 
@@ -40,7 +40,9 @@ class TestFormat(base.BaseTest):
 			for p in todo.PRIORITIES[:-1]:
 				color = todo.CONFIG["PRI_{0}".format(p)]
 				rd[p] = re.compile(concat([esc(colors[color]), 
-					"\d+ .*".format(p), default]))
+					"\d+ (?!\({0}\)).*".format(p), default]))
+				# If there is a priority listed ([A-X]), the match will fail on
+				# lines without priority
 
 		rd["X"] = re.compile(concat([default, "\d+ .*", default]))
 		return rd
@@ -83,6 +85,14 @@ class TestFormat(base.BaseTest):
 		self.assert_plain(lines, dict)
 		lines = todo.format_lines(True)
 		self.assert_plain(lines, list)
+
+
+	def test_dated(self):
+		todo.CONFIG["PRE_DATE"] = True
+		self.addm_todo_date(self.num)
+		lines = todo.format_lines()
+		self.assert_dated(lines)
+
 
 	def addm_todo_no_pri(self, n):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
@@ -159,15 +169,6 @@ class TestFormat(base.BaseTest):
 				self.assertIsNotNone(color_dict[k].match(line), todo.concat([k,
 					line], " "))
 
-
-	def assert_dated(self):
-		# Should check that the formatting is in date form and properly sorted.
-		pass
-
-
-	def assert_context(self):
-		# Should check that the return value is sorted by context.
-		pass
 
 if __name__ == "__main__":
 	unittest.main()

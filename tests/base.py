@@ -62,6 +62,14 @@ class BaseTest(unittest.TestCase):
 		return ["({0}) Test {1}".format(p[i % n], i) for i in range(0, num)]
 
 
+	def _test_lines_date(self, num):
+		n = len(todo.PRIORITIES)
+		p = todo.PRIORITIES
+		lines = ["({0}) Test {1}". format(p[i % n], i) for i in range(0, num)]
+		return [todo.concat(lines[i], "#{2011-12-%d}" % (i % num)) for i in
+				range(0, num)]
+
+
 	def assertNumLines(self, exp, regexp=None):
 		c = self.count_matches(regexp)
 		self.assertEqual(exp, c)
