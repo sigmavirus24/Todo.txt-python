@@ -87,13 +87,6 @@ class TestFormat(base.BaseTest):
 		self.assert_plain(lines, list)
 
 
-	def test_dated(self):
-		todo.CONFIG["PRE_DATE"] = True
-		self.addm_todo_date(self.num)
-		lines = todo.format_lines()
-		self.assert_dated(lines)
-
-
 	def addm_todo_no_pri(self, n):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
 
