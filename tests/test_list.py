@@ -26,14 +26,14 @@ class TestList(base.BaseTest):
 
 	def test_dated(self):
 		todo.CONFIG["PRE_DATE"] = True
-		self.addm_todo_date(self.num)
-		lines = todo.format_lines()
-		self.assert_dated(lines)
+		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
+		lines, sorted_lines = todo._list_("date", "#\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
+		self.assert_dated(sorted_lines)
 
 
 	def assert_dated(self, lines):
 		# Should check that the formatting is in date form and properly sorted.
-		self.assertIsInstance(lines, dict)
+		self.assertIsInstance(lines, list)
 
 
 	def assert_context(self):
