@@ -65,9 +65,11 @@ class BaseTest(unittest.TestCase):
 	def _test_lines_date(self, num):
 		n = len(todo.PRIORITIES)
 		p = todo.PRIORITIES
-		lines = ["({0}) Test {1}". format(p[i % n], i) for i in range(0, num)]
-		return [todo.concat(lines[i], "#{2011-12-%d}" % (i % num)) for i in
-				range(0, num)]
+		l = ["({0}) Test {1}".format(p[i % n], i) for i in range(0, num)]
+		m = []
+		for i in range(0, num):
+			m.append(todo.concat([l[i], " #{2012-12-%d}" % ((i + 1) % 31)]))
+		return m
 
 
 	def assertNumLines(self, exp, regexp=None):
