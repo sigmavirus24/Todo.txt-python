@@ -63,12 +63,32 @@ class BaseTest(unittest.TestCase):
 
 
 	def _test_lines_date(self, num):
-		n = len(todo.PRIORITIES)
-		p = todo.PRIORITIES
-		l = ["({0}) Test {1}".format(p[i % n], i) for i in range(0, num)]
+		l = self._test_lines_pri(num)
 		m = []
 		for i in range(0, num):
 			m.append(todo.concat([l[i], " #{2012-12-%d}" % ((i + 1) % 31)]))
+		return m
+
+
+	def _test_lines_project(self, num):
+		projects = ["+foo", "+bar", "+bogus", "+github", "+school", "+work",
+				"+inthemorning", "+agenda", "+noagenda"]
+		n = len(projects)
+		l = self._test_lines_pri(num)
+		m = []
+		for i in range(0, num):
+			m.append(todo.concat([l[i], projects[i % n]], " "))
+		return m
+
+
+	def _test_lines_context(self, num):
+		projects = ["@foo", "@bar", "@bogus", "@github", "@school", "@work",
+				"@inthemorning", "@agenda", "@noagenda"]
+		n = len(projects)
+		l = self._test_lines_pri(num)
+		m = []
+		for i in range(0, num):
+			m.append(todo.concat([l[i], projects[i % n]], " "))
 		return m
 
 

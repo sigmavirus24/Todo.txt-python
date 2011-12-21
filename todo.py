@@ -702,7 +702,7 @@ def cmd_help():
 	print('\t\tAdd "text to prepend" to the beginning of the item.')
 	print("")
 	print("\tpri | p NUMBER [A-X]")
-	print("\t\tAdd priority specified (A, B, or C) to item NUMBER.")
+	print("\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.")
 	if CONFIG["USE_GIT"]:
 		print("")
 		print("\tpull")

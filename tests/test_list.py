@@ -25,8 +25,7 @@ import base
 class TestList(base.BaseTest):
 	max = 31
 
-	def test_not_dated(self):
-		#todo.CONFIG["PRE_DATE"] = True
+	def test_dated(self):
 		if self.num > self.max:
 			self.num = self.max
 		todo.addm_todo("\n".join(self._test_lines_date(self.num)))
@@ -35,13 +34,35 @@ class TestList(base.BaseTest):
 		self.assert_dated(colored, sorted)
 
 
+	def test_context(self):
+		todo.addm_todo("\n".join(self._test_lines_context(self.num)))
+		colored, sorted = todo._list_("context", "@(\w+)")
+		self.assert_not_equal(colored, sorted)
+		self.assert_labeled(colored, sorted)
+
+
+	def test_project(self):
+		todo.addm_todo("\n".join(self._test_lines_project(self.num)))
+		colored, sorted = todo._list_("project", "\+(\w+)")
+		self.assert_not_equal(colored, sorted)
+		self.assert_labeled(colored, sorted)
+
+
+	# In order to test ./todo.py ls args I'll need a good way of redirecting
+	# stdout so I can capture what it prints.
+	#def test_ls(self):
+	# 	lines = "\n".join(self._test_lines_pri(self.num))
+	# 	lines[-1] = lines[-1] + " I'm looking for this"
+	# 	todo.addm_todo(lines)
+
+
 	def assert_dated(self, colored, lines):
 		# Should check that the formatting is in date form and properly sorted.
 		self.assertIsInstance(lines, list)
 		datere = re.compile("\d{4}-\d{1,2}-\d{1,2}")
 		count = 0
 		for line in lines:
-			if datere.match(line):
+			if not datere.match(line):
 				count += 1
 		self.assertEqual(count, len(colored))
 
@@ -50,10 +71,15 @@ class TestList(base.BaseTest):
 		self.assertNotEqual(len(colored), len(sorted))
 
 
-	def assert_context(self):
-		# Should check that the return value is sorted by context.
-		pass
-
+	def assert_labeled(self, colored, sorted):
+		# Should check that the return value is sorted by context or project.
+		self.assertIsInstance(sorted, list)
+		conre = re.compile("^\w+:$")
+		count = 0
+		for line in sorted:
+			if not conre.match(line):
+				count += 1
+		self.assertEqual(count, len(colored))
 
 if __name__ == "__main__":
 	unittest.main()
