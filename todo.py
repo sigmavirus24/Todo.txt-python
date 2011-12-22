@@ -115,7 +115,10 @@ def separate_line(number):
 	that position in the list. The list is the rest of the todos.
 	"""
 	lines = [line for line in iter_todos()]
-	separate = lines.pop(number - 1)
+	if lines:
+		separate = lines.pop(number - 1)
+	else:
+		separate = None
 	return separate, lines
 
 
