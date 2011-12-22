@@ -463,13 +463,13 @@ def default_config():
 				if yes_re.match(val):
 					repo_config()
 			# Untested addition
-			#else:
-			#	val = prompt("Would you like {prog} to clone\n a",
-			#			" remote repository for you? [y/N]",
-			#			prog=CONFIG["TODO_PY"])
-			#	if yes_re.match(val):
-			#		val = prompt("Please enter user@remote:/path/to/repo ")
-			#		repo.clone(val)
+			else:
+				val = prompt("Would you like {prog} to clone\n a",
+						" remote repository for you? [y/N]",
+						prog=CONFIG["TODO_PY"])
+				if yes_re.match(val):
+					val = prompt("Please enter user@remote:/path/to/repo. ")
+					r = Repo.clone_from(val, CONFIG["TODO_DIR"])
 		repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
 			CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 		repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
@@ -884,12 +884,11 @@ def _list_by_(*args):
 	matched_lines = []
 
 	for regexp in relist:
-		for line in lines:
-			if regexp.search(line):
-				matched_lines.append(line)
+		matched_lines = [line for line in lines if regexp.search(line)]
 		lines = matched_lines[:]
 	
-	print(concat(lines)[:-1])
+	if lines:
+		print(concat(lines)[:-1])
 	print_x_of_y(lines, alines)
 
 
