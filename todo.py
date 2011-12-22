@@ -43,6 +43,7 @@ except NameError:
 try:
 	PRIORITIES = string.uppercase[0:24]
 except AttributeError:
+	# Python 3 again
 	PRIORITIES = string.ascii_uppercase[0:24]
 
 # concat() is necessary long before the grouping of function declarations
@@ -63,16 +64,7 @@ TERM_COLORS = {
 		"bold" : "\033[1m",
 		}
 
-FROM_CONFIG = {}
-TO_CONFIG = {}
-for key in TERM_COLORS.keys():
-	bkey = concat(["$", re.sub(' ', '_', key).upper()])
-	FROM_CONFIG[bkey] = key
-	TO_CONFIG[key] = bkey
-del(key, bkey)  # If someone were to import this as a module, these show up.
-
-TODO_DIR = _path('~/.todo')
-
+TODO_DIR = _path("~/.todo")
 CONFIG = {
 		"TODO_DIR" : TODO_DIR,
 		"TODOTXT_DEFAULT_ACTION" : "",
@@ -91,9 +83,10 @@ CONFIG = {
 		"HIDE_DATE" : False,
 		"LEGACY" : False,
 		}
+
 for p in PRIORITIES:
-	CONFIG["PRI_{0}".format(p)] = ""
-del(p)
+	CONFIG["PRI_{0}".format(p)] = "default"
+del(p, TODO_DIR)
 
 
 ### Helper Functions
@@ -107,6 +100,7 @@ def todo_padding():
 		pad += 1
 		i /= 10
 	return pad
+
 
 def iter_todos():
 	"""
@@ -279,38 +273,44 @@ def get_config(config_name="", dir_name=""):
 			os.access(config_file, os.F_OK | os.R_OK | os.W_OK)):
 		default_config()
 	else:
+		FROM_CONFIG = {}
+		for key in TERM_COLORS.keys():
+			bkey = concat(["$", re.sub(' ', '_', key).upper()])
+			FROM_CONFIG[bkey] = key
+
 		f = open(config_file, 'r')
-		comment_re = re.compile('#')
-		bash_var_re = re.compile('$')
-		bash_val_re = re.compile('=')
+		skip_re = re.compile('#|$')
+		strip_re = re.compile('\w+\s([A-Za-z_$="./]+).*')
+		#bash_val_re = re.compile('=')
 		pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
 		home_re = re.compile('home', re.I)
-		for line in f.readlines():
-			if not (comment_re.match(line) or bash_var_re.match(line)):
-				line = line.strip()
-				i = line.find(' ') + 1
-				if i > 0:
-					line = line[i:]
-				items = bash_val_re.split(line)
-				items[1] = items[1].strip('"')
-				i = items[1].find(' ')
-				if i > 0:
-					items[1] = items[1][:i]
-				if pri_re.match(items[0]):
-					CONFIG[items[0]] = FROM_CONFIG[items[1]]
-				elif '/' in items[1] and '$' in items[1]:
-					# elision for path names
-					i = items[1].find('/')
-					if items[1][1:i] in CONFIG.keys():
-						items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
-					elif home_re.match(items[1][1:i]):
-						items[1] = _pathc(['~', items[1][i:]])
-				elif items[0] == "USE_GIT":
-					CONFIG["USE_GIT"] = True if items[1] == "True" else False
-				else:
-					CONFIG[items[0]] = items[1]
 
-		f.close()
+		with open(config_file, 'r') as f:
+			for line in f:
+				if not skip_re.match(line):
+					line = line.strip()
+					#i = line.find(' ') + 1
+					#if i > 0:
+					#	line = line[i:]
+					line = strip_re.sub('\g<1>', line)
+					items = line.split('=')
+					items[1] = items[1].strip('"')
+					#i = items[1].find(' ')
+					#if i > 0:
+					#	items[1] = items[1][:i]
+					if pri_re.match(items[0]):
+						CONFIG[items[0]] = FROM_CONFIG[items[1]]
+					elif '/' in items[1] and '$' in items[1]:
+						# elision for path names
+						i = items[1].find('/')
+						if items[1][1:i] in CONFIG.keys():
+							items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
+						elif home_re.match(items[1][1:i]):
+							items[1] = _pathc(['~', items[1][i:]])
+					elif items[0] == "USE_GIT":
+						CONFIG["USE_GIT"] = True if items[1] == "True" else False
+					else:
+						CONFIG[items[0]] = items[1]
 
 	if CONFIG["USE_GIT"]:
 		global git
@@ -429,6 +429,11 @@ def default_config():
 	CONFIG["PRI_C"] = "light blue"
 	CONFIG["PRI_X"] = "white"
 
+	TO_CONFIG = {}
+	for key in TERM_COLORS.keys():
+		bkey = concat(["$", re.sub(' ', '_', key).upper()])
+		TO_CONFIG[key] = bkey
+
 	for k, v in CONFIG.items():
 		if v != "" and k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
 				"HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI"):
@@ -443,7 +448,8 @@ def default_config():
 	if yes_re.match(val):
 		CONFIG["USE_GIT"] = True
 		cfg.write("export USE_GIT=True\n")
-		repo = CONFIG["GIT"]
+		repo = CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
+		# ^: Might not be necessary
 		try:
 			repo.status()
 		except git.exc.GitCommandError as g:
@@ -452,12 +458,20 @@ def default_config():
 			if yes_re.match(val):
 				print(repo.init())
 				val = prompt("Would you like {prog} to help\n you",
-				" configure your new git repository? [y/n]",
-				prog=CONFIG["TODO_PY"])
+						" configure your new git repository? [y/n]",
+						prog=CONFIG["TODO_PY"])
 				if yes_re.match(val):
 					repo_config()
+			# Untested addition
+			#else:
+			#	val = prompt("Would you like {prog} to clone\n a",
+			#			" remote repository for you? [y/N]",
+			#			prog=CONFIG["TODO_PY"])
+			#	if yes_re.match(val):
+			#		val = prompt("Please enter user@remote:/path/to/repo ")
+			#		repo.clone(val)
 		repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
-		CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
+			CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
 		repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 	else:
 		cfg.write("export USE_GIT=False\n")
