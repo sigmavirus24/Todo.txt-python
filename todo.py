@@ -745,21 +745,21 @@ def format_lines(color_only=False):
 		if r:
 			category = r.groups()[0]
 			if plain:
-				col = default
+				color = default
 			else:
 				k = CONFIG["PRI_{0}".format(category)]
 				if k in TERM_COLORS.keys():
-					col = TERM_COLORS[k]
+					color = TERM_COLORS[k]
 				else:
-					col = default
+					color = default
 			if no_priority:
 				line = pri_re.sub("", line)
 		else:
 			category = "X"
-			col = default
+			color = default
 
 		j = i + 1
-		l = concat([col, invert, str(j).zfill(pad), " ", line[:-1], default, "\n"])
+		l = concat([color, invert, str(j).zfill(pad), " ", line[:-1], default, "\n"])
 		if color_only:
 			formatted.append(l)
 		else:
