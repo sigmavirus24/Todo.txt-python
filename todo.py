@@ -91,10 +91,8 @@ del(p, TODO_DIR)
 
 ### Helper Functions
 def todo_padding():
-	i = 0
-	with open(CONFIG["TODO_FILE"]) as fd:
-		for l in fd:
-			i += 1  # This is just a little bit more obvious.
+	lines = [line for line in iter_todos()]
+	i = len(lines)
 	pad = 1
 	while i >= 10:
 		pad += 1
@@ -498,8 +496,7 @@ def addm_todo(lines):
 	Add new items to the list of things todo.
 	"""
 	lines = lines.split("\n")
-	for line in lines:
-		add_todo(line)
+	map(add_todo, lines)
 ### End new todo functions
 
 
@@ -726,9 +723,10 @@ def format_lines(color_only=False):
 	Take in a list of lines to do, return them formatted with the TERM_COLORS
 	and organized based upon priority.
 	"""
-	i = 1
-	default = TERM_COLORS[CONFIG.get("DEFAULT", "default")]
+	def _m(i):
+		formatted[i] = []
 	plain = CONFIG["PLAIN"]
+	default = TERM_COLORS[CONFIG.get("DEFAULT", "default")] if not plain else ""
 	no_priority = CONFIG["NO_PRI"]
 	category = ""
 	invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
@@ -736,38 +734,34 @@ def format_lines(color_only=False):
 	formatted = []
 	if not color_only:
 		formatted = {}
-		for l in PRIORITIES:
-			formatted[l] = []
-
-	if plain:
-		default = ""
+		map(_m, PRIORITIES)
 
 	pri_re = re.compile('^\(([A-W])\)\s')
 	pad = todo_padding()
-	for line in iter_todos():
+	for (i, line) in enumerate(iter_todos()):
 		r = pri_re.match(line)
 		if r:
 			category = r.groups()[0]
 			if plain:
-				color = default
+				col = default
 			else:
 				k = CONFIG["PRI_{0}".format(category)]
 				if k in TERM_COLORS.keys():
-					color = TERM_COLORS[k]
+					col = TERM_COLORS[k]
 				else:
-					color = default
+					col = default
 			if no_priority:
 				line = pri_re.sub("", line)
 		else:
 			category = "X"
-			color = default
+			col = default
 
-		l = concat([color, invert, str(i).zfill(pad), " ", line[:-1], default, "\n"])
+		j = i + 1
+		l = concat([col, invert, str(j).zfill(pad), " ", line[:-1], default, "\n"])
 		if color_only:
 			formatted.append(l)
 		else:
 			formatted[category].append(l)
-		i += 1
 
 	return formatted
 
@@ -783,10 +777,9 @@ def _legacy_sort(items):
 	"""
 	line_re = re.compile('^.*\d+\s(\([A-X]\)\s)?')
 	# The .* in the regexp is needed for the \033[* codes
-	keys = [line_re.sub("", i) for i in items]
-	items_dict = dict(zip(keys, items))
-	keys.sort()
-	items = [items_dict[k] for k in keys]
+	items = [(line_re.sub("", i), i) for i in items]
+	items.sort()
+	items = [line for (k, line) in items]
 	return items
 
 
