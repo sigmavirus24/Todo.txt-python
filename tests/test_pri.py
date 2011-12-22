@@ -30,21 +30,26 @@ class PrioritizeTest(base.BaseTest):
 	def test_prioritize(self):
 		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
 
+		n = len(todo.PRIORITIES)
 		for i in range(0, self.num):
-			todo.prioritize_todo([str(i + 1), uppercase[i]])
+			todo.prioritize_todo([str(i + 1), todo.PRIORITIES[i % n]])
 
 		self.assertNumLines(self.num, "\([A-X]\)\sTest\s\d+")
 
 		for i in range(0, self.num):
-			todo.prioritize_todo([str(i + 1), uppercase[-i]])
+			todo.prioritize_todo([str(i + 1), todo.PRIORITIES[-i % n]])
 
 		self.assertNumLines(self.num, "\([A-X]\)\sTest\s\d+")
 
 		for i in range(0, self.num):
 			todo.de_prioritize_todo(str(i + 1))
-			todo.prioritize_todo([str(i + 1), uppercase[-i]])
 
-		self.assertNumLines(self.num - 2, "\([A-X]\)\sTest\s\d+")
+		self.assertNumLines(0, "\([A-X]\)\sTest\s\d+")
+
+		for i in range(0, self.num):
+			todo.prioritize_todo([str(i + 1), todo.PRIORITIES[-i % n]])
+
+		self.assertNumLines(self.num, "\([A-X]\)\sTest\s\d+")
 
 if __name__ == "__main__":
 	unittest.main()
