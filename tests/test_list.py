@@ -23,11 +23,7 @@ import todo
 import base
 
 class TestList(base.BaseTest):
-	max = 31
-
 	def test_dated(self):
-		if self.num > self.max:
-			self.num = self.max
 		todo.addm_todo("\n".join(self._test_lines_date(self.num)))
 		colored, sorted = todo._list_("date", "#\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
 		self.assert_not_equal(colored, sorted)

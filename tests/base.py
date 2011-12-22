@@ -17,6 +17,7 @@
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 # Common functions for test_*_todo.py
+import datetime
 import re
 import sys
 import unittest
@@ -28,7 +29,7 @@ todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
 donetxt = todo.CONFIG["DONE_FILE"] = "test_done.txt"
 
 class BaseTest(unittest.TestCase):
-	num = 11
+	num = 50
 
 	def setUp(self):
 		todo.CONFIG["PRE_DATE"] = False
@@ -65,8 +66,10 @@ class BaseTest(unittest.TestCase):
 	def _test_lines_date(self, num):
 		l = self._test_lines_pri(num)
 		m = []
-		for i in range(0, num):
-			m.append(todo.concat([l[i], " #{2012-12-%d}" % ((i + 1) % 31)]))
+		start_date = datetime.date.today()
+
+		for d, l in zip((start_date + datetime.timedelta(n) for n in range(num)), l):
+			m.append(todo.concat([l, " #{%s}" % d.isoformat()]))
 		return m
 
 
