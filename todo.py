@@ -116,16 +116,8 @@ def separate_line(number):
 	Takes an integer and returns a string and a list. The string is the item at
 	that position in the list. The list is the rest of the todos.
 	"""
-	i = 1
-	lines = []
-	separate = ''
-	for line in iter_todos():
-		if i != number:
-			lines.append(line)
-		else:
-			separate = line
-		i += 1
-	
+	lines = [line for line in iter_todos()]
+	separate = lines.pop(number - 1)
 	return separate, lines
 
 
@@ -281,23 +273,16 @@ def get_config(config_name="", dir_name=""):
 		f = open(config_file, 'r')
 		skip_re = re.compile('#|$')
 		strip_re = re.compile('\w+\s([A-Za-z_$="./]+).*')
-		#bash_val_re = re.compile('=')
 		pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
 		home_re = re.compile('home', re.I)
 
 		with open(config_file, 'r') as f:
 			for line in f:
 				if not skip_re.match(line):
-					line = line.strip()
-					#i = line.find(' ') + 1
-					#if i > 0:
-					#	line = line[i:]
-					line = strip_re.sub('\g<1>', line)
-					items = line.split('=')
+					# Extract VAR=VAL and then split VAR and VAL
+					items = strip_re.sub('\g<1>', line.strip()).split('=')
 					items[1] = items[1].strip('"')
-					#i = items[1].find(' ')
-					#if i > 0:
-					#	items[1] = items[1][:i]
+
 					if pri_re.match(items[0]):
 						CONFIG[items[0]] = FROM_CONFIG[items[1]]
 					elif '/' in items[1] and '$' in items[1]:
