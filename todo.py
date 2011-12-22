@@ -418,8 +418,10 @@ def default_config():
 		TO_CONFIG[key] = bkey
 
 	for k, v in CONFIG.items():
-		if v != "" and k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
-				"HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI"):
+		if v and (k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
+				"HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI")):
+			if isinstance(v, bool):
+				v = int(v)
 			if v in TO_CONFIG.keys():
 				cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
 			else:
