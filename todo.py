@@ -90,8 +90,8 @@ del(p, TODO_DIR)
 
 
 ### Helper Functions
-def todo_padding():
-	lines = [line for line in iter_todos()]
+def todo_padding(include_done=False):
+	lines = [line for line in iter_todos(include_done)]
 	i = len(lines)
 	pad = 1
 	while i >= 10:
@@ -100,13 +100,17 @@ def todo_padding():
 	return pad
 
 
-def iter_todos():
+def iter_todos(include_done=False):
 	"""
 	Opens the file in read-only mode, and returns an iterator for the todos.
 	"""
 	with open(CONFIG["TODO_FILE"]) as fd:
 		for line in fd:
 			yield line
+	if include_done:
+		with open(CONFIG["DONE_FILE"]) as fd:
+			for line in fd:
+				yield line
 
 
 def separate_line(number):
@@ -435,7 +439,7 @@ def default_config():
 	yes_re = re.compile('y(?:es)?', re.I)
 	if yes_re.match(val):
 		CONFIG["USE_GIT"] = True
-		cfg.write("export USE_GIT=True\n")
+		cfg.write("export USE_GIT=1\n")
 		repo = CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
 		# ^: Might not be necessary
 		try:
@@ -473,10 +477,16 @@ def default_config():
 
 
 ### New todo Functions
-def add_todo(line):
+def add_todo(args):
 	"""
 	Add a new item to the list of things todo.
 	"""
+	if str(args) == args:
+		line = args
+	elif len(args) >= 1:
+		line = concat(args, " ")
+	else:
+		line = prompt("Add: ")
 	prepend = CONFIG["PRE_DATE"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
@@ -500,6 +510,10 @@ def addm_todo(lines):
 	"""
 	Add new items to the list of things todo.
 	"""
+	if str(args) == args:
+		lines = args
+	else:
+		lines = concat(args, " ")
 	lines = lines.split("\n")
 	map(add_todo, lines)
 ### End new todo functions
@@ -723,7 +737,7 @@ def cmd_help():
 
 
 ### List Printing Functions
-def format_lines(color_only=False):
+def format_lines(color_only=False, include_done=False):
 	"""
 	Take in a list of lines to do, return them formatted with the TERM_COLORS
 	and organized based upon priority.
@@ -742,8 +756,8 @@ def format_lines(color_only=False):
 		map(_m, PRIORITIES)
 
 	pri_re = re.compile('^\(([A-W])\)\s')
-	pad = todo_padding()
-	for (i, line) in enumerate(iter_todos()):
+	pad = todo_padding(include_done)
+	for (i, line) in enumerate(iter_todos(include_done)):
 		r = pri_re.match(line)
 		if r:
 			category = r.groups()[0]
@@ -858,7 +872,7 @@ def _list_by_(*args):
 	relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"])) for arg in args]
 	del(esc)  # don't need it anymore
 
-	alines = format_lines() # Retrieves all lines.
+	alines = format_lines()  # Retrieves all lines.
 	lines = []
 	for p in PRIORITIES:
 		lines.extend(alines[p])
@@ -886,6 +900,25 @@ def list_todo(args=None, plain=False, no_priority=False):
 		print_x_of_y(sorted, sorted)
 	else:
 		_list_by_(*args)
+
+
+def list_all():
+	"""
+	Print the list of todo items in order of priority and then print the
+	done.txt file.
+	"""
+	#lines, sorted = _list_("pri", "")
+	#print(concat(sorted)[:-1])
+	#i = len(lines)
+	#pad = todo_padding(True)
+	#with open(CONFIG["DONE.TXT"], "r") as fd:
+	formatted = format_lines(include_done=True)
+	lines = []
+	for p in PRIORITIES:
+		lines.extend(formatted[p])
+	if lines:
+		print(concat(lines)[:-1])
+	print_x_of_y(lines, lines)
 
 
 def list_date():
@@ -1030,6 +1063,7 @@ if __name__ == "__main__" :
 			"rm"		: ( True, delete_todo),
 			"ls"		: ( True, list_todo),
 			"list"		: ( True, list_todo),
+			"lsa"		: (False, list_all),
 			"lsc"		: (False, list_context),
 			"listcon"	: (False, list_context),
 			"lsd"		: (False, list_date),
@@ -1052,9 +1086,8 @@ if __name__ == "__main__" :
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
-	append_re = re.compile('app(?:end)?')
+	all_re = re.compile('(app|pre)(?:end)?')
 	pri_re = re.compile('p(?:ri)?')
-	prepend_re = re.compile('pre(?:end)?')
 
 	while args:
 		# ensure this doesn't error because of a faulty CAPS LOCK key
@@ -1063,10 +1096,10 @@ if __name__ == "__main__" :
 			if not commands[arg][0]:
 				commands[arg][1]()
 			else:
-				if append_re.match(arg) or arg in ["ls", "list"]:
+				if all_re.match(arg) or arg in ["ls", "list", "a", "add", "addm"]:
 					commands[arg][1](args)
 					args = None
-				elif pri_re.match(arg) or prepend_re.match(arg):
+				elif pri_re.match(arg):
 					commands[arg][1](args[:2])
 					args = args[2:]
 				else:
