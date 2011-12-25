@@ -477,14 +477,14 @@ def default_config():
 
 
 ### New todo Functions
-def add_todo(lines):
+def add_todo(args):
 	"""
 	Add a new item to the list of things todo.
 	"""
-	if str(lines) == lines:
-		line = lines
-	elif len(lines) >= 1:
-		line = concat(lines, " ")
+	if str(args) == args:
+		line = args
+	elif len(args) >= 1:
+		line = concat(args, " ")
 	else:
 		line = prompt("Add:")
 	prepend = CONFIG["PRE_DATE"]
