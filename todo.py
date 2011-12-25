@@ -477,16 +477,16 @@ def default_config():
 
 
 ### New todo Functions
-def add_todo(args):
+def add_todo(lines):
 	"""
 	Add a new item to the list of things todo.
 	"""
-	if str(args) == args:
-		line = args
-	elif len(args) >= 1:
-		line = concat(args, " ")
+	if str(lines) == lines:
+		line = lines
+	elif len(lines) >= 1:
+		line = concat(lines, " ")
 	else:
-		line = prompt("Add: ")
+		line = prompt("Add:")
 	prepend = CONFIG["PRE_DATE"]
 	fd = open(CONFIG["TODO_FILE"], "r+")
 	l = len(fd.readlines()) + 1
@@ -506,7 +506,7 @@ def add_todo(args):
 		_git_commit([CONFIG["TODO_FILE"]], s)
 
 
-def addm_todo(lines):
+def addm_todo(args):
 	"""
 	Add new items to the list of things todo.
 	"""
@@ -1063,6 +1063,7 @@ if __name__ == "__main__" :
 			"rm"		: ( True, delete_todo),
 			"ls"		: ( True, list_todo),
 			"list"		: ( True, list_todo),
+			"listall"	: (False, list_all),
 			"lsa"		: (False, list_all),
 			"lsc"		: (False, list_context),
 			"listcon"	: (False, list_context),
@@ -1075,10 +1076,10 @@ if __name__ == "__main__" :
 			}
 	if CONFIG["USE_GIT"]:
 		commands.update(
-				[("push", (False, _git_push)),
-				("pull", (False, _git_pull)),
-				("status", (False, _git_status)),
-				("log", (False, _git_log))]
+				[("push", 	(False, _git_push)),
+				("pull", 	(False, _git_pull)),
+				("status", 	(False, _git_status)),
+				("log", 	(False, _git_log))]
 				)
 
 	commandsl = [intern(key) for key in commands.keys()]
