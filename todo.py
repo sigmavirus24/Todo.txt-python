@@ -2,20 +2,20 @@
 
 # TODO.TXT-CLI-python
 # Copyright (C) 2011  Sigmavirus24
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 import os
@@ -265,7 +265,7 @@ def get_config(config_name="", dir_name=""):
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
 
 	config_file = _path(config_file)
-	if not (os.access(CONFIG["TODO_DIR"], 
+	if not (os.access(CONFIG["TODO_DIR"],
 		os.F_OK | os.R_OK | os.W_OK | os.X_OK) and \
 			os.access(config_file, os.F_OK | os.R_OK | os.W_OK)):
 		default_config()
@@ -321,6 +321,7 @@ http://pypi.python.org/pypi/GitPython")
 
 def git_functions():
 	global repo_config
+
 	def repo_config():
 		"""
 		Help the user configure their git repository.
@@ -660,12 +661,12 @@ def prepend_todo(args):
 		pri_re = re.compile('^(\([A-X]\)\s)')
 
 		if pri_re.match(old_line):
-			new_line = pri_re.sub(concat( ["\g<1>", prepend_str]), old_line)
+			new_line = pri_re.sub(concat(["\g<1>", prepend_str]), old_line)
 		else:
 			new_line = concat([prepend_str, old_line])
 
 		lines.insert(line_no - 1, new_line)
-		
+
 		rewrite_and_post(line_no, old_line, new_line, lines)
 	else:
 		post_error('prepend', 'NUMBER', 'string')
@@ -678,7 +679,8 @@ def cmd_help():
 	print("")
 	print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
 	print('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"')
-	print("\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}' to your todo.txt")
+	print(concat(["\t\tAdds 'Item to do +project @context",
+		" #{yyyy-mm-dd}' to your todo.txt"]))
 	print("\t\tfile.")
 	print("\t\t+project, @context, #{yyyy-mm-dd} are optional")
 	print("")
@@ -883,7 +885,7 @@ def _list_by_(*args):
 	for regexp in relist:
 		matched_lines = [line for line in lines if regexp.search(line)]
 		lines = matched_lines[:]
-	
+
 	if lines:
 		print(concat(lines)[:-1])
 	print_x_of_y(lines, alines)
