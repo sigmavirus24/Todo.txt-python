@@ -18,10 +18,10 @@
 
 # Common functions for test_*_todo.py
 import datetime
+import os
 import re
 import sys
 import unittest
-from os import unlink
 
 import todo
 
@@ -41,8 +41,10 @@ class BaseTest(unittest.TestCase):
 
 	def tearDown(self):
 		sys.stdout = sys.__stdout__
-		unlink(todotxt)
-		unlink(donetxt)
+		if os.path.isfile(todotxt):
+			os.unlink(todotxt)
+		if os.path.isfile(donetxt):
+			os.unlink(donetxt)
 
 
 	def count_matches(self, regexp=None):

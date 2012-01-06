@@ -16,6 +16,7 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
+import os
 import todo
 import base
 import unittest
@@ -29,6 +30,10 @@ class TestAdd(base.BaseTest):
 	def test_add_predate(self):
 		self.add_todo_predate(self.num)
 		self.assertNumLines(self.num, "\d{4}-\d{2}-\d{2}.*Test \d+")
+
+	def test_add_nofile(self):
+		os.unlink(todo.CONFIG["TODO_FILE"])
+		self.test_add()
 
 	def add_todo(self, n):
 		lines = self._test_lines_no_pri(n)

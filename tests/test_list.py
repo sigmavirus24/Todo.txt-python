@@ -16,8 +16,9 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import unittest
+import os
 import re
+import unittest
 
 import todo
 import base
@@ -42,6 +43,10 @@ class TestList(base.BaseTest):
 		colored, sorted = todo._list_("project", "\+(\w+)")
 		self.assert_not_equal(colored, sorted)
 		self.assert_labeled(colored, sorted)
+
+	def test_nofile(self):
+		os.unlink(todo.CONFIG["TODO_FILE"])
+		colored, sorted = todo._list_("pri", None)
 
 
 	# In order to test ./todo.py ls args I'll need a good way of redirecting
