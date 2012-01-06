@@ -107,7 +107,7 @@ def iter_todos(include_done=False):
 	with open(CONFIG["TODO_FILE"]) as fd:
 		for line in fd:
 			yield line
-	if include_done:
+	if include_done and os.path.isfile(CONFIG["DONE_FILE"]):
 		with open(CONFIG["DONE_FILE"]) as fd:
 			for line in fd:
 				yield line
@@ -276,10 +276,9 @@ def get_config(config_name="", dir_name=""):
 			FROM_CONFIG[bkey] = key
 
 		f = open(config_file, 'r')
-		skip_re = re.compile('#|$')
+		skip_re = re.compile('^\s*(#|$)')
 		strip_re = re.compile('\w+\s([A-Za-z_$="./]+).*')
 		pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
-		home_re = re.compile('home', re.I)
 
 		with open(config_file, 'r') as f:
 			for line in f:
@@ -290,17 +289,14 @@ def get_config(config_name="", dir_name=""):
 
 					if pri_re.match(items[0]):
 						CONFIG[items[0]] = FROM_CONFIG[items[1]]
-					elif '/' in items[1] and '$' in items[1]:
-						# elision for path names
-						i = items[1].find('/')
-						if items[1][1:i] in CONFIG.keys():
-							items[1] = concat([CONFIG[items[1][1:i]], items[1][i:]])
-						elif home_re.match(items[1][1:i]):
-							items[1] = _pathc(['~', items[1][i:]])
 					elif items[0] == "USE_GIT":
 						CONFIG["USE_GIT"] = True if items[1] == "True" else False
 					else:
+						items[1] = os.path.expandvars(items[1])
 						CONFIG[items[0]] = items[1]
+
+					# make expandvars work for our vars too
+					os.environ[items[0]] = items[1]
 
 	if CONFIG["USE_GIT"]:
 		global git
@@ -394,7 +390,6 @@ def git_functions():
 			g.config(concat(["branch.", local_branch, ".merge"]),
 					concat(["refs/heads/", remote_branch]))
 
-
 def default_config():
 	"""
 	Set up the default configuration file.
@@ -410,7 +405,8 @@ def default_config():
 
 	# touch/create files needed for the operation of the script
 	for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
-		touch(CONFIG[item])
+		if CONFIG[item]:
+			touch(CONFIG[item])
 
 	cfg = open(concat([CONFIG["TODO_DIR"], "/config"]), 'w')
 
@@ -463,8 +459,11 @@ def default_config():
 				if yes_re.match(val):
 					val = prompt("Please enter user@remote:/path/to/repo. ")
 					r = Repo.clone_from(val, CONFIG["TODO_DIR"])
-		repo.add([CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"],
-			CONFIG["TMP_FILE"], CONFIG["DONE_FILE"], CONFIG["REPORT_FILE"]])
+		files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
+		for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
+			if CONFIG[setting]:
+				files.append(CONFIG[setting])
+		repo.add(files)
 		repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 	else:
 		cfg.write("export USE_GIT=False\n")
@@ -538,14 +537,21 @@ def do_todo(line):
 		removed = re.sub("\([A-X]\)\s?", "", removed)
 		removed = "x " + today + " " + removed
 
-		fd = open(CONFIG["DONE_FILE"], "a")
-		fd.write(removed)
-		fd.close()
+		files = [CONFIG["TODO_FILE"]]
+		dfile = CONFIG["DONE_FILE"]
+		if dfile:
+			fd = open(dfile, "a")
+			fd.write(removed)
+			fd.close()
+			files.append(dfile)
 
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(line))
 		if CONFIG["USE_GIT"]:
-			_git_commit([CONFIG["TODO_FILE"], CONFIG["DONE_FILE"]], removed)
+			files = [CONFIG["TODO_FILE"]]
+			if CONFIG["DONE_FILE"]:
+				files.append(CONFIG["DONE_FILE"])
+			_git_commit(files, removed)
 
 
 def delete_todo(line):
