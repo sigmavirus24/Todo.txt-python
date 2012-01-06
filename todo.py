@@ -104,6 +104,9 @@ def iter_todos(include_done=False):
 	"""
 	Opens the file in read-only mode, and returns an iterator for the todos.
 	"""
+	tfile=CONFIG["TODO_FILE"]
+	if not os.path.isfile(tfile):
+		return
 	with open(CONFIG["TODO_FILE"]) as fd:
 		for line in fd:
 			yield line
@@ -488,8 +491,7 @@ def add_todo(args):
 	else:
 		line = prompt("Add:")
 	prepend = CONFIG["PRE_DATE"]
-	fd = open(CONFIG["TODO_FILE"], "r+")
-	l = len(fd.readlines()) + 1
+	l = len([1 for l in iter_todos()]) + 1
 	pri_re = re.compile('(\([A-X]\))')
 	if pri_re.match(line) and prepend:
 		line = pri_re.sub(concat(["\g<1>",
@@ -497,8 +499,8 @@ def add_todo(args):
 			line)
 	elif prepend:
 		line = concat([datetime.now().strftime("%Y-%m-%d "), line])
-	fd.write(concat([line, "\n"]))
-	fd.close()
+	with open(CONFIG["TODO_FILE"], "a") as fd:
+		fd.write(concat([line, "\n"]))
 	s = "TODO: '{0}' added on line {1}.".format(
 		line, l)
 	print(s)
