@@ -219,10 +219,8 @@ def _git_commit(files, message):
 		CONFIG["GIT"].commit(files, "-m", message)
 	except git.exc.GitCommandError as g:
 		_git_err(g)
-	if "-a" not in files:
-		print(concat(["TODO: ", concat(files, ", "), " archived."]))
-	else:
-		print(concat(["TODO: ", CONFIG["TODO_DIR"], " archived."]))
+	committed = CONFIG["TODO_DIR"] if "-a" in files else concat(files, ", ")
+	print(concat(["TODO: ", committed, " archived."]))
 
 
 def prompt(*args, **kwargs):
@@ -322,7 +320,6 @@ def git_functions():
 		"""
 		Help the user configure their git repository.
 		"""
-		from getpass import getuser
 		from os import getenv
 		g = CONFIG["GIT"]
 		# local configuration
@@ -356,22 +353,23 @@ def git_functions():
 			remote_user = None
 			remote_branch = None
 
-			while not remote_host:
-				remote_host = prompt("Remote hostname:")
-				if not remote_host:
-					print("Please enter the remote's hostname.")
-			while not remote_path:
-				remote_path = prompt("Remote path:")
-				if not remote_path:
-					print("Please enter the path to the remote's repository.")
-			while not remote_user:
-				remote_user = prompt("Remote user:")
-				if not remote_user:
-					print("Please enter the user on the remote machine.")
-			while not remote_branch:
-				remote_branch = prompt("Remote branch:")
-				if not remote_branch:
-					print("Please enter the branch to push to on the remote machine.")
+			def __while_prompt__(prompt_str, error_string):
+				ret = None
+				while not ret:
+					ret = prompt(prompt_str)
+					if not ret:
+						print(error_string)
+				return ret
+
+			remote_host = __while_prompt__("Remote hostname:", 
+				"Please enter the remote's hostname.")
+			remote_path = __while_prompt__("Remote path:",
+				"Please enter the path to the remote's repository.")
+			remote_path = __while_prompt__("Remote user:",
+				"Please enter the user on the remote machine.")
+			remote_branch = __while_prompt__("Remote branch:",
+				"Please enter the branch to push to on the remote machine.")
+
 			prompt("Press enter when you have initialized a bare\n",
 				" repository on the remote or are ready to proceed.")
 			local_branch = g.branch()
