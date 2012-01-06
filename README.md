@@ -1,4 +1,4 @@
-A port of the popular todo.txt-cli project written in bash to python.
+A port of the [popular todo.txt-cli project](https://github.com/ginatrapani/todo.txt-cli) written in bash to python.
 
 This REQUIRES GitPython. Running the script once will give you the URL to
 download it. For `todo.py status` to work, it seems git 1.7.x is required. 
