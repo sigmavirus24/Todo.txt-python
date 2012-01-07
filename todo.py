@@ -120,9 +120,12 @@ def separate_line(number):
 	"""
 	Takes an integer and returns a string and a list. The string is the item at
 	that position in the list. The list is the rest of the todos.
+	
+	If the todo.txt file is empty, separate = lines = None.
+	If the number is invalid separate = None, lines != None.
 	"""
 	lines = [line for line in iter_todos()]
-	if lines:
+	if lines and number - 1 < len(lines) and 0 <= number - 1:
 		separate = lines.pop(number - 1)
 	else:
 		separate = None
@@ -249,6 +252,13 @@ def print_x_of_y(x, y):
 			# more lines of items to do than there actually are.
 	else:
 		print(t_str.format(len(x), len(y)))
+
+
+def test_separated(removed, lines, line_no):
+	if not (removed or lines):
+		print("{0}: No such todo.".format(line_no))
+		return True
+	return False
 ### End Helper Functions
 
 
@@ -528,6 +538,8 @@ def do_todo(line):
 		print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
 	else:
 		removed, lines = separate_line(int(line))
+		if test_separated(removed, lines, line):
+			return
 
 		fd = open(CONFIG["TODO_FILE"], "w")
 		rewrite_file(fd, lines)
@@ -562,6 +574,8 @@ def delete_todo(line):
 		print("Usage: {0} (del|rm) item#".format(CONFIG["TODO_PY"]))
 	else:
 		removed, lines = separate_line(int(line))
+		if test_separated(removed, lines, line):
+			return
 
 		fd = open(CONFIG["TODO_FILE"], "w")
 		rewrite_file(fd, lines)
@@ -610,6 +624,9 @@ def append_todo(args):
 	if args[0].isdigit():
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
+		if test_separated(old_line, lines, line_no):
+			return
+
 		new_line = concat([concat([old_line[:-1], concat(args, " ")],  " "), "\n"],)
 		lines.insert(line_no - 1, new_line)
 
@@ -625,6 +642,9 @@ def prioritize_todo(args):
 	if args[0].isdigit() and len(args[1]) == 1 and args[1] in PRIORITIES:
 		line_no = int(args.pop(0))
 		old_line, lines = separate_line(line_no)
+		if test_separated(old_line, lines, line_no):
+			return
+
 		new_pri = concat(["(", args[0], ") "])
 		r = re.match("(\([A-X]\)\s).*", old_line)
 		if r:
@@ -647,6 +667,9 @@ def de_prioritize_todo(number):
 	if number.isdigit():
 		number = int(number)
 		old_line, lines = separate_line(number)
+		if test_separated(old_line, lines, number):
+			return
+
 		new_line = re.sub("(\([A-X]\)\s)", "", old_line)
 		lines.insert(number - 1, new_line)
 
@@ -664,6 +687,9 @@ def prepend_todo(args):
 		line_no = int(args.pop(0))
 		prepend_str = concat(args, " ") + " "
 		old_line, lines = separate_line(line_no)
+		if test_separated(old_line, lines, line_no):
+			return
+
 		pri_re = re.compile('^(\([A-X]\)\s)')
 
 		if pri_re.match(old_line):
@@ -1095,7 +1121,7 @@ if __name__ == "__main__" :
 	if not len(args) > 0:
 		args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
-	all_re = re.compile('(app|pre)(?:end)?')
+	all_re = re.compile('((app|pre)(?:end)?|p(?:ri)?)')
 
 	while args:
 		# ensure this doesn't error because of a faulty CAPS LOCK key

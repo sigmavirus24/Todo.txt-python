@@ -31,6 +31,7 @@ class DoTest(base.BaseTest):
 		for i in range(self.num, 0, -1):
 			j = ran.randint(1, i)
 			todo.do_todo(str(j))
+			#todo.do_todo(str(i))
 
 		self.assertNumLines(0)
 
