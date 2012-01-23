@@ -107,11 +107,11 @@ def iter_todos(include_done=False):
 	tfile=CONFIG["TODO_FILE"]
 	if not os.path.isfile(tfile):
 		return
-	with open(CONFIG["TODO_FILE"]) as fd:
-		for line in fd:
-			yield line
+	files = [CONFIG["TODO_FILE"]]
 	if include_done and os.path.isfile(CONFIG["DONE_FILE"]):
-		with open(CONFIG["DONE_FILE"]) as fd:
+		files.append(CONFIG["DONE_FILE"])
+	for f in files:
+		with open(f) as fd:
 			for line in fd:
 				yield line
 
@@ -121,8 +121,8 @@ def separate_line(number):
 	Takes an integer and returns a string and a list. The string is the item at
 	that position in the list. The list is the rest of the todos.
 	
-	If the todo.txt file is empty, separate = lines = None.
-	If the number is invalid separate = None, lines != None.
+	If the todo.txt file is empty, separate = lines = None. If the number is
+	invalid separate = None, lines != None.
 	"""
 	lines = [line for line in iter_todos()]
 	if lines and number - 1 < len(lines) and 0 <= number - 1:
@@ -546,23 +546,17 @@ def do_todo(line):
 		fd.close()
 
 		today = datetime.now().strftime("%Y-%m-%d")
-		removed = re.sub("\([A-X]\)\s?", "", removed)
-		removed = "x " + today + " " + removed
+		removed = concat(["x", today, re.sub("\([A-X]\)\s?", "", removed)], " ")
 
 		files = [CONFIG["TODO_FILE"]]
-		dfile = CONFIG["DONE_FILE"]
-		if dfile:
-			fd = open(dfile, "a")
-			fd.write(removed)
-			fd.close()
-			files.append(dfile)
+		if CONFIG["DONE_FILE"]:
+			with open(CONFIG["DONE_FILE"], "a") as fd:
+				fd.write(removed)
+			files.append(CONFIG["DONE_FILE"])
 
 		print(removed[:-1])
 		print("TODO: Item {0} marked as done.".format(line))
 		if CONFIG["USE_GIT"]:
-			files = [CONFIG["TODO_FILE"]]
-			if CONFIG["DONE_FILE"]:
-				files.append(CONFIG["DONE_FILE"])
 			_git_commit(files, removed)
 
 
@@ -577,9 +571,8 @@ def delete_todo(line):
 		if test_separated(removed, lines, line):
 			return
 
-		fd = open(CONFIG["TODO_FILE"], "w")
-		rewrite_file(fd, lines)
-		fd.close()
+		with open(CONFIG["TODO_FILE"], "w") as fd:
+			rewrite_file(fd, lines)
 
 		removed = "'{0}' deleted.".format(removed[:-1])
 		print(removed)
