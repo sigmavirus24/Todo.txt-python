@@ -125,10 +125,9 @@ def separate_line(number):
 	invalid separate = None, lines != None.
 	"""
 	lines = [line for line in iter_todos()]
+	separate = None
 	if lines and number - 1 < len(lines) and 0 <= number - 1:
 		separate = lines.pop(number - 1)
-	else:
-		separate = None
 	return separate, lines
 
 
@@ -202,18 +201,7 @@ def _git_log():
 	"""
 	Print the two latest commits in the local repository's log.
 	"""
-	lines = CONFIG["GIT"].log("-2")
-	flines = []
-	commit_re = re.compile("commit")
-	for line in lines.split("\n"):
-		if commit_re.match(line):
-			flines.append(concat([TERM_COLORS["yellow"],
-				line[:-1], TERM_COLORS["default"], "\n"]))
-		else:
-			flines.append(concat([line, "\n"]))
-
-	flines[-1] = flines[-1][:-1]
-	print(concat(flines))
+	print(CONFIG["GIT"].log("-5", "--oneline"))
 
 
 def _git_commit(files, message):
@@ -239,8 +227,7 @@ def prompt(*args, **kwargs):
 	"""
 	args = list(args)  # [a for a in args]
 	args.append(' ')
-	prompt_str = concat(args)
-	prompt_str = prompt_str.format(**kwargs)
+	prompt_str = concat(args).format(**kwargs)
 	input = raw_input(prompt_str)
 	return re.sub(r"\\", "", input)
 
