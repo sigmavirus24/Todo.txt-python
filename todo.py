@@ -265,12 +265,7 @@ def get_config(config_name="", dir_name=""):
 		CONFIG["TODO_FILE"] = _pathc([dir, "/todo.txt"])
 		CONFIG["DONE_FILE"] = _pathc([dir, "/done.txt"])
 
-	temp_dict = {"TODO_DIR" : CONFIG["TODO_DIR"],
-			"TODOTXT_CFG_FILE" : CONFIG["TODO_CFG_FILE"],
-			"TODO_FILE" : CONFIG["TODO_FILE"],
-			"DONE_FILE" : CONFIG["DONE_FILE"]}
-	os.environ.update(temp_dict)
-	del(temp_dict)
+	os.environ["TODO_DIR"] = CONFIG["TODO_DIR"]
 
 	if CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
