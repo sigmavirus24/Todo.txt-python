@@ -257,7 +257,11 @@ def get_config(config_name="", dir_name=""):
 	if config_name:
 		CONFIG["TODOTXT_CFG_FILE"] = config_name
 	if dir_name:
-		CONFIG["TODO_DIR"] = _path(dir_name)
+		dir = _path(dir_name)
+		CONFIG["TODO_DIR"] = dir
+		CONFIG["TODOTXT_CFG_FILE"] = _pathc([dir, "/config"])
+		CONFIG["TODO_FILE"] = _pathc([dir, "/todo.txt"])
+		CONFIG["DONE_FILE"] = _pathc([dir, "/done.txt"])
 
 	if CONFIG["TODOTXT_CFG_FILE"]:
 		config_file = CONFIG["TODOTXT_CFG_FILE"]
@@ -273,7 +277,6 @@ def get_config(config_name="", dir_name=""):
 			bkey = concat(["$", re.sub(' ', '_', key).upper()])
 			FROM_CONFIG[bkey] = key
 
-		f = open(config_file, 'r')
 		skip_re = re.compile('^\s*(#|$)')
 		strip_re = re.compile('\w+\s([A-Za-z_$="./]+).*')
 		pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
@@ -738,14 +741,14 @@ def cmd_help():
 		print("\t\tPulls from the remote for your git repository.")
 		print("")
 		print("\tpush")
-		print("\t\tPushs to the remote for your git repository.")
+		print("\t\tPushes to the remote for your git repository.")
 		print("")
 		print("\tstatus")
 		print("\t\tIf using $(git --version) > 1.7, shows the status of your")
 		print("\t\tlocal git repository.")
 		print("")
 		print("\tlog")
-		print("\t\tShows the last two commits in your local git repository.")
+		print("\t\tShows the last five commits in your local git repository.")
 	sys.exit(0)
 ### HELP
 
