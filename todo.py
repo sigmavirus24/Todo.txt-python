@@ -787,14 +787,14 @@ def format_lines(color_only=False, include_done=False):
 		if r:
 			category = r.groups()[0]
 			color_name = CONFIG["PRI_{0}".format(category)]
-			color = default
-			if not plain or esc_code in TERM_COLORS.keys():
+
+			if not plain and color_name in TERM_COLORS.keys():
 				color = TERM_COLORS[color_name]
 			if no_priority:
 				line = pri_re.sub("", line)
 
-		j = i + 1
-		l = concat([color, invert, str(j).zfill(pad), " ", line[:-1], default, "\n"])
+		j = str(i + 1).zfill(pad)
+		l = concat([color, invert, j, " ", line[:-1], default, "\n"])
 		if color_only:
 			formatted.append(l)
 		else:
