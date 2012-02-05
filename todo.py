@@ -732,7 +732,7 @@ def cmd_help():
 	print("\t\tLists all items in your todo.txt file sorted by project title.")
 	print("")
 	print("\thelp | h")
-	print("\t\tShows this message and exits.")
+	print("\t\tDisplay this message and exit.")
 	print("")
 	print('\tprepend | pre NUMBER "text to prepend"')
 	print('\t\tAdd "text to prepend" to the beginning of the item.')
