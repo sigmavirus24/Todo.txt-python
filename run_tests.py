@@ -24,17 +24,17 @@ import re
 import tests
 
 if __name__ == "__main__":
-	if sys.version_info >= (2, 7):
-		suite = unittest.defaultTestLoader.discover("tests")
-	else:
-		names = os.listdir("tests")
-		tmp = []
-		regex = re.compile("(?!_+)\w+\.py$")
-		for f in names:
-			if regex.match(f):
-				tmp.append(f)
-		tmp = [ a[:-3] for a in tmp ]
-		names = [ "".join(["tests.", a]) for a in tmp ]
-		suite = unittest.defaultTestLoader.loadTestsFromNames(names)
+    if sys.version_info >= (2, 7):
+        suite = unittest.defaultTestLoader.discover("tests")
+    else:
+        names = os.listdir("tests")
+        tmp = []
+        regex = re.compile("(?!_+)\w+\.py$")
+        for f in names:
+            if regex.match(f):
+                tmp.append(f)
+        tmp = [ a[:-3] for a in tmp ]
+        names = [ "".join(["tests.", a]) for a in tmp ]
+        suite = unittest.defaultTestLoader.loadTestsFromNames(names)
 
-	unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite)

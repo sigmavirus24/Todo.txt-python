@@ -100,7 +100,7 @@ class BaseTest(unittest.TestCase):
 	def assertNumLines(self, exp, regexp=None):
 		c = self.count_matches(regexp)
 		self.assertEqual(exp, c)
-	
+
 
 	def assertIsInstance(self, obj, cls, msg=None):
 		if sys.version_info >= (2, 7):
@@ -108,12 +108,10 @@ class BaseTest(unittest.TestCase):
 		else:
 			self.assertTrue(isinstance(obj, cls))
 
-	
+
 	def assertIsNotNone(self, expr, msg=None):
 		if sys.version_info >= (2, 7):
 			super(BaseTest, self).assertIsNotNone(expr, msg)
 		else:
 			if not expr:
 				self.fail(msg)
-
-# vim:set noet:

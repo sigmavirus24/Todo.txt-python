@@ -24,18 +24,15 @@ import todo
 
 class DelTest(base.BaseTest):
 
-	def test_del(self):
-		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
-		ran = random.Random()
+    def test_del(self):
+        todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
+        ran = random.Random()
 
-		for i in range(self.num, 0, -1):
-			j = ran.randint(1, i)
-			todo.delete_todo(str(j))
+        for i in range(self.num, 0, -1):
+            j = ran.randint(1, i)
+            todo.delete_todo(str(j))
 
-		self.assertNumLines(0)
+        self.assertNumLines(0)
 
 if __name__ == "__main__":
-	unittest.main()
-
-
-# vim:set noet:
+    unittest.main()

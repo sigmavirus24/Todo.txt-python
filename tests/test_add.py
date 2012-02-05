@@ -23,30 +23,27 @@ import unittest
 
 class TestAdd(base.BaseTest):
 
-	def test_add(self):
-		self.add_todo(self.num)
-		self.assertNumLines(self.num, "Test\s\d+")
+    def test_add(self):
+        self.add_todo(self.num)
+        self.assertNumLines(self.num, "Test\s\d+")
 
-	def test_add_predate(self):
-		self.add_todo_predate(self.num)
-		self.assertNumLines(self.num, "\d{4}-\d{2}-\d{2}.*Test \d+")
+    def test_add_predate(self):
+        self.add_todo_predate(self.num)
+        self.assertNumLines(self.num, "\d{4}-\d{2}-\d{2}.*Test \d+")
 
-	def test_add_nofile(self):
-		os.unlink(todo.CONFIG["TODO_FILE"])
-		self.test_add()
+    def test_add_nofile(self):
+        os.unlink(todo.CONFIG["TODO_FILE"])
+        self.test_add()
 
-	def add_todo(self, n):
-		lines = self._test_lines_no_pri(n)
-		for line in lines:
-			todo.add_todo(line)
+    def add_todo(self, n):
+        lines = self._test_lines_no_pri(n)
+        for line in lines:
+            todo.add_todo(line)
 
-	def add_todo_predate(self, n):
-		_pre = todo.CONFIG["PRE_DATE"]
-		todo.CONFIG["PRE_DATE"] = True
-		self.add_todo(n)
+    def add_todo_predate(self, n):
+        _pre = todo.CONFIG["PRE_DATE"]
+        todo.CONFIG["PRE_DATE"] = True
+        self.add_todo(n)
 
 if __name__ == "__main__":
-	unittest.main()
-
-
-# vim:set noet:
+    unittest.main()

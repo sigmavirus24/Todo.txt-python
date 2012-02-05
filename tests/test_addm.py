@@ -23,23 +23,20 @@ import base
 
 class TestAddm(base.BaseTest):
 
-	def test_addm(self):
-		self.addm_todo(self.num)
-		self.assertNumLines(self.num, "Test\s\d+")
+    def test_addm(self):
+        self.addm_todo(self.num)
+        self.assertNumLines(self.num, "Test\s\d+")
 
-	def test_addm_predate(self):
-		self.addm_todo_predate(self.num)
-		self.assertNumLines(self.num, "\d{4}-\d{2}-\d{2}.*Test \d+")
+    def test_addm_predate(self):
+        self.addm_todo_predate(self.num)
+        self.assertNumLines(self.num, "\d{4}-\d{2}-\d{2}.*Test \d+")
 
-	def addm_todo(self, n):
-		todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
+    def addm_todo(self, n):
+        todo.addm_todo("\n".join(self._test_lines_no_pri(n)))
 
-	def addm_todo_predate(self, n):
-		todo.CONFIG["PRE_DATE"] = True
-		self.addm_todo(n)
+    def addm_todo_predate(self, n):
+        todo.CONFIG["PRE_DATE"] = True
+        self.addm_todo(n)
 
 if __name__ == "__main__":
-	unittest.main()
-
-
-# vim:set noet:
+    unittest.main()

@@ -22,17 +22,14 @@ import todo
 
 class PrependTest(base.BaseTest):
 
-	def test_prepend(self):
-		todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
+    def test_prepend(self):
+        todo.addm_todo("\n".join(self._test_lines_no_pri(self.num)))
 
-		for i in range(1, self.num + 1):
-			todo.prepend_todo([str(i), "testing", "prepend"])
+        for i in range(1, self.num + 1):
+            todo.prepend_todo([str(i), "testing", "prepend"])
 
-		self.assertNumLines(self.num, "testing\sprepend\sTest\s\d+")
+        self.assertNumLines(self.num, "testing\sprepend\sTest\s\d+")
 
 
 if __name__ == "__main__":
-	unittest.main()
-
-
-# vim:set noet:
+    unittest.main()

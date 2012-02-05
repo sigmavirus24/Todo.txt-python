@@ -21,27 +21,24 @@ import base
 import todo
 
 try:
-	from string import uppercase
+    from string import uppercase
 except:
-	from string import ascii_uppercase as uppercase
+    from string import ascii_uppercase as uppercase
 
 class DeprioritizeTest(base.BaseTest):
 
-	def test_deprioritize(self):
-		todo.addm_todo("\n".join(self._test_lines_pri(self.num)))
+    def test_deprioritize(self):
+        todo.addm_todo("\n".join(self._test_lines_pri(self.num)))
 
-		for i in range(0, self.num):
-			todo.de_prioritize_todo(str(i + 1))
+        for i in range(0, self.num):
+            todo.de_prioritize_todo(str(i + 1))
 
-		self.assertNumLines(self.num, "Test\s\d+")
+        self.assertNumLines(self.num, "Test\s\d+")
 
-		for i in range(0, self.num):
-			todo.de_prioritize_todo(str(i + 1))
+        for i in range(0, self.num):
+            todo.de_prioritize_todo(str(i + 1))
 
-		self.assertNumLines(self.num, "Test\s\d+")
+        self.assertNumLines(self.num, "Test\s\d+")
 
 if __name__ == "__main__":
-	unittest.main()
-
-
-# vim:set noet:
+    unittest.main()
