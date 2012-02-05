@@ -765,36 +765,33 @@ def format_lines(color_only=False, include_done=False):
 	"""
 	def _m(i):
 		formatted[i] = []
+
 	plain = CONFIG["PLAIN"]
 	default = TERM_COLORS[CONFIG.get("DEFAULT", "default")] if not plain else ""
 	no_priority = CONFIG["NO_PRI"]
 	category = ""
 	invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
+	pri_re = re.compile('^\(([A-W])\)\s')
+	pad = todo_padding(include_done)
 
 	formatted = []
 	if not color_only:
 		formatted = {}
 		map(_m, PRIORITIES)
 
-	pri_re = re.compile('^\(([A-W])\)\s')
-	pad = todo_padding(include_done)
 	for (i, line) in enumerate(iter_todos(include_done)):
+		category = "X"
+		color = default
+
 		r = pri_re.match(line)
 		if r:
 			category = r.groups()[0]
-			if plain:
-				color = default
-			else:
-				k = CONFIG["PRI_{0}".format(category)]
-				if k in TERM_COLORS.keys():
-					color = TERM_COLORS[k]
-				else:
-					color = default
+			color_name = CONFIG["PRI_{0}".format(category)]
+			color = default
+			if not plain or esc_code in TERM_COLORS.keys():
+				color = TERM_COLORS[color_name]
 			if no_priority:
 				line = pri_re.sub("", line)
-		else:
-			category = "X"
-			color = default
 
 		j = i + 1
 		l = concat([color, invert, str(j).zfill(pad), " ", line[:-1], default, "\n"])
