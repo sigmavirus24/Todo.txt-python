@@ -1,10 +1,11 @@
-A port of the [popular todo.txt-cli project](https://github.com/ginatrapani/todo.txt-cli) written in bash to python.
+A port of the [popular todo.txt-cli
+project](https://github.com/ginatrapani/todo.txt-cli) written in bash to python.
 
-This REQUIRES GitPython. Running the script once will give you the URL to
-download it. For `todo.py status` to work, it seems git 1.7.x is required. 
-At least git 1.6.4 returns an exit status of 1 which causes an error and
-prevents GitPython from completing the command. On a different machine, 1.7.4
-works with it.
+This REQUIRES [GitPython](https://github.com/gitpython-developers/GitPython).
+Running the script once will give you the URL to download it. For `todo.py
+status` to work, it seems git 1.7.x is required.  At least git 1.6.4 returns an
+exit status of 1 which causes an error and prevents GitPython from completing
+the command. On a different machine, 1.7.4 works with it.
 
 Enjoy, contribute, and feel free to clone. I'm doing this blind[1] as best as
 possible for fun.
