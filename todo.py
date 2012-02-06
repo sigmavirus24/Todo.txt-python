@@ -104,10 +104,9 @@ def iter_todos(include_done=False):
     """
     Opens the file in read-only mode, and returns an iterator for the todos.
     """
-    tfile=CONFIG["TODO_FILE"]
-    if not os.path.isfile(tfile):
-        return
     files = [CONFIG["TODO_FILE"]]
+    if not os.path.isfile(files[0]):
+        return
     if include_done and os.path.isfile(CONFIG["DONE_FILE"]):
         files.append(CONFIG["DONE_FILE"])
     for f in files:
@@ -295,7 +294,9 @@ def get_config(config_name="", dir_name=""):
                     if pri_re.match(items[0]):
                         CONFIG[items[0]] = FROM_CONFIG[items[1]]
                     elif items[0] == "USE_GIT":
-                        CONFIG["USE_GIT"] = True if items[1] == "True" else False
+                        CONFIG["USE_GIT"] = False
+                        if items[1] == "True":
+                            CONFIG["USE_GIT"] = True
                     else:
                         items[1] = os.path.expandvars(items[1])
                         CONFIG[items[0]] = items[1]
@@ -368,7 +369,7 @@ def git_functions():
                         print(error_string)
                 return ret
 
-            remote_host = __while_prompt__("Remote hostname:", 
+            remote_host = __while_prompt__("Remote hostname:",
                 "Please enter the remote's hostname.")
             remote_path = __while_prompt__("Remote path:",
                 "Please enter the path to the remote's repository.")
@@ -394,6 +395,7 @@ def git_functions():
             g.config(concat(["branch.", local_branch, ".remote"]), "origin")
             g.config(concat(["branch.", local_branch, ".merge"]),
                     concat(["refs/heads/", remote_branch]))
+
 
 def default_config():
     """
@@ -540,7 +542,8 @@ def do_todo(line):
         fd.close()
 
         today = datetime.now().strftime("%Y-%m-%d")
-        removed = concat(["x", today, re.sub("\([A-X]\)\s?", "", removed)], " ")
+        removed = concat(["x", today,
+            re.sub("\([A-X]\)\s?", "", removed)], " ")
 
         files = [CONFIG["TODO_FILE"]]
         if CONFIG["DONE_FILE"]:
@@ -614,7 +617,8 @@ def append_todo(args):
         if test_separated(old_line, lines, line_no):
             return
 
-        new_line = concat([concat([old_line[:-1], concat(args, " ")],  " "), "\n"],)
+        new_line = concat([concat([old_line[:-1],
+            concat(args, " ")], " "), "\n"])
         lines.insert(line_no - 1, new_line)
 
         rewrite_and_post(line_no, old_line, new_line, lines)
@@ -767,7 +771,9 @@ def format_lines(color_only=False, include_done=False):
         formatted[i] = []
 
     plain = CONFIG["PLAIN"]
-    default = TERM_COLORS[CONFIG.get("DEFAULT", "default")] if not plain else ""
+    default = TERM_COLORS[CONFIG.get("DEFAULT", "default")]
+    if plain:
+        default = ""
     no_priority = CONFIG["NO_PRI"]
     category = ""
     invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
