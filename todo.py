@@ -893,7 +893,9 @@ def _list_(by, regexp):
 
 def _list_by_(*args):
     """
-    print lines matching items in args
+    Print lines matching items in args
+    Called when the user does:
+        todo.py ls search-term1 search-term2 ...
     """
     esc = re.escape  # keep line length down
     relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"])) for arg in args]
@@ -934,11 +936,6 @@ def list_all():
     Print the list of todo items in order of priority and then print the
     done.txt file.
     """
-    #lines, sorted = _list_("pri", "")
-    #print(concat(sorted)[:-1])
-    #i = len(lines)
-    #pad = todo_padding(True)
-    #with open(CONFIG["DONE.TXT"], "r") as fd:
     formatted = format_lines(include_done=True)
     lines = []
     for p in PRIORITIES:
