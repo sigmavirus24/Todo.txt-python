@@ -867,17 +867,20 @@ def _list_(by, regexp):
 
     by_list.sort()
 
-    hide_proj_re = re.compile('(\+\w+\s?)')
-    hide_cont_re = re.compile('(@\w+\s?)')
-    hide_date_re = re.compile('(#\{\d+-\d+-\d+\}\s?)')
+    hide_proj_re = re.compile('')
+    if CONFIG["HIDE_PROJ"]:
+        hide_proj_re = re.compile('(\+\w+\s?)')
+    hide_cont_re = re.compile('')
+    if CONFIG["HIDE_CONT"]:
+        hide_cont_re = re.compile('(@\w+\s?)')
+    hide_date_re = re.compile('')
+    if CONFIG["HIDE_DATE"]:
+        hide_date_re = re.compile('(#\{\d+-\d+-\d+\}\s?)')
 
     for b in by_list:
-        if CONFIG["HIDE_PROJ"]:
-            todo[b] = [hide_proj_re.sub("", l) for l in todo[b]]
-        if CONFIG["HIDE_CONT"]:
-            todo[b] = [hide_cont_re.sub("", l) for l in todo[b]]
-        if CONFIG["HIDE_DATE"]:
-            todo[b] = [hide_date_re.sub("", l) for l in todo[b]]
+        todo[b] = [hide_proj_re.sub("", l) for l in todo[b]]
+        todo[b] = [hide_cont_re.sub("", l) for l in todo[b]]
+        todo[b] = [hide_date_re.sub("", l) for l in todo[b]]
         if CONFIG["LEGACY"]:
             todo[b] = _legacy_sort(todo[b])
         if by != "pri":
