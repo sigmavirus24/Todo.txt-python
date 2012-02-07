@@ -839,27 +839,26 @@ def _list_(by, regexp):
         lines = format_lines(color_only=True)
         regexp = re.compile(regexp)
         for line in lines:
-            r = regexp.findall(line)
-            if r:
+            match = regexp.findall(line)
+            if match:
                 line = concat(["\t", line])
-                if by == "date":
-                    for tup in r:
+                if by in ["project", "context"]:
+                    for i in match:
+                        if i not in by_list:
+                            by_list.append(i)
+                            todo[i] = [line]
+                        else:
+                            todo[i].append(line)
+                else:
+                    for tup in match:
                         d = date(int(tup[0]), int(tup[1]), int(tup[2]))
                         if d not in by_list:
                             by_list.append(d)
                             todo[d] = [line]
                         else:
                             todo[d].append(line)
-                elif by in ["project", "context"]:
-                    for i in r:
-                        if i not in by_list:
-                            by_list.append(i)
-                            todo[i] = [line]
-                        else:
-                            todo[i].append(line)
             else:
                 todo[nonetype].append(line)
-
     elif by == "pri":
         lines = format_lines()
         todo.update(lines)
