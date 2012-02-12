@@ -314,7 +314,10 @@ def get_config(config_name="", dir_name=""):
                         http://pypi.python.org/pypi/GitPython")
             else:
                 print("GitPython is not available for Python3 last I checked.")
-            sys.exit(52)
+            CONFIG["USE_GIT"] = False
+            del(git)
+            return
+
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
         if CONFIG["TODOTXT_CFG_FILE"] not in CONFIG["GIT"].ls_files():
             CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"]])
@@ -339,7 +342,7 @@ def git_functions():
         try:
             user_email = g.config("--global", "--get", "user.email")
         except:
-            user_email = concat([user.name, "@", getenv("HOSTNAME")])
+            user_email = concat([user_name, "@", getenv("HOSTNAME")])
 
         print("First configure your local repository options.")
         ret = prompt("git config user.name ", user_name, "?")
