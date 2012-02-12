@@ -44,7 +44,7 @@ try:
 except AttributeError:
     # Python 3 again
     from string import ascii_uppercase as uppercase
-PRIORITIES = string.uppercase[0:24]
+PRIORITIES = uppercase[:24]
 
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
