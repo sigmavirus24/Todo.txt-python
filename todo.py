@@ -34,14 +34,20 @@ except ImportError:
     pass
 
 try:
-    intern = intern
-except NameError:
     # Python 3 moved the built-in intern() to sys.intern()
     intern = sys.intern
+except NameError:
+    pass
+
+try:
+    input = raw_input
+except NameError:
+    # Python 3 renamed raw_input to input
+    pass
 
 try:
     from string import uppercase
-except AttributeError:
+except ImportError:
     # Python 3 again
     from string import ascii_uppercase as uppercase
 PRIORITIES = uppercase[:24]
@@ -229,8 +235,8 @@ def prompt(*args, **kwargs):
     args = list(args)  # [a for a in args]
     args.append(' ')
     prompt_str = concat(args).format(**kwargs)
-    input = raw_input(prompt_str)
-    return re.sub(r"\\", "", input)
+    raw = input(prompt_str)
+    return re.sub(r"\\", "", raw)
 
 
 def print_x_of_y(x, y):
@@ -276,7 +282,7 @@ def get_config(config_name="", dir_name=""):
         default_config()
     else:
         FROM_CONFIG = {}
-        for key in TERM_COLORS.keys():
+        for key in list(TERM_COLORS.keys()):
             bkey = concat(["$", re.sub(' ', '_', key).upper()])
             FROM_CONFIG[bkey] = key
 
@@ -315,7 +321,6 @@ def get_config(config_name="", dir_name=""):
             else:
                 print("GitPython is not available for Python3 last I checked.")
             CONFIG["USE_GIT"] = False
-            del(git)
             return
 
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
@@ -427,7 +432,7 @@ def default_config():
     CONFIG["PRI_X"] = "white"
 
     TO_CONFIG = {}
-    for key in TERM_COLORS.keys():
+    for key in list(TERM_COLORS.keys()):
         bkey = concat(["$", re.sub(' ', '_', key).upper()])
         TO_CONFIG[key] = bkey
 
@@ -436,7 +441,7 @@ def default_config():
                 "HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI")):
             if isinstance(v, bool):
                 v = int(v)
-            if v in TO_CONFIG.keys():
+            if v in list(TO_CONFIG.keys()):
                 cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
             else:
                 cfg.write(concat(["export ", k, '="', str(v), '"\n']))
@@ -524,7 +529,7 @@ def addm_todo(args):
     else:
         lines = concat(args, " ")
     lines = lines.split("\n")
-    map(add_todo, lines)
+    list(map(add_todo, lines))  # Python 3 requirement
 ### End new todo functions
 
 
@@ -786,7 +791,7 @@ def format_lines(color_only=False, include_done=False):
     formatted = []
     if not color_only:
         formatted = {}
-        map(_m, PRIORITIES)
+        list(map(_m, PRIORITIES))
 
     for (i, line) in enumerate(iter_todos(include_done)):
         category = "X"
@@ -797,13 +802,14 @@ def format_lines(color_only=False, include_done=False):
             category = r.groups()[0]
             color_name = CONFIG["PRI_{0}".format(category)]
 
-            if not plain and color_name in TERM_COLORS.keys():
+            if not plain and color_name in list(TERM_COLORS.keys()):
                 color = TERM_COLORS[color_name]
             if no_priority:
                 line = pri_re.sub("", line)
 
         j = str(i + 1).zfill(pad)
         l = concat([color, invert, j, " ", line[:-1], default, "\n"])
+
         if color_only:
             formatted.append(l)
         else:
@@ -1006,7 +1012,7 @@ def toggle_opt(option, opt_str, val, parser):
             "--invert-colors" : "INVERT", "-l" : "LEGACY",
             "--legacy" : "LEGACY",
             }
-    if opt_str in toggle_dict.keys():
+    if opt_str in list(toggle_dict.keys()):
         CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
 ### End callback functions
 
@@ -1108,7 +1114,7 @@ if __name__ == "__main__" :
                 ("log", 	(False, _git_log))]
                 )
 
-    commandsl = [intern(key) for key in commands.keys()]
+    commandsl = [intern(key) for key in list(commands.keys())]
 
     if not len(args) > 0:
         args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
