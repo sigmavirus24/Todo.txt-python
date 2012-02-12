@@ -20,7 +20,6 @@
 
 import os
 import re
-import string
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
@@ -41,10 +40,11 @@ except NameError:
     intern = sys.intern
 
 try:
-    PRIORITIES = string.uppercase[0:24]
+    from string import uppercase
 except AttributeError:
     # Python 3 again
-    PRIORITIES = string.ascii_uppercase[0:24]
+    from string import ascii_uppercase as uppercase
+PRIORITIES = string.uppercase[0:24]
 
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join(str_list)
