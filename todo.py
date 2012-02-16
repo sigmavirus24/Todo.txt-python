@@ -847,21 +847,14 @@ def _list_(by, regexp):
             match = regexp.findall(line)
             if match:
                 line = concat(["\t", line])
-                if by in ["project", "context"]:
-                    for i in match:
-                        if i not in by_list:
-                            by_list.append(i)
-                            todo[i] = [line]
-                        else:
-                            todo[i].append(line)
-                else:
-                    for tup in match:
-                        d = date(int(tup[0]), int(tup[1]), int(tup[2]))
-                        if d not in by_list:
-                            by_list.append(d)
-                            todo[d] = [line]
-                        else:
-                            todo[d].append(line)
+                for i in match:
+                    if by == "date":
+                        i = date(int(i[0]), int(i[1]), int(i[2]))
+                    if i not in by_list:
+                        by_list.append(i)
+                        todo[i] = [line]
+                    else:
+                        todo[i].append(line)
             else:
                 todo[nonetype].append(line)
     elif by == "pri":
