@@ -36,7 +36,7 @@ except ImportError:
 try:
     # Python 3 moved the built-in intern() to sys.intern()
     intern = sys.intern
-except NameError:
+except AttributeError:
     pass
 
 try:
@@ -775,9 +775,6 @@ def format_lines(color_only=False, include_done=False):
     Take in a list of lines to do, return them formatted with the TERM_COLORS
     and organized based upon priority.
     """
-    def _m(i):
-        formatted[i] = []
-
     plain = CONFIG["PLAIN"]
     default = TERM_COLORS[CONFIG.get("DEFAULT", "default")]
     if plain:
@@ -790,8 +787,7 @@ def format_lines(color_only=False, include_done=False):
 
     formatted = []
     if not color_only:
-        formatted = {}
-        list(map(_m, PRIORITIES))
+        formatted = dict(zip(PRIORITIES, [[] for i in PRIORITIES]))
 
     for (i, line) in enumerate(iter_todos(include_done)):
         category = "X"
