@@ -7,6 +7,7 @@ body {
 
 body p {
   margin: 0 0 0 20px;
+  text-align: justify;
 }
 
 #container {
@@ -16,10 +17,10 @@ body p {
 }
 
 h1 { 
-    font-size: 3.8em;
-    color: #2966B8;
     margin-bottom: 3px;
     font-family: 'Gentium Book Basic', serif;
+    font-size: 3.8em;
+    font-color: #2966B8;
 }
 
 h1 .small { font-size: 0.35em; }
