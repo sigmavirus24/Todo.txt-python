@@ -25,6 +25,7 @@ from optparse import OptionParser
 from datetime import datetime, date
 
 VERSION = "0.1-conditional_import_dev"
+REVISION = "$Id$"
 
 try:
     import readline
@@ -972,7 +973,7 @@ def list_context():
 
 ### Callback functions for options
 def version(option, opt, value, parser):
-    print("""TODO.TXT Command Line Interface v{version}
+    print("""TODO.TXT Command Line Interface v{version}-{id}
 
 First release:
 Original conception by: Gina Trapani (http://ginatrapani.org)
@@ -984,7 +985,7 @@ https://github.com/sigmavirus24/Todo.txt-python/network
 License: GPLv3
 Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
-        version=VERSION))
+        version=VERSION, id=REVISION))
     sys.exit(0)
 
 
