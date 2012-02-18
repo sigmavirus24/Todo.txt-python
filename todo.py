@@ -59,36 +59,36 @@ _path = lambda p: os.path.abspath(os.path.expanduser(p))
 _pathc = lambda plist: _path(concat(plist))
 
 TERM_COLORS = {
-        "black" : "\033[0;30m", "red" : "\033[0;31m",
-        "green" : "\033[0;32m", "brown" : "\033[0;33m",
-        "blue" : "\033[0;34m", "purple" : "\033[0;35m",
-        "cyan" : "\033[0;36m", "light grey" : "\033[0;37m",
-        "dark grey" : "\033[1;30m", "light red" : "\033[1;31m",
-        "light green" : "\033[1;32m", "yellow" : "\033[1;33m",
-        "light blue" : "\033[1;34m", "light purple" : "\033[1;35m",
-        "light cyan" : "\033[1;36m", "white" : "\033[1;37m",
-        "default" : "\033[0m", "reverse" : "\033[7m",
-        "bold" : "\033[1m",
+        "black": "\033[0;30m", "red": "\033[0;31m",
+        "green": "\033[0;32m", "brown": "\033[0;33m",
+        "blue": "\033[0;34m", "purple": "\033[0;35m",
+        "cyan": "\033[0;36m", "light grey": "\033[0;37m",
+        "dark grey": "\033[1;30m", "light red": "\033[1;31m",
+        "light green": "\033[1;32m", "yellow": "\033[1;33m",
+        "light blue": "\033[1;34m", "light purple": "\033[1;35m",
+        "light cyan": "\033[1;36m", "white": "\033[1;37m",
+        "default": "\033[0m", "reverse": "\033[7m",
+        "bold": "\033[1m",
         }
 
 TODO_DIR = _path("~/.todo")
 CONFIG = {
-        "TODO_DIR" : TODO_DIR,
-        "TODOTXT_DEFAULT_ACTION" : "",
-        "TODOTXT_CFG_FILE" : _pathc([TODO_DIR, "/config"]),
-        "TODO_FILE" : _pathc([TODO_DIR, "/todo.txt"]),
-        "TMP_FILE" : _pathc([TODO_DIR, "/todo.tmp"]),
-        "DONE_FILE" : _pathc([TODO_DIR, "/done.txt"]),
-        "REPORT_FILE" : _pathc([TODO_DIR, "/report.txt"]),
-        "USE_GIT" : False,
-        "PLAIN" : False,
-        "NO_PRI" : False,
-        "PRE_DATE" : False,
-        "INVERT" : False,
-        "HIDE_PROJ" : False,
-        "HIDE_CONT" : False,
-        "HIDE_DATE" : False,
-        "LEGACY" : False,
+        "TODO_DIR": TODO_DIR,
+        "TODOTXT_DEFAULT_ACTION": "",
+        "TODOTXT_CFG_FILE": _pathc([TODO_DIR, "/config"]),
+        "TODO_FILE": _pathc([TODO_DIR, "/todo.txt"]),
+        "TMP_FILE": _pathc([TODO_DIR, "/todo.tmp"]),
+        "DONE_FILE": _pathc([TODO_DIR, "/done.txt"]),
+        "REPORT_FILE": _pathc([TODO_DIR, "/report.txt"]),
+        "USE_GIT": False,
+        "PLAIN": False,
+        "NO_PRI": False,
+        "PRE_DATE": False,
+        "INVERT": False,
+        "HIDE_PROJ": False,
+        "HIDE_CONT": False,
+        "HIDE_DATE": False,
+        "LEGACY": False,
         }
 
 for p in PRIORITIES:
@@ -265,11 +265,11 @@ def get_config(config_name="", dir_name=""):
     if config_name:
         CONFIG["TODOTXT_CFG_FILE"] = config_name
     if dir_name:
-        dir = _path(dir_name)
+        dir_name = _path(dir_name)
         CONFIG["TODO_DIR"] = dir
-        CONFIG["TODOTXT_CFG_FILE"] = _pathc([dir, "/config"])
-        CONFIG["TODO_FILE"] = _pathc([dir, "/todo.txt"])
-        CONFIG["DONE_FILE"] = _pathc([dir, "/done.txt"])
+        CONFIG["TODOTXT_CFG_FILE"] = _pathc([dir_name, "/config"])
+        CONFIG["TODO_FILE"] = _pathc([dir_name, "/todo.txt"])
+        CONFIG["DONE_FILE"] = _pathc([dir_name, "/done.txt"])
 
     os.environ["TODO_DIR"] = CONFIG["TODO_DIR"]
 
@@ -777,14 +777,14 @@ def format_lines(color_only=False, include_done=False):
     and organized based upon priority.
     """
     plain = CONFIG["PLAIN"]
-    default = TERM_COLORS[CONFIG.get("DEFAULT", "default")]
-    if plain:
-        default = ""
     no_priority = CONFIG["NO_PRI"]
-    category = ""
+    default = CONFIG.get("DEFAULT", "default")
+    default = TERM_COLORS[default] if not plain else ""
     invert = TERM_COLORS["reverse"] if CONFIG["INVERT"] else ""
     pri_re = re.compile('^\(([A-W])\)\s')
+    category = ""
     pad = todo_padding(include_done)
+    colors = set(TERM_COLORS.keys())  # Supposedly sets are faster for look-ups
 
     formatted = []
     if not color_only:
@@ -799,13 +799,13 @@ def format_lines(color_only=False, include_done=False):
             category = r.groups()[0]
             color_name = CONFIG["PRI_{0}".format(category)]
 
-            if not plain and color_name in list(TERM_COLORS.keys()):
+            if not plain and color_name in colors:
                 color = TERM_COLORS[color_name]
             if no_priority:
                 line = pri_re.sub("", line)
 
-        j = str(i + 1).zfill(pad)
-        l = concat([color, invert, j, " ", line[:-1], default, "\n"])
+        i = str(i + 1).zfill(pad)
+        l = concat([color, invert, i, " ", line[:-1], default, "\n"])
 
         if color_only:
             formatted.append(l)
@@ -837,7 +837,7 @@ def _list_(by, regexp):
     Master list_*() function.
     """
     nonetype = concat(["no", by])
-    todo = {nonetype : []}
+    todo = {nonetype: []}
     by_list = []
     sorted = []
 
@@ -865,15 +865,12 @@ def _list_(by, regexp):
 
     by_list.sort()
 
-    hide_proj_re = re.compile('')
-    if CONFIG["HIDE_PROJ"]:
-        hide_proj_re = re.compile('(\+\w+\s?)')
-    hide_cont_re = re.compile('')
-    if CONFIG["HIDE_CONT"]:
-        hide_cont_re = re.compile('(@\w+\s?)')
-    hide_date_re = re.compile('')
-    if CONFIG["HIDE_DATE"]:
-        hide_date_re = re.compile('(#\{\d+-\d+-\d+\}\s?)')
+    regstr = '(\+\w+\s?)' if CONFIG["HIDE_PROJ"] else ''
+    hide_proj_re = re.compile(regstr)
+    regstr = '(@\w+\s?)' if CONFIG["HIDE_CONT"] else ''
+    hide_cont_re = re.compile(regstr)
+    regstr = '(#\{\d+-\d+-\d+\}\s?)' if CONFIG["HIDE_DATE"] else ''
+    hide_date_re = re.compile(regstr)
 
     for b in by_list:
         todo[b] = [hide_proj_re.sub("", l) for l in todo[b]]
@@ -896,7 +893,7 @@ def _list_by_(*args):
         todo.py ls search-term1 search-term2 ...
     """
     esc = re.escape  # keep line length down
-    relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"])) for arg in args]
+    relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"]), re.I) for arg in args]
     del(esc)  # don't need it anymore
 
     alines = format_lines()  # Retrieves all lines.
@@ -995,12 +992,12 @@ def toggle_opt(option, opt_str, val, parser):
     '--plain-mode', '--no-priority', '--prepend-date', '-i',
     '--invert-colors'] and toggle that option in CONFIG.
     """
-    toggle_dict = {"-+" : "HIDE_PROJ", "-@" : "HIDE_CONT", "-#" : "HIDE_DATE",
-            "-p" : "PLAIN", "-P" : "NO_PRI", "-t" : "PRE_DATE",
-            "--plain-mode" : "PLAIN", "--no-priority" : "NO_PRI",
-            "--prepend-date" : "PRE_DATE", "-i" : "INVERT",
-            "--invert-colors" : "INVERT", "-l" : "LEGACY",
-            "--legacy" : "LEGACY",
+    toggle_dict = {"-+": "HIDE_PROJ", "-@": "HIDE_CONT", "-#": "HIDE_DATE",
+            "-p": "PLAIN", "-P": "NO_PRI", "-t": "PRE_DATE",
+            "--plain-mode": "PLAIN", "--no-priority": "NO_PRI",
+            "--prepend-date": "PRE_DATE", "-i": "INVERT",
+            "--invert-colors": "INVERT", "-l": "LEGACY",
+            "--legacy": "LEGACY",
             }
     if opt_str in list(toggle_dict.keys()):
         CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
@@ -1059,7 +1056,7 @@ def opt_setup():
     return opts
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     CONFIG["TODO_PY"] = sys.argv[0]
     opts = opt_setup()
 
@@ -1069,22 +1066,22 @@ if __name__ == "__main__" :
 
     commands = {
             # command 	: ( Args, Function),
-            "a"			: ( True, add_todo),
-            "add"		: ( True, add_todo),
-            "addm"		: ( True, addm_todo),
-            "app"		: ( True, append_todo),
-            "append"	: ( True, append_todo),
-            "do"		: ( True, do_todo),
-            "p"			: ( True, prioritize_todo),
-            "pri"		: ( True, prioritize_todo),
-            "pre"		: ( True, prepend_todo),
-            "prepend"	: ( True, prepend_todo),
-            "dp"		: ( True, de_prioritize_todo),
-            "depri"		: ( True, de_prioritize_todo),
-            "del"		: ( True, delete_todo),
-            "rm"		: ( True, delete_todo),
-            "ls"		: ( True, list_todo),
-            "list"		: ( True, list_todo),
+            "a"			: (True, add_todo),
+            "add"		: (True, add_todo),
+            "addm"		: (True, addm_todo),
+            "app"		: (True, append_todo),
+            "append"	: (True, append_todo),
+            "do"		: (True, do_todo),
+            "p"			: (True, prioritize_todo),
+            "pri"		: (True, prioritize_todo),
+            "pre"		: (True, prepend_todo),
+            "prepend"	: (True, prepend_todo),
+            "dp"		: (True, de_prioritize_todo),
+            "depri"		: (True, de_prioritize_todo),
+            "del"		: (True, delete_todo),
+            "rm"		: (True, delete_todo),
+            "ls"		: (True, list_todo),
+            "list"		: (True, list_todo),
             "listall"	: (False, list_all),
             "lsa"		: (False, list_all),
             "lsc"		: (False, list_context),
@@ -1110,6 +1107,7 @@ if __name__ == "__main__" :
         args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
     all_re = re.compile('((app|pre)(?:end)?|p(?:ri)?)')
+    all_set = set(["ls", "list", "a", "add", "addm"])
 
     while args:
         # ensure this doesn't error because of a faulty CAPS LOCK key
@@ -1118,7 +1116,7 @@ if __name__ == "__main__" :
             if not commands[arg][0]:
                 commands[arg][1]()
             else:
-                if all_re.match(arg) or arg in ["ls", "list", "a", "add", "addm"]:
+                if all_re.match(arg) or arg in all_set:
                     commands[arg][1](args)
                     args = None
                 else:
