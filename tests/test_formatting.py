@@ -102,7 +102,7 @@ class TestFormat(base.BaseTest):
         # also checks that the return value is a dictionary.
         self.assertIsInstance(lines, dict)
 
-        keys = lines.keys()
+        keys = list(lines.keys())
         keys.sort()
         self.assertEqual(todo.concat(keys), todo.PRIORITIES)
 
@@ -151,7 +151,7 @@ class TestFormat(base.BaseTest):
         # from the beginning of the lines (formatted or otherwise).
         self.assertIsInstance(lines, dict)
 
-        keys = lines.keys()
+        keys = list(lines.keys())
         keys.sort()
         self.assertEqual(todo.concat(keys), todo.PRIORITIES)
 
