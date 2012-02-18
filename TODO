@@ -1,6 +1,9 @@
 # Ironic that a project about managing a todo.txt file has a TODO text file
+# Priority A - W :: Highest - Lowest, X :: None
 
-Look into mmap.
+(A) Attack & simplify _list_().
+
+(N) Look into mmap.
 ```python
 > import mmap, re
 > f = open(CONFIG['TODO_TXT'], 'r+')
