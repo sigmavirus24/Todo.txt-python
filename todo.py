@@ -24,7 +24,7 @@ import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
-VERSION = "0.1-conditional_import_dev"
+VERSION = "0.2"
 REVISION = "$Id$"
 
 try:
