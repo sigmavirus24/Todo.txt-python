@@ -288,7 +288,7 @@ def get_config(config_name="", dir_name=""):
             FROM_CONFIG[bkey] = key
 
         skip_re = re.compile('^\s*(#|$)')
-        strip_re = re.compile('\w+\s([A-Za-z_$="./]+).*')
+        strip_re = re.compile('\w+\s([A-Za-z_$="./01]+).*')
         pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
 
         with open(config_file, 'r') as f:
@@ -301,8 +301,7 @@ def get_config(config_name="", dir_name=""):
                     if pri_re.match(items[0]):
                         CONFIG[items[0]] = FROM_CONFIG[items[1]]
                     elif items[0] == "USE_GIT":
-                        CONFIG["USE_GIT"] = False
-                        if items[1] == "True":
+                        if items[1] == "True" or items[1] == "1":
                             CONFIG["USE_GIT"] = True
                     else:
                         items[1] = os.path.expandvars(items[1])
