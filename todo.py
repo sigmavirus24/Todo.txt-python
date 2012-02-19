@@ -481,7 +481,7 @@ def default_config():
         repo.add(files)
         repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
     else:
-        cfg.write("export USE_GIT=False\n")
+        cfg.write("export USE_GIT=0\n")
 
     cfg.close()
     print(concat(["Default configuration completed. Please ",
