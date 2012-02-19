@@ -74,7 +74,7 @@ TERM_COLORS = {
 TODO_DIR = _path("~/.todo")
 CONFIG = {
         "TODO_DIR": TODO_DIR,
-        "TODOTXT_DEFAULT_ACTION": "",
+        "TODOTXT_DEFAULT_ACTION": "list",
         "TODOTXT_CFG_FILE": _pathc([TODO_DIR, "/config"]),
         "TODO_FILE": _pathc([TODO_DIR, "/todo.txt"]),
         "TMP_FILE": _pathc([TODO_DIR, "/todo.tmp"]),
@@ -197,10 +197,10 @@ def _git_status():
     Print the status of the local repository if the version of git is 1.7
     or later.
     """
-    try:
+    if CONFIG["GIT"].version_info >= (1, 7, 3):
         print(CONFIG["GIT"].status())
-    except git.exc.GitCommandError as g:
-        _git_err(g)
+    else:
+        print("`git status` only works for git version 1.7.4 or higher.")
 
 
 def _git_log():
@@ -350,10 +350,10 @@ def git_functions():
             user_email = concat([user_name, "@", getenv("HOSTNAME")])
 
         print("First configure your local repository options.")
-        ret = prompt("git config user.name ", user_name, "?")
+        ret = prompt("git config user.name ", user_name, "? ")
         if ret:
             user_name = ret
-        ret = prompt("git config user.email ", user_email, "?")
+        ret = prompt("git config user.email ", user_email, "? ")
         if ret:
             user_email = ret
 
@@ -361,7 +361,7 @@ def git_functions():
         g.config("user.email", user_email)
 
         # remote configuration
-        ret = prompt("Would you like to add a remote repository?")
+        ret = prompt("Would you like to add a remote? ")
         yes_re = re.compile("y(?:es)?", re.I)
         if yes_re.match(ret):
             remote_host = None
@@ -388,15 +388,10 @@ def git_functions():
 
             prompt("Press enter when you have initialized a bare\n",
                 " repository on the remote or are ready to proceed.")
-            local_branch = g.branch()
+
+            local_branch = git.Repo(CONFIG["TODO_DIR"]).heads[0].name
             if not local_branch:
                 local_branch = "master"
-            else:
-                branch_re = re.compile('^\*\s.*')
-                for l in local_branch.split("\n"):
-                    if branch_re.match(l):
-                        local_branch = branch_re.sub("", l)
-                        break
 
             g.remote("add", "origin", concat([remote_user, "@", remote_host,
                     ":", remote_path]))
@@ -419,7 +414,7 @@ def default_config():
         os.makedirs(CONFIG["TODO_DIR"])
 
     # touch/create files needed for the operation of the script
-    for item in ['TODO_FILE', 'TMP_FILE', 'DONE_FILE', 'REPORT_FILE']:
+    for item in ['TODO_FILE', 'DONE_FILE', 'REPORT_FILE']:
         if CONFIG[item]:
             touch(CONFIG[item])
 
@@ -429,34 +424,32 @@ def default_config():
     CONFIG["PRI_A"] = "yellow"
     CONFIG["PRI_B"] = "green"
     CONFIG["PRI_C"] = "light blue"
-    CONFIG["PRI_X"] = "white"
 
     TO_CONFIG = {}
     for key in list(TERM_COLORS.keys()):
-        bkey = concat(["$", re.sub(' ', '_', key).upper()])
+        bkey = concat(["$", key.replace(' ', '_').upper()])
         TO_CONFIG[key] = bkey
-
-    for k, v in CONFIG.items():
-        if v and (k not in ("GIT", "INVERT", "LEGACY", "PLAIN", "PRE_DATE",
-                "HIDE_DATE", "HIDE_CONT", "HIDE_PROJ", "NO_PRI")):
-            if isinstance(v, bool):
-                v = int(v)
-            if v in list(TO_CONFIG.keys()):
-                cfg.write(concat(["export ", k, "=", TO_CONFIG[v], "\n"]))
-            else:
-                cfg.write(concat(["export ", k, '="', str(v), '"\n']))
 
     val = prompt("Would you like to use git with your to manage\n ",
         CONFIG["TODO_DIR"], "? [y/N]")
     yes_re = re.compile('y(?:es)?', re.I)
     if yes_re.match(val):
         CONFIG["USE_GIT"] = True
-        cfg.write("export USE_GIT=1\n")
-        repo = CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
-        # ^: Might not be necessary
+
+    for k, v in CONFIG.items():
+        if k != "GIT":
+            if isinstance(v, bool):
+                v = int(v)
+            if v in list(TO_CONFIG.keys()):
+                cfg.write("export {0}={1}\n".format(k, TO_CONFIG[v]))
+            else:
+                cfg.write("export {0}=\"{1}\"\n".format(k, str(v)))
+
+    if CONFIG["USE_GIT"]:
+        CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
         try:
-            repo.status()
-        except git.exc.GitCommandError as g:
+            repo = git.Repo(CONFIG["TODO_DIR"])
+        except git.exc.InvalidGitRepositoryError:
             val = prompt("Would you like to create a new git repository in\n ",
                     CONFIG["TODO_DIR"], "? [y/N]")
             if yes_re.match(val):
@@ -466,24 +459,23 @@ def default_config():
                         prog=CONFIG["TODO_PY"])
                 if yes_re.match(val):
                     repo_config()
-            # Untested addition
             else:
                 val = prompt("Would you like {prog} to clone\n a",
                         " remote repository for you? [y/N]",
                         prog=CONFIG["TODO_PY"])
                 if yes_re.match(val):
                     val = prompt("Please enter user@remote:/path/to/repo. ")
-                    r = Repo.clone_from(val, CONFIG["TODO_DIR"])
+                    repo.clone_from(val, CONFIG["TODO_DIR"])
         files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
         for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
             if CONFIG[setting]:
                 files.append(CONFIG[setting])
-        repo.add(files)
-        repo.commit("-m", CONFIG["TODO_PY"] + " initial commit.")
-    else:
-        cfg.write("export USE_GIT=0\n")
+
+        CONFIG["GIT"].add(files)
+        CONFIG["GIT"].commit("-m", CONFIG["TODO_PY"] + " initial commit.")
 
     cfg.close()
+
     print(concat(["Default configuration completed. Please ",
         "re-run\n {prog} with '-h' and 'help' separately.".format(
             prog=CONFIG["TODO_PY"])]))
@@ -502,19 +494,21 @@ def add_todo(args):
         line = concat(args, " ")
     else:
         line = prompt("Add:")
+
     prepend = CONFIG["PRE_DATE"]
     l = len([1 for l in iter_todos()]) + 1
     pri_re = re.compile('(\([A-X]\))')
+
     if pri_re.match(line) and prepend:
         line = pri_re.sub(concat(["\g<1>",
-            datetime.now().strftime(" %Y-%m-%d ")]),
-            line)
+            datetime.now().strftime(" %Y-%m-%d ")]), line)
     elif prepend:
         line = concat([datetime.now().strftime("%Y-%m-%d "), line])
+
     with open(CONFIG["TODO_FILE"], "a") as fd:
         fd.write(concat([line, "\n"]))
-    s = "TODO: '{0}' added on line {1}.".format(
-        line, l)
+
+    s = "TODO: '{0}' added on line {1}.".format(line, l)
     print(s)
     if CONFIG["USE_GIT"]:
         _git_commit([CONFIG["TODO_FILE"]], s)
