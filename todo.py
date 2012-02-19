@@ -216,7 +216,7 @@ def _git_commit(files, message):
         * files should be a list like ['file_a', 'file_b'] or ['-a']
     """
     if len(message) > 49:
-        message = concat([message[:45], "...'\n\n", message])
+        message = concat([message[:45], "...\n\n", message])
     try:
         CONFIG["GIT"].commit(files, "-m", message)
     except git.exc.GitCommandError as g:
@@ -350,10 +350,10 @@ def git_functions():
             user_email = concat([user_name, "@", getenv("HOSTNAME")])
 
         print("First configure your local repository options.")
-        ret = prompt("git config user.name ", user_name, "? ")
+        ret = prompt("git config user.name ", user_name, "?")
         if ret:
             user_name = ret
-        ret = prompt("git config user.email ", user_email, "? ")
+        ret = prompt("git config user.email ", user_email, "?")
         if ret:
             user_email = ret
 
@@ -361,7 +361,7 @@ def git_functions():
         g.config("user.email", user_email)
 
         # remote configuration
-        ret = prompt("Would you like to add a remote? ")
+        ret = prompt("Would you like to add a remote?")
         yes_re = re.compile("y(?:es)?", re.I)
         if yes_re.match(ret):
             remote_host = None
@@ -464,7 +464,7 @@ def default_config():
                         " remote repository for you? [y/N]",
                         prog=CONFIG["TODO_PY"])
                 if yes_re.match(val):
-                    val = prompt("Please enter user@remote:/path/to/repo. ")
+                    val = prompt("Please enter user@remote:/path/to/repo.")
                     repo.clone_from(val, CONFIG["TODO_DIR"])
         files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
         for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
@@ -472,13 +472,14 @@ def default_config():
                 files.append(CONFIG[setting])
 
         CONFIG["GIT"].add(files)
-        CONFIG["GIT"].commit("-m", CONFIG["TODO_PY"] + " initial commit.")
+        CONFIG["GIT"].commit("-m", concat([CONFIG["TODO_PY"], 
+            " initial commit."]))
 
     cfg.close()
 
     print(concat(["Default configuration completed. Please ",
-        "re-run\n {prog} with '-h' and 'help' separately.".format(
-            prog=CONFIG["TODO_PY"])]))
+        "re-run\n ", CONFIG["TODO_PY"], 
+        " with '-h' and 'help' separately."]))
     sys.exit(0)
 ### End Config Functions
 
