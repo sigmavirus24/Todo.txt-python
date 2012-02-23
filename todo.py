@@ -24,7 +24,7 @@ import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
-VERSION = "development-branch"
+VERSION = "0.2.1"
 REVISION = "$Id$"
 
 try:
