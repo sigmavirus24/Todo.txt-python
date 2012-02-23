@@ -266,7 +266,7 @@ def get_config(config_name="", dir_name=""):
         CONFIG["TODOTXT_CFG_FILE"] = config_name
     if dir_name:
         dir_name = _path(dir_name)
-        CONFIG["TODO_DIR"] = dir
+        CONFIG["TODO_DIR"] = dir_name
         CONFIG["TODOTXT_CFG_FILE"] = _pathc([dir_name, "/config"])
         CONFIG["TODO_FILE"] = _pathc([dir_name, "/todo.txt"])
         CONFIG["DONE_FILE"] = _pathc([dir_name, "/done.txt"])
