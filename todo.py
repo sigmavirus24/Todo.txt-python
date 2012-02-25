@@ -77,9 +77,9 @@ CONFIG = {
         "TODOTXT_DEFAULT_ACTION": "list",
         "TODOTXT_CFG_FILE": _pathc([TODO_DIR, "/config"]),
         "TODO_FILE": _pathc([TODO_DIR, "/todo.txt"]),
-        "TMP_FILE": _pathc([TODO_DIR, "/todo.tmp"]),
         "DONE_FILE": _pathc([TODO_DIR, "/done.txt"]),
-        "REPORT_FILE": _pathc([TODO_DIR, "/report.txt"]),
+        "TMP_FILE": "",
+        "REPORT_FILE": "",
         "USE_GIT": False,
         "PLAIN": False,
         "NO_PRI": False,
@@ -311,22 +311,30 @@ def get_config(config_name="", dir_name=""):
                     os.environ[items[0]] = items[1]
 
     if CONFIG["USE_GIT"]:
-        global git
-        try:
-            import git
-        except ImportError:
-            if sys.version_info < (3, 0):
-                print("You must download and install GitPython from: \
-                        http://pypi.python.org/pypi/GitPython")
-            else:
-                print("GitPython is not available for Python3 last I checked.")
-            CONFIG["USE_GIT"] = False
+        if not __import_git__():
             return
 
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
-        if CONFIG["TODOTXT_CFG_FILE"] not in CONFIG["GIT"].ls_files():
-            CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"]])
-        git_functions()
+        tracked_files = set(CONFIG["GIT"].ls_files().split())
+        i = CONFIG["TODOTXT_CFG_FILE"].rfind('/') + 1
+        if CONFIG["TODOTXT_CFG_FILE"][i:] not in tracked_files:
+            CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"][i:]])
+
+
+def __import_git__():
+    git_functions()
+    global git
+    try:
+        import git
+    except ImportError:
+        if sys.version_info < (3, 0):
+            print("You must download and install GitPython from: \
+                    http://pypi.python.org/pypi/GitPython")
+        else:
+            print("GitPython is not available for Python3 last I checked.")
+        CONFIG["USE_GIT"] = False
+        return False
+    return True
 
 
 def git_functions():
@@ -446,6 +454,8 @@ def default_config():
                 cfg.write("export {0}=\"{1}\"\n".format(k, str(v)))
 
     if CONFIG["USE_GIT"]:
+        if not __import_git__():
+            sys.exit(0)
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
         try:
             repo = git.Repo(CONFIG["TODO_DIR"])
@@ -453,27 +463,29 @@ def default_config():
             val = prompt("Would you like to create a new git repository in\n ",
                     CONFIG["TODO_DIR"], "? [y/N]")
             if yes_re.match(val):
-                print(repo.init())
+                print(CONFIG["GIT"].init())
                 val = prompt("Would you like {prog} to help\n you",
                         " configure your new git repository? [y/n]",
                         prog=CONFIG["TODO_PY"])
+
                 if yes_re.match(val):
                     repo_config()
+                    files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
+                    for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
+                        if CONFIG[setting]:
+                            files.append(CONFIG[setting])
+                    CONFIG["GIT"].add(files)
+                    CONFIG["GIT"].commit("-m", concat(['"', CONFIG["TODO_PY"],
+                        " initial commit.\""]))
             else:
                 val = prompt("Would you like {prog} to clone\n a",
                         " remote repository for you? [y/N]",
                         prog=CONFIG["TODO_PY"])
                 if yes_re.match(val):
+                    from shutil import rmtree
+                    rmtree(CONFIG["TODO_DIR"])
                     val = prompt("Please enter user@remote:/path/to/repo.")
-                    repo.clone_from(val, CONFIG["TODO_DIR"])
-        files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
-        for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
-            if CONFIG[setting]:
-                files.append(CONFIG[setting])
-
-        CONFIG["GIT"].add(files)
-        CONFIG["GIT"].commit("-m", concat([CONFIG["TODO_PY"], 
-            " initial commit."]))
+                    git.Repo.clone_from(val, CONFIG["TODO_DIR"])
 
     cfg.close()
 
