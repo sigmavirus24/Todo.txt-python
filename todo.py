@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # TODO.TXT-CLI-python
-# Copyright (C) 2011  Sigmavirus24
+# Copyright (C) 2011-2012  Sigmavirus24
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

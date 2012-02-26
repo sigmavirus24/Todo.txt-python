@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # TODO.TXT-CLI-python test script
-# Copyright (C) 2011  Jeff Stein
+# Copyright (C) 2011-2012  Jeff Stein
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
