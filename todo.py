@@ -54,7 +54,7 @@ except ImportError:
 PRIORITIES = uppercase[:24]
 
 # concat() is necessary long before the grouping of function declarations
-concat = lambda str_list, sep='': sep.join([str(i} for i in str_list])
+concat = lambda str_list, sep='': sep.join([str(i) for i in str_list])
 _path = lambda p: os.path.abspath(os.path.expanduser(p))
 _pathc = lambda plist: _path(concat(plist))
 
