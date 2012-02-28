@@ -7,4 +7,4 @@ python:
 # --use-mirrors
 # install: PLEASE CHANGE ME
 # # command to run tests, e.g. python setup.py test
- script:  run_tests.py
+script:  python run_tests.py
