@@ -1,5 +1,8 @@
 # todo.py
 
+[![Build
+Status](https://secure.travis-ci.org/sigmavirus24/Todo.txt-python.png?branch=development)](http://travis-ci.org/sigmavirus24/Todo.txt-python)
+
 A port of the [popular todo.txt-cli
 project](https://github.com/ginatrapani/todo.txt-cli) from bash to
 python.

@@ -34,7 +34,7 @@ class BaseTest(unittest.TestCase):
 	def setUp(self):
 		todo.CONFIG["PRE_DATE"] = False
 		todo.CONFIG["TODO_PY"] = "testing"
-		sys.stdout = open("/dev/null", "w")
+		sys.stdout = os.devnull
 		open(todotxt, "w+").close()
 		open(donetxt, "w+").close()
 
