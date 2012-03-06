@@ -24,7 +24,7 @@ import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
-VERSION = "development-branch"
+VERSION = "issue-18"
 REVISION = "$Id$"
 
 try:
@@ -90,10 +90,15 @@ CONFIG = {
         "HIDE_DATE": False,
         "LEGACY": False,
         }
+_opt_modified_ = {}  # CONFIG_KEY: (Modified, Value)
+for k in set(["plain", "no_pri", "pre_date", "invert", "hide_proj",
+    "hide_cont", "hide_date", "legacy"]):
+    _opt_modified_[k.upper()] = (0, False)
+
 
 for p in PRIORITIES:
     CONFIG["PRI_{0}".format(p)] = "default"
-del(p, TODO_DIR)
+del(p, TODO_DIR, k)
 
 
 ### Helper Functions
@@ -311,6 +316,11 @@ def get_config(config_name="", dir_name=""):
                     # make expandvars work for our vars too
                     os.environ[items[0]] = items[1]
 
+    for (k, v) in list(_opt_modified_.items()):
+        if v[0]:
+            CONFIG[k] = v[1]
+
+
     if CONFIG["USE_GIT"]:
         if not __import_git__():
             return
@@ -445,7 +455,7 @@ def default_config():
     if yes_re.match(val):
         CONFIG["USE_GIT"] = True
 
-    for k, v in CONFIG.items():
+    for k, v in list(CONFIG.items()):
         if k != "GIT":
             if isinstance(v, bool):
                 v = int(v)
@@ -1007,7 +1017,8 @@ def toggle_opt(option, opt_str, val, parser):
             "--legacy": "LEGACY",
             }
     if opt_str in list(toggle_dict.keys()):
-        CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
+        k = toggle_dict[opt_str]
+        _opt_modified_[k] = (1, not _opt_modified_[k][1])
 ### End callback functions
 
 
