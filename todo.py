@@ -298,11 +298,12 @@ def get_config(config_name="", dir_name=""):
                     items = strip_re.sub('\g<1>', line.strip()).split('=')
                     items[1] = items[1].strip('"')
 
-                    if pri_re.match(items[0]):
+                    if items[1] in ("True", "1"):
+                        CONFIG[items[0]] = True
+                    elif items[1] in ("False", "0"):
+                        CONFIG[items[1]] = False
+                    elif pri_re.match(items[0]):
                         CONFIG[items[0]] = FROM_CONFIG[items[1]]
-                    elif items[0] == "USE_GIT":
-                        if items[1] == "True" or items[1] == "1":
-                            CONFIG["USE_GIT"] = True
                     else:
                         items[1] = os.path.expandvars(items[1])
                         CONFIG[items[0]] = items[1]
