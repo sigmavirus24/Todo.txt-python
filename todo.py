@@ -316,9 +316,10 @@ def get_config(config_name="", dir_name=""):
                     # make expandvars work for our vars too
                     os.environ[items[0]] = items[1]
 
+    from operator import xor
     for (k, v) in list(_opt_modified_.items()):
         if v[0]:
-            CONFIG[k] = v[1]
+            CONFIG[k] = xor(v[1], CONFIG[k])
 
 
     if CONFIG["USE_GIT"]:
