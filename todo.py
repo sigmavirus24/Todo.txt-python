@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # TODO.TXT-CLI-python
-# Copyright (C) 2011  Sigmavirus24
+# Copyright (C) 2011-2012  Sigmavirus24
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import sys
 from optparse import OptionParser
 from datetime import datetime, date
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 REVISION = "$Id$"
 
 try:
@@ -54,7 +54,7 @@ except ImportError:
 PRIORITIES = uppercase[:24]
 
 # concat() is necessary long before the grouping of function declarations
-concat = lambda str_list, sep='': sep.join(str_list)
+concat = lambda str_list, sep='': sep.join([str(i) for i in str_list])
 _path = lambda p: os.path.abspath(os.path.expanduser(p))
 _pathc = lambda plist: _path(concat(plist))
 
@@ -77,9 +77,9 @@ CONFIG = {
         "TODOTXT_DEFAULT_ACTION": "list",
         "TODOTXT_CFG_FILE": _pathc([TODO_DIR, "/config"]),
         "TODO_FILE": _pathc([TODO_DIR, "/todo.txt"]),
-        "TMP_FILE": _pathc([TODO_DIR, "/todo.tmp"]),
         "DONE_FILE": _pathc([TODO_DIR, "/done.txt"]),
-        "REPORT_FILE": _pathc([TODO_DIR, "/report.txt"]),
+        "TMP_FILE": "",
+        "REPORT_FILE": "",
         "USE_GIT": False,
         "PLAIN": False,
         "NO_PRI": False,
@@ -90,10 +90,15 @@ CONFIG = {
         "HIDE_DATE": False,
         "LEGACY": False,
         }
+_opt_modified_ = {}  # CONFIG_KEY: (Modified, Value)
+for k in set(["plain", "no_pri", "pre_date", "invert", "hide_proj",
+    "hide_cont", "hide_date", "legacy"]):
+    _opt_modified_[k.upper()] = (0, False)
+
 
 for p in PRIORITIES:
     CONFIG["PRI_{0}".format(p)] = "default"
-del(p, TODO_DIR)
+del(p, TODO_DIR, k)
 
 
 ### Helper Functions
@@ -298,11 +303,12 @@ def get_config(config_name="", dir_name=""):
                     items = strip_re.sub('\g<1>', line.strip()).split('=')
                     items[1] = items[1].strip('"')
 
-                    if pri_re.match(items[0]):
+                    if items[1] in ("True", "1"):
+                        CONFIG[items[0]] = True
+                    elif items[1] in ("False", "0"):
+                        CONFIG[items[1]] = False
+                    elif pri_re.match(items[0]):
                         CONFIG[items[0]] = FROM_CONFIG[items[1]]
-                    elif items[0] == "USE_GIT":
-                        if items[1] == "True" or items[1] == "1":
-                            CONFIG["USE_GIT"] = True
                     else:
                         items[1] = os.path.expandvars(items[1])
                         CONFIG[items[0]] = items[1]
@@ -310,23 +316,36 @@ def get_config(config_name="", dir_name=""):
                     # make expandvars work for our vars too
                     os.environ[items[0]] = items[1]
 
+    for (k, v) in list(_opt_modified_.items()):
+        if v[0]:
+            CONFIG[k] = v[1] ^ CONFIG[k]
+
+
     if CONFIG["USE_GIT"]:
-        global git
-        try:
-            import git
-        except ImportError:
-            if sys.version_info < (3, 0):
-                print("You must download and install GitPython from: \
-                        http://pypi.python.org/pypi/GitPython")
-            else:
-                print("GitPython is not available for Python3 last I checked.")
-            CONFIG["USE_GIT"] = False
+        if not __import_git__():
             return
 
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
-        if CONFIG["TODOTXT_CFG_FILE"] not in CONFIG["GIT"].ls_files():
-            CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"]])
-        git_functions()
+        tracked_files = set(CONFIG["GIT"].ls_files().split())
+        i = CONFIG["TODOTXT_CFG_FILE"].rfind('/') + 1
+        if CONFIG["TODOTXT_CFG_FILE"][i:] not in tracked_files:
+            CONFIG["GIT"].add([CONFIG["TODOTXT_CFG_FILE"][i:]])
+
+
+def __import_git__():
+    git_functions()
+    global git
+    try:
+        import git
+    except ImportError:
+        if sys.version_info < (3, 0):
+            print("You must download and install GitPython from: \
+                    http://pypi.python.org/pypi/GitPython")
+        else:
+            print("GitPython is not available for Python3 last I checked.")
+        CONFIG["USE_GIT"] = False
+        return False
+    return True
 
 
 def git_functions():
@@ -436,7 +455,7 @@ def default_config():
     if yes_re.match(val):
         CONFIG["USE_GIT"] = True
 
-    for k, v in CONFIG.items():
+    for k, v in list(CONFIG.items()):
         if k != "GIT":
             if isinstance(v, bool):
                 v = int(v)
@@ -446,6 +465,8 @@ def default_config():
                 cfg.write("export {0}=\"{1}\"\n".format(k, str(v)))
 
     if CONFIG["USE_GIT"]:
+        if not __import_git__():
+            sys.exit(0)
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
         try:
             repo = git.Repo(CONFIG["TODO_DIR"])
@@ -453,27 +474,29 @@ def default_config():
             val = prompt("Would you like to create a new git repository in\n ",
                     CONFIG["TODO_DIR"], "? [y/N]")
             if yes_re.match(val):
-                print(repo.init())
+                print(CONFIG["GIT"].init())
                 val = prompt("Would you like {prog} to help\n you",
                         " configure your new git repository? [y/n]",
                         prog=CONFIG["TODO_PY"])
+
                 if yes_re.match(val):
                     repo_config()
+                    files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
+                    for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
+                        if CONFIG[setting]:
+                            files.append(CONFIG[setting])
+                    CONFIG["GIT"].add(files)
+                    CONFIG["GIT"].commit("-m", concat(['"', CONFIG["TODO_PY"],
+                        " initial commit.\""]))
             else:
                 val = prompt("Would you like {prog} to clone\n a",
                         " remote repository for you? [y/N]",
                         prog=CONFIG["TODO_PY"])
                 if yes_re.match(val):
+                    from shutil import rmtree
+                    rmtree(CONFIG["TODO_DIR"])
                     val = prompt("Please enter user@remote:/path/to/repo.")
-                    repo.clone_from(val, CONFIG["TODO_DIR"])
-        files = [CONFIG["TODOTXT_CFG_FILE"], CONFIG["TODO_FILE"]]
-        for setting in ["TMP_FILE", "DONE_FILE", "REPORT_FILE"]:
-            if CONFIG[setting]:
-                files.append(CONFIG[setting])
-
-        CONFIG["GIT"].add(files)
-        CONFIG["GIT"].commit("-m", concat([CONFIG["TODO_PY"], 
-            " initial commit."]))
+                    git.Repo.clone_from(val, CONFIG["TODO_DIR"])
 
     cfg.close()
 
@@ -873,7 +896,7 @@ def _list_(by, regexp):
         if CONFIG["LEGACY"]:
             todo[b] = _legacy_sort(todo[b])
         if by != "pri":
-            sorted.append(concat([str(b), ":\n"]))
+            sorted.append(concat([b, ":\n"]))
         sorted.extend(todo[b])
 
     sorted.extend(todo[nonetype])
@@ -994,7 +1017,8 @@ def toggle_opt(option, opt_str, val, parser):
             "--legacy": "LEGACY",
             }
     if opt_str in list(toggle_dict.keys()):
-        CONFIG[toggle_dict[opt_str]] = not CONFIG[toggle_dict[opt_str]]
+        k = toggle_dict[opt_str]
+        _opt_modified_[k] = (1, not _opt_modified_[k][1])
 ### End callback functions
 
 

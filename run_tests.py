@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # TODO.TXT-CLI-python test script
-# Copyright (C) 2011  Jeff Stein
+# Copyright (C) 2011-2012  Jeff Stein
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,4 +37,5 @@ if __name__ == "__main__":
         names = [ "".join(["tests.", a]) for a in tmp ]
         suite = unittest.defaultTestLoader.loadTestsFromNames(names)
 
+    print("=== Starting unittest suite ===")
     unittest.TextTestRunner(verbosity=2).run(suite)
