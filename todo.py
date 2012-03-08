@@ -90,15 +90,11 @@ CONFIG = {
         "HIDE_DATE": False,
         "LEGACY": False,
         }
-_opt_modified_ = {}  # CONFIG_KEY: (Modified, Value)
-for k in set(["plain", "no_pri", "pre_date", "invert", "hide_proj",
-    "hide_cont", "hide_date", "legacy"]):
-    _opt_modified_[k.upper()] = (0, False)
 
 
 for p in PRIORITIES:
     CONFIG["PRI_{0}".format(p)] = "default"
-del(p, TODO_DIR, k)
+del(p, TODO_DIR)
 
 
 ### Helper Functions
@@ -304,9 +300,9 @@ def get_config(config_name="", dir_name=""):
                     items[1] = items[1].strip('"')
 
                     if items[1] in ("True", "1"):
-                        CONFIG[items[0]] = True
+                        CONFIG[items[0]] ^= True
                     elif items[1] in ("False", "0"):
-                        CONFIG[items[1]] = False
+                        CONFIG[items[0]] ^= False
                     elif pri_re.match(items[0]):
                         CONFIG[items[0]] = FROM_CONFIG[items[1]]
                     else:
@@ -315,10 +311,6 @@ def get_config(config_name="", dir_name=""):
 
                     # make expandvars work for our vars too
                     os.environ[items[0]] = items[1]
-
-    for (k, v) in list(_opt_modified_.items()):
-        if v[0]:
-            CONFIG[k] = v[1] ^ CONFIG[k]
 
 
     if CONFIG["USE_GIT"]:
@@ -1018,7 +1010,7 @@ def toggle_opt(option, opt_str, val, parser):
             }
     if opt_str in list(toggle_dict.keys()):
         k = toggle_dict[opt_str]
-        _opt_modified_[k] = (1, not _opt_modified_[k][1])
+        CONFIG[k] ^= True
 ### End callback functions
 
 
