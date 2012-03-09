@@ -122,3 +122,4 @@ class BaseTest(unittest.TestCase):
 
     def force_print(self, message):
         sys.stderr.write(''.join([message, '\n']))
+        sys.stderr.flush()

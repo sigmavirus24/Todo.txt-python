@@ -29,14 +29,11 @@ class TestConfig(base.BaseTest):
         # Just some nice magic:
         self.sub = partial(file_re.sub, '\g<1>plain')
         super(TestConfig, self).setUp()
-        self.backup = todo.CONFIG.copy()
 
     def tearDown(self):
         todo.CONFIG = self.backup
 
     def config_assert(self, key, val):
-        self.force_print("key: {0} should be: {1} is: {2}".format(key, val,
-            todo.CONFIG[key]))
         self.assertEquals(todo.CONFIG[key], val)
 
     def _validate_(self, filename):
@@ -53,8 +50,11 @@ class TestConfig(base.BaseTest):
                 self.config_assert(key, val)
 
     def test_configs(self):
+        self.backup = todo.CONFIG.copy()
         for f in listdir('tests/config/'):
             if f.endswith('config'):
                 f = ''.join(['tests/config/', f])
                 todo.get_config(config_name=f)
                 self._validate_(f)
+                todo.CONFIG = self.backup.copy()
+
