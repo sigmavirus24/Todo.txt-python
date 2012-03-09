@@ -119,3 +119,6 @@ class BaseTest(unittest.TestCase):
         else:
             if not expr:
                 self.fail(msg)
+
+    def force_print(self, message):
+        sys.stderr.write(''.join([message, '\n']))

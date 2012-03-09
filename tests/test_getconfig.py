@@ -35,6 +35,8 @@ class TestConfig(base.BaseTest):
         todo.CONFIG = self.backup
 
     def config_assert(self, key, val):
+        self.force_print("key: {0} should be: {1} is: {2}".format(key, val,
+            todo.CONFIG[key]))
         self.assertEquals(todo.CONFIG[key], val)
 
     def _validate_(self, filename):
