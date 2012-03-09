@@ -38,11 +38,13 @@ class TestConfig(base.BaseTest):
     def config_assert(self, key, val):
         self.assertEquals(todo.CONFIG[key], val)
 
-    def _validate_(filename):
+    def _validate_(self, filename):
         filename = self.sub(filename)
-        with open(filename, r) as fd:
+        with open(filename, 'r') as fd:
             for line in fd:
-                key, val, = line.split()
+                if line.startswith('#') or line == '\n':
+                    continue
+                key, val = line.split()
                 if val == "False":
                     val = False
                 elif val == "True":
@@ -54,3 +56,4 @@ class TestConfig(base.BaseTest):
             if f.endswith('config'):
                 f = ''.join(['tests/config/', f])
                 todo.get_config(config_name=f)
+                self._validate_(f)

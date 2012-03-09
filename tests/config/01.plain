@@ -28,4 +28,4 @@ HIDE_CONT False
 TODO_DIR _todo
 TODOTXT_DEFAULT_ACTION lsc
 TODO_FILE _todo/todo.txt
-DONE_FILE _TODO/done.txt
+DONE_FILE _todo/done.txt
