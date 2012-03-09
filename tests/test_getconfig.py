@@ -33,7 +33,6 @@ class TestConfig(base.BaseTest):
 
     def tearDown(self):
         todo.CONFIG = self.backup
-        super(TestConfig, self).setUp()
 
     def config_assert(self, key, val):
         self.assertEquals(todo.CONFIG[key], val)

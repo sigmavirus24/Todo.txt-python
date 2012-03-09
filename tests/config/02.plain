@@ -16,15 +16,15 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-PLAIN False
-NO_PRI False
-LEGACY False
-INVERT False
-USE_GIT False
-PRE_DATE False
-HIDE_PROJ False
-HIDE_DATE False
-HIDE_CONT False
+PLAIN True
+NO_PRI True
+LEGACY True
+INVERT True
+USE_GIT True
+PRE_DATE True
+HIDE_PROJ True
+HIDE_DATE True
+HIDE_CONT True
 TODO_DIR _todo
 TODOTXT_DEFAULT_ACTION lsc
 TODO_FILE _todo/todo.txt
