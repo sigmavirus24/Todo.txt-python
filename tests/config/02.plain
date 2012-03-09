@@ -20,7 +20,7 @@ PLAIN True
 NO_PRI True
 LEGACY True
 INVERT True
-USE_GIT True
+USE_GIT False
 PRE_DATE True
 HIDE_PROJ True
 HIDE_DATE True
