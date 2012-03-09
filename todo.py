@@ -436,7 +436,7 @@ def default_config():
     CONFIG["PRI_B"] = "green"
     CONFIG["PRI_C"] = "light blue"
 
-    TO_CONFIG = {}
+    TO_CONFIG = {True: 1, False: 0}
     for key in list(TERM_COLORS.keys()):
         bkey = concat(["$", key.replace(' ', '_').upper()])
         TO_CONFIG[key] = bkey
@@ -449,8 +449,6 @@ def default_config():
 
     for k, v in list(CONFIG.items()):
         if k != "GIT":
-            if isinstance(v, bool):
-                v = int(v)
             if v in list(TO_CONFIG.keys()):
                 cfg.write("export {0}={1}\n".format(k, TO_CONFIG[v]))
             else:
