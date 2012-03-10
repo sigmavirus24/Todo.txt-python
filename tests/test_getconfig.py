@@ -56,7 +56,6 @@ class TestConfig(base.BaseTest):
             if f.endswith('config'):
                 f = ''.join(['tests/config/', f])
                 todo.get_config(config_name=f)
-                self.force_print(os.environ['TODO_DIR'])
                 self._validate_(f)
                 todo.CONFIG = self.backup.copy()
                 os.environ = self.environ.copy()
