@@ -278,10 +278,10 @@ def get_config(config_name="", dir_name=""):
         config_file = CONFIG["TODOTXT_CFG_FILE"]
 
     config_file = _path(config_file)
-    if not (os.access(CONFIG["TODO_DIR"],
-        os.F_OK | os.R_OK | os.W_OK | os.X_OK) and \
-                os.access(config_file, os.F_OK | os.R_OK | os.W_OK) and \
-                config_name):
+    perms = os.F_OK | os.R_OK | os.W_OK
+    if not (os.access(CONFIG["TODO_DIR"], perms | os.X_OK) and \
+            os.access(config_file, perms)) and \
+        not config_name:
         default_config()
     else:
         FROM_CONFIG = {}
