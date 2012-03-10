@@ -19,7 +19,7 @@
 import todo
 import base
 import re
-from os import listdir, environ
+import os
 from functools import partial
 
 class TestConfig(base.BaseTest):
@@ -51,11 +51,13 @@ class TestConfig(base.BaseTest):
 
     def test_configs(self):
         self.backup = todo.CONFIG.copy()
-        for f in listdir('tests/config/'):
+        self.environ = os.environ.copy()
+        for f in os.listdir('tests/config/'):
             if f.endswith('config'):
                 f = ''.join(['tests/config/', f])
                 todo.get_config(config_name=f)
-                self.force_print(environ['TODO_DIR'])
+                self.force_print(os.environ['TODO_DIR'])
                 self._validate_(f)
                 todo.CONFIG = self.backup.copy()
+                os.environ = self.environ.copy()
 
