@@ -20,6 +20,10 @@ GitPython is written for `git --version` 1.7.2+.
 Enjoy, contribute, and feel free to clone. I'm doing this blind[1] as best as
 possible for fun.
 
+# Important Information
+
+  * License: [GPLv3](https://raw.github.com/sigmavirus24/Todo.txt-python/master/LICENSE)
+
 # Footnotes
 
 [1] By blind, I mean without looking at the source of the original todo.txt-cli
