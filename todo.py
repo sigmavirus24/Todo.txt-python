@@ -259,6 +259,19 @@ def test_separated(removed, lines, line_no):
 
 
 ### Configuration Functions
+def _iter_actual_lines_(config_file):
+    """
+    Return only the actual lines of the config file. This skips commented or
+    blank lines.
+    """
+    skip_re = re.compile('^\s*(#|$)')
+
+    with open(config_file, 'r') as f:
+        for line in f:
+            if not skip_re.match(line):
+                yield line
+
+
 def get_config(config_name="", dir_name=""):
     """
     Read the config file
@@ -284,35 +297,26 @@ def get_config(config_name="", dir_name=""):
         not config_name:
         default_config()
     else:
-        FROM_CONFIG = {}
-        for key in list(TERM_COLORS.keys()):
-            bkey = concat(["$", re.sub(' ', '_', key).upper()])
-            FROM_CONFIG[bkey] = key
-
-        skip_re = re.compile('^\s*(#|$)')
         strip_re = re.compile('\w+\s([A-Za-z_$="./01]+).*')
         pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
 
-        with open(config_file, 'r') as f:
-            for line in f:
-                if not skip_re.match(line):
-                    # Extract VAR=VAL and then split VAR and VAL
-                    items = strip_re.sub('\g<1>', line.strip()).split('=')
-                    items[1] = items[1].strip('"')
+        for line in _iter_actual_lines_(config_file):
+            # Extract VAR=VAL and then split VAR and VAL
+            var = strip_re.sub('\g<1>', line.strip()).split('=')
+            var[1] = var[1].strip('"')
 
-                    if items[1] in ("True", "1"):
-                        CONFIG[items[0]] ^= True
-                    elif items[1] in ("False", "0"):
-                        CONFIG[items[0]] ^= False
-                    elif pri_re.match(items[0]):
-                        CONFIG[items[0]] = FROM_CONFIG[items[1]]
-                    else:
-                        items[1] = os.path.expandvars(items[1])
-                        CONFIG[items[0]] = items[1]
+            if var[1] in ("True", "1"):
+                CONFIG[var[0]] ^= True
+            elif var[1] in ("False", "0"):
+                CONFIG[var[0]] ^= False
+            elif pri_re.match(var[0]):
+                CONFIG[var[0]] = var[1].strip('$').lower().replace('_', ' ')
+            else:
+                var[1] = os.path.expandvars(var[1])
+                CONFIG[var[0]] = var[1]
 
-                    # make expandvars work for our vars too
-                    os.environ[items[0]] = items[1]
-
+            # make expandvars work for our vars too
+            os.environ[var[0]] = var[1]
 
     if CONFIG["USE_GIT"]:
         if not __import_git__():
@@ -492,8 +496,7 @@ def default_config():
     cfg.close()
 
     print(concat(["Default configuration completed. Please ",
-        "re-run\n ", CONFIG["TODO_PY"], 
-        " with '-h' and 'help' separately."]))
+        "re-run\n ", CONFIG["TODO_PY"], " with '-h' and 'help' separately."]))
     sys.exit(0)
 ### End Config Functions
 
@@ -901,7 +904,7 @@ def _list_by_(*args):
         todo.py ls search-term1 search-term2 ...
     """
     esc = re.escape  # keep line length down
-    relist = [re.compile(concat(["\s?(", esc(arg), ")\s?"]), re.I) for arg in args]
+    relist = [re.compile(concat(["\s?(", esc(a), ")\s?"]), re.I) for a in args]
     del(esc)  # don't need it anymore
 
     alines = format_lines()  # Retrieves all lines.
