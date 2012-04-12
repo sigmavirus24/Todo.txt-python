@@ -158,6 +158,15 @@ def rewrite_and_post(line_no, old_line, new_line, lines):
     post_success(line_no, old_line, new_line)
 
 
+def usage(*args):
+    """Set the usage string printed out in ./todo.py help."""
+    def usage_decorator(func):
+        """Function that actually sets the usage string."""
+        func.__usage__ = concat(args, '\n')
+        return func
+    return usage_decorator
+
+
 def _git_err(g):
     """
     Print any errors that result from GitPython and exit.
@@ -502,6 +511,10 @@ def default_config():
 
 
 ### New todo Functions
+@usage('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"',
+       concat(["\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}'",
+       "to your todo.txt"], ' '), "\t\tfile.",
+       "\t\t+project, @context, #{yyyy-mm-dd} are optional")
 def add_todo(args):
     """
     Add a new item to the list of things todo.
@@ -721,12 +734,7 @@ def cmd_help():
     print(concat(["Use", CONFIG["TODO_PY"], "-h for option help"], " "))
     print("")
     print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
-    print('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"')
-    print(concat(["\t\tAdds 'Item to do +project @context",
-        " #{yyyy-mm-dd}' to your todo.txt"]))
-    print("\t\tfile.")
-    print("\t\t+project, @context, #{yyyy-mm-dd} are optional")
-    print("")
+    print(add_todo.__usage__)
     print('\taddm "First item to do +project @context #{yyyy-mm-dd}')
     print("\t\tSecond item to do +project @context #{yyyy-mm-dd}")
     print("\t\t...")
