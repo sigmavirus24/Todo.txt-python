@@ -514,7 +514,7 @@ def default_config():
 @usage('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"',
        concat(["\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}'",
        "to your todo.txt"], ' '), "\t\tfile.",
-       "\t\t+project, @context, #{yyyy-mm-dd} are optional")
+       "\t\t+project, @context, #{yyyy-mm-dd} are optional\n")
 def add_todo(args):
     """
     Add a new item to the list of things todo.
@@ -545,6 +545,10 @@ def add_todo(args):
         _git_commit([CONFIG["TODO_FILE"]], s)
 
 
+@usage('\taddm "First item to do +project @context #{yyyy-mm-dd}',
+    "\t\tSecond item to do +project @context #{yyyy-mm-dd}",
+    "\t\t...", "\t\tLast item to do +project @context #{yyyy-mm-dd}",
+    "\t\tAdds each line as a separate item to your todo.txt file.\n")
 def addm_todo(args):
     """
     Add new items to the list of things todo.
@@ -640,6 +644,8 @@ def post_success(item_no, old_line, new_line):
         _git_commit([CONFIG["TODO_FILE"]], print_str)
 
 
+@usage('\tappend | app NUMBER "text to append"',
+    '\t\tAppend "text to append" to item NUMBER.\n')
 def append_todo(args):
     """
     Append text to the item specified.
@@ -683,6 +689,8 @@ def prioritize_todo(args):
         post_error('pri', 'NUMBER', 'capital letter in [A-X]')
 
 
+@usage("\tdepri | dp NUMBER", 
+    "\t\tRemove the priority of the item on line NUMBER.\n")
 def de_prioritize_todo(number):
     """
     Remove priority markings from the beginning of the line if they're there.
@@ -735,17 +743,8 @@ def cmd_help():
     print("")
     print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
     print(add_todo.__usage__)
-    print('\taddm "First item to do +project @context #{yyyy-mm-dd}')
-    print("\t\tSecond item to do +project @context #{yyyy-mm-dd}")
-    print("\t\t...")
-    print("\t\tLast item to do +project @context #{yyyy-mm-dd}")
-    print("\t\tAdds each line as a separate item to your todo.txt file.")
-    print("")
-    print('\tappend | app NUMBER "text to append"')
-    print('\t\tAppend "text to append" to item NUMBER.')
-    print("")
-    print("\tdepri | dp NUMBER")
-    print("\t\tRemove the priority of the item on line NUMBER.")
+    print(addm_todo.__usage__)
+    print(append_todo.__usage__)
     print("")
     print("\tdo NUMBER")
     print("\t\tMarks item with corresponding number as done and moves it to")
