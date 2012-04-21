@@ -109,9 +109,7 @@ def todo_padding(include_done=False):
 
 
 def iter_todos(include_done=False):
-    """
-    Opens the file in read-only mode, and returns an iterator for the todos.
-    """
+    """Opens the file in read-only mode; returns an iterator for the todos."""
     files = [CONFIG["TODO_FILE"]]
     if not os.path.isfile(files[0]):
         return
@@ -139,20 +137,16 @@ def separate_line(number):
 
 
 def rewrite_file(fd, lines):
-    """
-    Simple wrapper for three lines used all too frequently.
-    Sets the access position to the beginning of the file, truncates the
-    file's length to 0 and then writes all the lines to the file.
-    """
+    """Simple wrapper for three lines used all too frequently. Sets the access
+    position to the beginning of the file, truncates the file's length to 0 and
+    then writes all the lines to the file. """
     fd.seek(0, 0)
     fd.truncate(0)
     fd.writelines(lines)
 
 
 def rewrite_and_post(line_no, old_line, new_line, lines):
-    """
-    Wraps the following code used frequently in post-production functions.
-    """
+    """Wrapper for frequently used semantics for "post-production"."""
     with open(CONFIG["TODO_FILE"], "w") as fd:
         rewrite_file(fd, lines)
     post_success(line_no, old_line, new_line)
@@ -168,9 +162,7 @@ def usage(*args):
 
 
 def _git_err(g):
-    """
-    Print any errors that result from GitPython and exit.
-    """
+    """Print any errors that result from GitPython and exit."""
     if g.stderr:
         print(g.stderr)
     else:
@@ -179,9 +171,7 @@ def _git_err(g):
 
 
 def _git_pull():
-    """
-    Pull any commits that exist on the remote to the local repository.
-    """
+    """Equivalent to running git pull on the command line."""
     try:
         print(CONFIG["GIT"].pull())
     except git.exc.GitCommandError as g:
@@ -189,9 +179,7 @@ def _git_pull():
 
 
 def _git_push():
-    """
-    Push commits made locally to the remote.
-    """
+    """Push commits made locally to the remote."""
     try:
         s = CONFIG["GIT"].push()
     except git.exc.GitCommandError as g:
@@ -203,10 +191,8 @@ def _git_push():
 
 
 def _git_status():
-    """
-    Print the status of the local repository if the version of git is 1.7
-    or later.
-    """
+    """Print the status of the local repository if the version of git is 1.7
+    or later."""
     if CONFIG["GIT"].version_info >= (1, 7, 3):
         print(CONFIG["GIT"].status())
     else:
@@ -214,17 +200,14 @@ def _git_status():
 
 
 def _git_log():
-    """
-    Print the two latest commits in the local repository's log.
-    """
+    """Print the two latest commits in the local repository's log."""
     print(CONFIG["GIT"].log("-5", "--oneline"))
 
 
 def _git_commit(files, message):
-    """
-    Make a commit to the git repository.
-        * files should be a list like ['file_a', 'file_b'] or ['-a']
-    """
+    """Make a commit to the git repository.
+
+    files -- should be an iterable like ['file_a', 'file_b'] or ['-a']"""
     if len(message) > 49:
         message = concat([message[:45], "...\n\n", message])
     try:
@@ -236,12 +219,11 @@ def _git_commit(files, message):
 
 
 def prompt(*args, **kwargs):
-    """
-    Sanitize input collected with raw_input().
+    """Sanitize input collected with raw_input().
     Prevents someone from entering 'y\' to attempt to break the program.
 
-    args can be any collection of strings that require formatting.
-    kwargs will collect the tokens and values.
+    args -- can be any collection of strings that require formatting.
+    kwargs -- will collect the tokens and values.
     """
     args = list(args)  # [a for a in args]
     args.append(' ')
@@ -269,10 +251,8 @@ def test_separated(removed, lines, line_no):
 
 ### Configuration Functions
 def _iter_actual_lines_(config_file):
-    """
-    Return only the actual lines of the config file. This skips commented or
-    blank lines.
-    """
+    """Return only the actual lines of the config file. This skips commented or
+    blank lines."""
     skip_re = re.compile('^\s*(#|$)')
 
     with open(config_file, 'r') as f:
@@ -282,9 +262,7 @@ def _iter_actual_lines_(config_file):
 
 
 def get_config(config_name="", dir_name=""):
-    """
-    Read the config file
-    """
+    """Read the config file"""
     if config_name:
         CONFIG["TODOTXT_CFG_FILE"] = config_name
     if dir_name:
@@ -358,9 +336,7 @@ def git_functions():
     global repo_config
 
     def repo_config():
-        """
-        Help the user configure their git repository.
-        """
+        """Help the user configure their git repository."""
         from os import getenv
         g = CONFIG["GIT"]
         # local configuration
@@ -426,13 +402,9 @@ def git_functions():
 
 
 def default_config():
-    """
-    Set up the default configuration file.
-    """
+    """Set up the default configuration file."""
     def touch(filename):
-        """
-        Create files if they aren't already there.
-        """
+        """Create files if they aren't already there."""
         open(filename, "w").close()
 
     if not os.path.exists(CONFIG["TODO_DIR"]):
@@ -516,9 +488,7 @@ def default_config():
        "to your todo.txt"], ' '), "\t\tfile.",
        "\t\t+project, @context, #{yyyy-mm-dd} are optional\n")
 def add_todo(args):
-    """
-    Add a new item to the list of things todo.
-    """
+    """Add a new item to the list of things todo."""
     if str(args) == args:
         line = args
     elif len(args) >= 1:
@@ -550,9 +520,7 @@ def add_todo(args):
     "\t\t...", "\t\tLast item to do +project @context #{yyyy-mm-dd}",
     "\t\tAdds each line as a separate item to your todo.txt file.\n")
 def addm_todo(args):
-    """
-    Add new items to the list of things todo.
-    """
+    """Add new items to the list of things todo."""
     if str(args) == args:
         lines = args
     else:
@@ -563,10 +531,11 @@ def addm_todo(args):
 
 
 ### Start do/del functions
+@usage("\tdo NUMBER",
+    "\t\tMarks item with corresponding number as done and moves it to",
+    "\t\tyour done.txt file.\n")
 def do_todo(line):
-    """
-    Mark an item on a specified line as done.
-    """
+    """Mark an item on a specified line as done."""
     if not line.isdigit():
         print("Usage: {0} do item#".format(CONFIG["TODO_PY"]))
     else:
@@ -595,9 +564,7 @@ def do_todo(line):
 
 
 def delete_todo(line):
-    """
-    Delete an item without marking it as done.
-    """
+    """Delete an item without marking it as done."""
     if not line.isdigit():
         print("Usage: {0} (del|rm) item#".format(CONFIG["TODO_PY"]))
     else:
@@ -745,11 +712,7 @@ def cmd_help():
     print(add_todo.__usage__)
     print(addm_todo.__usage__)
     print(append_todo.__usage__)
-    print("")
-    print("\tdo NUMBER")
-    print("\t\tMarks item with corresponding number as done and moves it to")
-    print("\t\tyour done.txt file.")
-    print("")
+    print(do_todo.__usage__)
     print("\tlist | ls")
     print("\t\tLists all items in your todo.txt file sorted by priority.")
     print("")
