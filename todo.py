@@ -168,6 +168,7 @@ def _git_err(g):
     sys.exit(g.status)
 
 
+@usage('\tpull', '\t\tPulls from your remote git repository.\n')
 def _git_pull():
     """Equivalent to running git pull on the command line."""
     try:
@@ -176,6 +177,7 @@ def _git_pull():
         _git_err(g)
 
 
+@usage('\tpush', '\t\tPushes to your remote git repository.\n')
 def _git_push():
     """Push commits made locally to the remote."""
     try:
@@ -188,15 +190,19 @@ def _git_push():
         print("TODO: 'git push' executed.")
 
 
+@usage('\tstatus',
+    '\t\t"git status" of the repository containing your todo files.',
+    '\t\tRequires git version 1.7.4 or newer.\n')
 def _git_status():
     """Print the status of the local repository if the version of git is 1.7
     or later."""
     if CONFIG["GIT"].version_info >= (1, 7, 3):
         print(CONFIG["GIT"].status())
     else:
-        print("`git status` only works for git version 1.7.4 or higher.")
+        print("status only works for git version 1.7.4 or higher.")
 
 
+@usage('\tlog', '\t\tShows the last five commits in your repository.\n')
 def _git_log():
     """Print the two latest commits in the local repository's log."""
     print(CONFIG["GIT"].log("-5", "--oneline"))
@@ -626,7 +632,7 @@ def append_todo(args):
 
 
 @usage('\tpri | p NUMBER [A-X]',
-    '\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.')
+    '\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.\n')
 def prioritize_todo(args):
     """Add or modify the priority of the specified item."""
     if args[0].isdigit() and len(args[1]) == 1 and args[1] in PRIORITIES:
@@ -716,19 +722,10 @@ def cmd_help():
     print(prepend_todo.__usage__)
     print(prioritize_todo.__usage__)
     if CONFIG["USE_GIT"]:
-        print("")
-        print("\tpull")
-        print("\t\tPulls from the remote for your git repository.")
-        print("")
-        print("\tpush")
-        print("\t\tPushes to the remote for your git repository.")
-        print("")
-        print("\tstatus")
-        print("\t\tIf using $(git --version) > 1.7, shows the status of your")
-        print("\t\tlocal git repository.")
-        print("")
-        print("\tlog")
-        print("\t\tShows the last five commits in your local git repository.")
+        print(_git_log.__usage__)
+        print(_git_pull.__usage__)
+        print(_git_push.__usage__)
+        print(_git_status.__usage__)
     sys.exit(0)
 ### HELP
 
@@ -1024,6 +1021,7 @@ if __name__ == "__main__":
 
     get_config(valid.config, valid.todo_dir)
 
+    global commands
     commands = {
             # command 	: ( Args, Function),
             "a"			: (True, add_todo),
