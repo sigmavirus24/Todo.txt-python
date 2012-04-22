@@ -122,13 +122,11 @@ def iter_todos(include_done=False):
 
 
 def separate_line(number):
-    """
-    Takes an integer and returns a string and a list. The string is the item at
-    that position in the list. The list is the rest of the todos.
+    """Takes an integer and returns a string and a list. The string is
+    the item at that position in the list. The list is the rest of the todos.
 
     If the todo.txt file is empty, separate = lines = None. If the number is
-    invalid separate = None, lines != None.
-    """
+    invalid separate = None, lines != None."""
     lines = [line for line in iter_todos()]
     separate = None
     if lines and number - 1 < len(lines) and 0 <= number - 1:
@@ -139,7 +137,7 @@ def separate_line(number):
 def rewrite_file(fd, lines):
     """Simple wrapper for three lines used all too frequently. Sets the access
     position to the beginning of the file, truncates the file's length to 0 and
-    then writes all the lines to the file. """
+    then writes all the lines to the file."""
     fd.seek(0, 0)
     fd.truncate(0)
     fd.writelines(lines)
@@ -156,7 +154,7 @@ def usage(*args):
     """Set the usage string printed out in ./todo.py help."""
     def usage_decorator(func):
         """Function that actually sets the usage string."""
-        func.__usage__ = concat(args, '\n')
+        func.__usage__ = concat(args, '\n').expandtabs(3)
         return func
     return usage_decorator
 
@@ -223,8 +221,7 @@ def prompt(*args, **kwargs):
     Prevents someone from entering 'y\' to attempt to break the program.
 
     args -- can be any collection of strings that require formatting.
-    kwargs -- will collect the tokens and values.
-    """
+    kwargs -- will collect the tokens and values."""
     args = list(args)  # [a for a in args]
     args.append(' ')
     prompt_str = concat(args).format(**kwargs)
@@ -516,9 +513,9 @@ def add_todo(args):
 
 
 @usage('\taddm "First item to do +project @context #{yyyy-mm-dd}',
-    "\t\tSecond item to do +project @context #{yyyy-mm-dd}",
-    "\t\t...", "\t\tLast item to do +project @context #{yyyy-mm-dd}",
-    "\t\tAdds each line as a separate item to your todo.txt file.\n")
+    '\t\tSecond item to do +project @context #{yyyy-mm-dd}',
+    '\t\t...', '\t\tLast item to do +project @context #{yyyy-mm-dd}',
+    '\t\tAdds each line as a separate item to your todo.txt file.\n')
 def addm_todo(args):
     """Add new items to the list of things todo."""
     if str(args) == args:
@@ -531,9 +528,9 @@ def addm_todo(args):
 
 
 ### Start do/del functions
-@usage("\tdo NUMBER",
-    "\t\tMarks item with corresponding number as done and moves it to",
-    "\t\tyour done.txt file.\n")
+@usage('\tdo NUMBER',
+    '\t\tMarks item with corresponding number as done and moves it to',
+    '\t\tyour done.txt file.\n')
 def do_todo(line):
     """Mark an item on a specified line as done."""
     if not line.isdigit():
@@ -563,6 +560,8 @@ def do_todo(line):
             _git_commit(files, removed)
 
 
+@usage('\tdel | rm NUMBER', '\t\tDeletes the item on line NUMBER in todo.txt',
+        '')
 def delete_todo(line):
     """Delete an item without marking it as done."""
     if not line.isdigit():
@@ -585,11 +584,9 @@ def delete_todo(line):
 
 ### Post-production todo functions
 def post_error(command, arg1, arg2):
-    """
-    If one of the post-production todo functions isn't given the proper
+    """If one of the post-production todo functions isn't given the proper
     arguments, the function calls this to notify the user of what they need to
-    supply.
-    """
+    supply."""
     if arg2:
         print(concat(["'", CONFIG["TODO_PY"], " ", command, "' requires a(n) ",
             arg1, " then a ", arg2, "."]))
@@ -599,9 +596,7 @@ def post_error(command, arg1, arg2):
 
 
 def post_success(item_no, old_line, new_line):
-    """
-    After changing a line, pring a standard line and commit the change.
-    """
+    """After changing a line, pring a standard line and commit the change."""
     old_line = old_line.rstrip()
     new_line = new_line.rstrip()
     print_str = "TODO: Item {0} changed from '{1}' to '{2}'.".format(
@@ -614,9 +609,7 @@ def post_success(item_no, old_line, new_line):
 @usage('\tappend | app NUMBER "text to append"',
     '\t\tAppend "text to append" to item NUMBER.\n')
 def append_todo(args):
-    """
-    Append text to the item specified.
-    """
+    """Append text to the item specified."""
     if args[0].isdigit():
         line_no = int(args.pop(0))
         old_line, lines = separate_line(line_no)
@@ -632,10 +625,10 @@ def append_todo(args):
         post_error('append', 'NUMBER', 'string')
 
 
+@usage('\tpri | p NUMBER [A-X]',
+    '\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.')
 def prioritize_todo(args):
-    """
-    Add or modify the priority of the specified item.
-    """
+    """Add or modify the priority of the specified item."""
     if args[0].isdigit() and len(args[1]) == 1 and args[1] in PRIORITIES:
         line_no = int(args.pop(0))
         old_line, lines = separate_line(line_no)
@@ -656,13 +649,11 @@ def prioritize_todo(args):
         post_error('pri', 'NUMBER', 'capital letter in [A-X]')
 
 
-@usage("\tdepri | dp NUMBER", 
-    "\t\tRemove the priority of the item on line NUMBER.\n")
+@usage('\tdepri | dp NUMBER',
+    '\t\tRemove the priority of the item on line NUMBER.\n')
 def de_prioritize_todo(number):
-    """
-    Remove priority markings from the beginning of the line if they're there.
-    Don't complain otherwise.
-    """
+    """Remove priority markings from the beginning of the line if they're
+    there. Don't complain otherwise."""
     if number.isdigit():
         number = int(number)
         old_line, lines = separate_line(number)
@@ -677,11 +668,11 @@ def de_prioritize_todo(number):
         post_err('depri', 'NUMBER', None)
 
 
+@usage('\tprepend | pre NUMBER "text to prepend"',
+    '\t\tAdd "text to prepend" to the beginning of the item.\n')
 def prepend_todo(args):
-    """
-    Take in the line number and prepend the rest of the arguments to the item
-    specified by the line number.
-    """
+    """Take in the line number and prepend the rest of the arguments to the
+    item specified by the line number."""
     if args[0].isdigit():
         line_no = int(args.pop(0))
         prepend_str = concat(args, " ") + " "
@@ -705,6 +696,8 @@ def prepend_todo(args):
 
 
 ### HELP
+@usage('\thelp | h',
+    '\t\tDisplay this message and exit.\n')
 def cmd_help():
     print(concat(["Use", CONFIG["TODO_PY"], "-h for option help"], " "))
     print("")
@@ -712,27 +705,16 @@ def cmd_help():
     print(add_todo.__usage__)
     print(addm_todo.__usage__)
     print(append_todo.__usage__)
+    print(delete_todo.__usage__)
     print(do_todo.__usage__)
-    print("\tlist | ls")
-    print("\t\tLists all items in your todo.txt file sorted by priority.")
-    print("")
-    print("\tlistcon | lsc")
-    print("\t\tLists all items in your todo.txt file sorted by context.")
-    print("")
-    print("\tlistdate | lsd")
-    print("\t\tLists all items in your todo.txt file sorted by date.")
-    print("")
-    print("\tlistproj | lsp")
-    print("\t\tLists all items in your todo.txt file sorted by project title.")
-    print("")
-    print("\thelp | h")
-    print("\t\tDisplay this message and exit.")
-    print("")
-    print('\tprepend | pre NUMBER "text to prepend"')
-    print('\t\tAdd "text to prepend" to the beginning of the item.')
-    print("")
-    print("\tpri | p NUMBER [A-X]")
-    print("\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.")
+    print(list_todo.__usage__)
+    print(list_all.__usage__)
+    print(list_context.__usage__)
+    print(list_date.__usage__)
+    print(list_project.__usage__)
+    print(cmd_help.__usage__)
+    print(prepend_todo.__usage__)
+    print(prioritize_todo.__usage__)
     if CONFIG["USE_GIT"]:
         print("")
         print("\tpull")
@@ -753,10 +735,8 @@ def cmd_help():
 
 ### List Printing Functions
 def format_lines(color_only=False, include_done=False):
-    """
-    Take in a list of lines to do, return them formatted with the TERM_COLORS
-    and organized based upon priority.
-    """
+    """Take in a list of lines to do, return them formatted with the 
+    TERM_COLORS and organized based upon priority."""
     plain = CONFIG["PLAIN"]
     no_priority = CONFIG["NO_PRI"]
     default = CONFIG.get("DEFAULT", "default")
@@ -797,14 +777,13 @@ def format_lines(color_only=False, include_done=False):
 
 
 def _legacy_sort(items):
-    """
-    Sort items alphabetically, i.e.
+    """Sort items alphabetically, i.e.
+
     # (pri_a) Abc
     # (pri_a) Bcd
     # (pri_b) Abc
     # (pri_c) Bcd
-    etc., etc., etc.
-    """
+    etc., etc., etc."""
     line_re = re.compile('^.*\d+\s(\([A-X]\)\s)?')
     # The .* in the regexp is needed for the \033[* codes
     items = [(line_re.sub("", i), i) for i in items]
@@ -814,9 +793,7 @@ def _legacy_sort(items):
 
 
 def _list_(by, regexp):
-    """
-    Master list_*() function.
-    """
+    """Master list_*() function."""
     nonetype = concat(["no", by])
     todo = {nonetype: []}
     by_list = []
@@ -894,11 +871,11 @@ def _list_by_(*args):
     print_x_of_y(lines, alines)
 
 
+@usage('\tlist | ls',
+    '\t\tLists all items in your todo.txt file sorted by priority.\n')
 def list_todo(args=None, plain=False, no_priority=False):
-    """
-    Print the list of todo items in order of priority and position in the
-    todo.txt file.
-    """
+    """Print the list of todo items in order of priority and position in the 
+    todo.txt file."""
     if not args:
         lines, sorted = _list_("pri", "")
         print(concat(sorted)[:-1])
@@ -907,11 +884,12 @@ def list_todo(args=None, plain=False, no_priority=False):
         _list_by_(*args)
 
 
+@usage('\tlistall | lsa',
+    '\t\tLists all items in your todo.txt file sorted by priority followed', 
+    '\t\tby the items in your done.txt file.\n')
 def list_all():
-    """
-    Print the list of todo items in order of priority and then print the
-    done.txt file.
-    """
+    """Print the list of todo items in order of priority and then print the 
+    done.txt file."""
     formatted = format_lines(include_done=True)
     lines = []
     for p in PRIORITIES:
@@ -921,28 +899,28 @@ def list_all():
     print_x_of_y(lines, lines)
 
 
+@usage('\tlistdate | lsd',
+    '\t\tLists all items in your todo.txt file sorted by date.\n')
 def list_date():
-    """
-    List todo items by date #{yyyy-mm-dd}.
-    """
+    """List todo items by date #{yyyy-mm-dd}."""
     lines, sorted = _list_("date", "#\{(\d{4})-(\d{1,2})-(\d{1,2})\}")
     print(concat(sorted)[:-1])
     print_x_of_y(sorted, lines)
 
 
+@usage('\tlistproj | lsp',
+    '\t\tLists all items in your todo.txt file sorted by project title.\n')
 def list_project():
-    """
-    Organizes items by project +prj they belong to.
-    """
+    """Organizes items by project +prj they belong to."""
     lines, sorted = _list_("project", "\+(\w+)")
     print(concat(sorted)[:-1])
     print_x_of_y(sorted, lines)
 
 
+@usage('\tlistcon | lsc',
+    '\t\tLists all items in your todo.txt file sorted by context.\n')
 def list_context():
-    """
-    Organizes items by context @context associated with them.
-    """
+    """Organizes items by context @context associated with them."""
     lines, sorted = _list_("context", "@(\w+)")
     print(concat(sorted)[:-1])
     print_x_of_y(sorted, lines)
