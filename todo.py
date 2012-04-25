@@ -705,27 +705,16 @@ def prepend_todo(args):
 @usage('\thelp | h',
     '\t\tDisplay this message and exit.\n')
 def cmd_help():
-    print(concat(["Use", CONFIG["TODO_PY"], "-h for option help"], " "))
-    print("")
+    print(concat(["Use", CONFIG["TODO_PY"], "-h for option help\n"], " "))
     print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
-    print(add_todo.__usage__)
-    print(addm_todo.__usage__)
-    print(append_todo.__usage__)
-    print(delete_todo.__usage__)
-    print(do_todo.__usage__)
-    print(list_todo.__usage__)
-    print(list_all.__usage__)
-    print(list_context.__usage__)
-    print(list_date.__usage__)
-    print(list_project.__usage__)
-    print(cmd_help.__usage__)
-    print(prepend_todo.__usage__)
-    print(prioritize_todo.__usage__)
-    if CONFIG["USE_GIT"]:
-        print(_git_log.__usage__)
-        print(_git_pull.__usage__)
-        print(_git_push.__usage__)
-        print(_git_status.__usage__)
+    d = {}
+    for (key, val) in commands.items():
+        d[val[1]] = (key, val[1])
+        # By using the function, only one command name will be added
+    cmds = d.values() # Only get the tuples
+    cmds.sort() # Sorts by first element in each tuple
+    for (_, f) in cmds:
+        print(f.__usage__)
     sys.exit(0)
 ### HELP
 
