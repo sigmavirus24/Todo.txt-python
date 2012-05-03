@@ -926,8 +926,10 @@ Contributors to python version: \
 https://github.com/sigmavirus24/Todo.txt-python/network
 License: GPLv3
 Code repository: \
-https://github.com/sigmavirus24/Todo.txt-python/tree/master""".format(
-        version=VERSION, id=REVISION))
+https://github.com/sigmavirus24/Todo.txt-python/tree/master
+Running on {python} {pyversion}""".format(version=VERSION, id=REVISION,
+    python=sys.subversion[0], pyversion=concat(sys.version_info[:3], 
+        '.')))
     sys.exit(0)
 
 
