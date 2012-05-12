@@ -60,6 +60,8 @@ a { color: #000000; }
 .menu a {
     color: #2966B8;
     text-decoration: none;
+    font-family: 'Gentium Book Basic', serif;
+    font-weight: bold;
 }
 
 
