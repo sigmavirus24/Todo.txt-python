@@ -711,8 +711,7 @@ def cmd_help():
     for (key, val) in commands.items():
         d[val[1]] = (key, val[1])
         # By using the function, only one command name will be added
-    cmds = d.values() # Only get the tuples
-    cmds.sort() # Sorts by first element in each tuple
+    cmds = sorted(d.values()) # Only get the tuples
     for (_, f) in cmds:
         print(f.__usage__)
     sys.exit(0)
@@ -772,8 +771,7 @@ def _legacy_sort(items):
     etc., etc., etc."""
     line_re = re.compile('^.*\d+\s(\([A-X]\)\s)?')
     # The .* in the regexp is needed for the \033[* codes
-    items = [(line_re.sub("", i), i) for i in items]
-    items.sort()
+    items = sorted([(line_re.sub("", i), i) for i in items])
     items = [line for (k, line) in items]
     return items
 
