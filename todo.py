@@ -266,14 +266,14 @@ def _iter_actual_lines_(config_file):
 
 def get_config(config_name="", dir_name=""):
     """Read the config file"""
-    if config_name:
-        CONFIG["TODOTXT_CFG_FILE"] = config_name
     if dir_name:
         dir_name = _path(dir_name)
         CONFIG["TODO_DIR"] = dir_name
         CONFIG["TODOTXT_CFG_FILE"] = _pathc([dir_name, "/config"])
         CONFIG["TODO_FILE"] = _pathc([dir_name, "/todo.txt"])
         CONFIG["DONE_FILE"] = _pathc([dir_name, "/done.txt"])
+    if config_name:
+        CONFIG["TODOTXT_CFG_FILE"] = _path(config_name)
 
     os.environ["TODO_DIR"] = CONFIG["TODO_DIR"]
 
@@ -635,7 +635,9 @@ def append_todo(args):
     '\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.\n')
 def prioritize_todo(args):
     """Add or modify the priority of the specified item."""
-    if args[0].isdigit() and len(args[1]) == 1 and args[1] in PRIORITIES:
+    args = [arg.upper() for arg in args]
+    a = args
+    if a[1:] and a[0].isdigit() and len(a[1]) == 1 and a[1] in PRIORITIES:
         line_no = int(args.pop(0))
         old_line, lines = separate_line(line_no)
         if test_separated(old_line, lines, line_no):
