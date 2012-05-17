@@ -636,8 +636,8 @@ def append_todo(args):
 def prioritize_todo(args):
     """Add or modify the priority of the specified item."""
     args = [arg.upper() for arg in args]
-    a = args
-    if a[1:] and a[0].isdigit() and len(a[1]) == 1 and a[1] in PRIORITIES:
+    if args[1:] and args[0].isdigit()\
+            and len(args[1]) == 1 and args[1] in PRIORITIES:
         line_no = int(args.pop(0))
         old_line, lines = separate_line(line_no)
         if test_separated(old_line, lines, line_no):
@@ -651,7 +651,6 @@ def prioritize_todo(args):
             new_line = concat([new_pri, old_line])
 
         lines.insert(line_no - 1, new_line)
-
         rewrite_and_post(line_no, old_line, new_line, lines)
     else:
         post_error('pri', 'NUMBER', 'capital letter in [A-X]')
