@@ -712,7 +712,7 @@ def cmd_help():
     for (key, val) in commands.items():
         d[val[1]] = (key, val[1])
         # By using the function, only one command name will be added
-    cmds = sorted(d.values()) # Only get the tuples
+    cmds = sorted(d.values())  # Only get the tuples
     for (_, f) in cmds:
         print(f.__usage__)
     sys.exit(0)
@@ -721,7 +721,7 @@ def cmd_help():
 
 ### List Printing Functions
 def format_lines(color_only=False, include_done=False):
-    """Take in a list of lines to do, return them formatted with the 
+    """Take in a list of lines to do, return them formatted with the
     TERM_COLORS and organized based upon priority."""
     plain = CONFIG["PLAIN"]
     no_priority = CONFIG["NO_PRI"]
@@ -859,7 +859,7 @@ def _list_by_(*args):
 @usage('\tlist | ls',
     '\t\tLists all items in your todo.txt file sorted by priority.\n')
 def list_todo(args=None, plain=False, no_priority=False):
-    """Print the list of todo items in order of priority and position in the 
+    """Print the list of todo items in order of priority and position in the
     todo.txt file."""
     if not args:
         lines, sorted = _list_("pri", "")
@@ -870,10 +870,10 @@ def list_todo(args=None, plain=False, no_priority=False):
 
 
 @usage('\tlistall | lsa',
-    '\t\tLists all items in your todo.txt file sorted by priority followed', 
+    '\t\tLists all items in your todo.txt file sorted by priority followed',
     '\t\tby the items in your done.txt file.\n')
 def list_all():
-    """Print the list of todo items in order of priority and then print the 
+    """Print the list of todo items in order of priority and then print the
     done.txt file."""
     formatted = format_lines(include_done=True)
     lines = []
@@ -927,7 +927,7 @@ License: GPLv3
 Code repository: \
 https://github.com/sigmavirus24/Todo.txt-python/tree/master
 Running on {python} {pyversion}""".format(version=VERSION, id=REVISION,
-    python=sys.subversion[0], pyversion=concat(sys.version_info[:3], 
+    python=sys.subversion[0], pyversion=concat(sys.version_info[:3],
         '.')))
     sys.exit(0)
 
