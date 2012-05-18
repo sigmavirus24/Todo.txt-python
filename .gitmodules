@@ -1,0 +1,3 @@
+[submodule "docs"]
+	path = docs
+	url = git://github.com/sigmavirus24/Todo.txt-python.wiki.git
