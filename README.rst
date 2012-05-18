@@ -20,7 +20,7 @@ you the URL to download it. Please note that GitPython is written for ``git
 Hacking
 -------
 
-Enjoy, contribute, and feel free to clone. I'm doing this blind[1]_ as best as
+Enjoy, contribute, and feel free to clone. I'm doing this blind [1]_ as best as
 possible for fun.
 
 Important Information
