@@ -51,6 +51,15 @@ try:
 except ImportError:
     # Python 3 again
     from string import ascii_uppercase as uppercase
+
+if os.name == "nt":
+    try:
+        from colorama import init
+        init()
+    except Exception:
+        pass
+    # colorama provides ANSI -> win32 color support
+    # If they don't have it, no worries.
 PRIORITIES = uppercase[:24]
 
 # concat() is necessary long before the grouping of function declarations
