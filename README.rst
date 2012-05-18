@@ -2,7 +2,7 @@ todo.py
 =======
 
 .. image:: https://secure.travis-ci.org/sigmavirus24/Todo.txt-python.png?branch=development
-`Build Status <http://travis-ci.org/sigmavirus24/Todo.txt-python>`_
+.. `Build Status <http://travis-ci.org/sigmavirus24/Todo.txt-python>`_
 
 A port of the `popular todo.txt-cli project
 <https://github.com/ginatrapani/todo.txt-cli>`_ from bash to python.
@@ -10,11 +10,12 @@ A port of the `popular todo.txt-cli project
 Dependencies
 ------------
 
-This only requires
-[GitPython](https://github.com/gitpython-developers/GitPython) if you want to
-have todo.py also manage a git repository which tracks the related files.
-Running the script once will give you the URL to download it. Please note that
-GitPython is written for `git --version` 1.7.2+.
+This only requires GitPython_ if you want to have todo.py also manage a git
+repository which tracks the related files.  Running the script once will give
+you the URL to download it. Please note that GitPython is written for ``git
+--version`` 1.7.2+.
+
+.. _GitPython: https://github.com/gitpython-developers/GitPython
 
 Hacking
 -------
@@ -25,7 +26,7 @@ possible for fun.
 Important Information
 ---------------------
 
-  * License: GPLv3_
+ - License: GPLv3_
     
 .. _GPLv3: https://raw.github.com/sigmavirus24/Todo.txt-python/master/LICENSE
 
