@@ -15,6 +15,9 @@ repository which tracks the related files. Running the script once will give
 you the URL to download it. Please note that GitPython is written for ``git
 --version`` 1.7.2+.
 
+If you're on Windows and running the script out of cmd.exe, install 
+colorama for 'termcolor' support.
+
 .. _GitPython: https://github.com/gitpython-developers/GitPython
 
 Hacking
