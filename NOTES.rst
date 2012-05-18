@@ -5,7 +5,7 @@ In ``_list_()``, we use a list comprehension to remove priority, context, and
 project tags from the todos. You might wonder why we don't just use the
 following:
 
-.. sourcecode:: python
+::
 
     from functools import partial
 
