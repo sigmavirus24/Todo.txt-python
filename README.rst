@@ -1,12 +1,9 @@
 todo.py
 =======
 
-.. _travisci: http://travis-ci.org/sigmavirus24/Todo.txt-python
-
 .. image:: https://secure.travis-ci.org/sigmavirus24/Todo.txt-python.png?branch=development
     :alt: Build Status
     :name: travisci
-.. `Build Status <http://travis-ci.org/sigmavirus24/Todo.txt-python>`_
 
 A port of the `popular todo.txt-cli project
 <https://github.com/ginatrapani/todo.txt-cli>`_ from bash to python.
@@ -31,8 +28,12 @@ Important Information
 ---------------------
 
 - License: GPLv3_
-    
+- Build Status: TravisCI_
+
 .. _GPLv3: https://raw.github.com/sigmavirus24/Todo.txt-python/master/LICENSE
+.. _TravisCI: http://travis-ci.org/sigmavirus24/Todo.txt-python
+
+--------
 
 .. [1] By blind, I mean without looking at the source of the original todo.txt-cli
     project. I'm working solely from my experiences with the script and
