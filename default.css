@@ -69,4 +69,4 @@ pre { background: #1a1a1a; color: #fff; padding: 15px;}
 
 hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
 
-.footer { text-align:center; padding-top:5px; font-style: italic; }
+.footer { margin: auto; padding-top:5px; font-style: italic; }
