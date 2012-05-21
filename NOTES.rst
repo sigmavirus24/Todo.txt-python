@@ -5,14 +5,15 @@ In ``_list_()``, we use a list comprehension to remove priority, context, and
 project tags from the todos. You might wonder why we don't just use the
 following:
 
-    ```python
+.. code-block:: python
+
     from functools import partial
 
     for b in by_list:
         todo[b] = map(partial(hide_proj_re.sub, ""), todo[b])
         todo[b] = map(partial(hide_cont_re.sub, ""), todo[b])
         todo[b] = map(partial(hide_date_re.sub, ""), todo[b])
-    ```
+
 
 ``map()`` is no faster than a list comprehension and the latter are something
 everyone learns early on so even the newest python hacker can read it easily.
