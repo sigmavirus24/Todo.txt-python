@@ -4,6 +4,7 @@ History
 development
 -----------
 
+- Add add-on functionality!
 - Add colorama support for users using the script in ``cmd.exe`` on 
   Windows
 - Add tests for ``get_config()``

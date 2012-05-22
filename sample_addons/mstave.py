@@ -63,5 +63,5 @@ def addp(args):
 commands = { 'addp' : (True, addp),
              'ap'   : (True, addp),
              'sl'   : (False, rev_list),
-             'add'  : (True, add),
-             'a'    : (True, add) }
+             'add'  : (True, add_todo),
+             'a'    : (True, add_todo) }

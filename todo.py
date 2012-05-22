@@ -98,6 +98,7 @@ CONFIG = {
         "HIDE_CONT": False,
         "HIDE_DATE": False,
         "LEGACY": False,
+        "ACTIONS": None,
         }
 
 
@@ -311,11 +312,10 @@ def get_config(config_name="", dir_name=""):
             elif pri_re.match(var[0]):
                 CONFIG[var[0]] = var[1].strip('$').lower().replace('_', ' ')
             else:
-                var[1] = os.path.expandvars(var[1])
-                CONFIG[var[0]] = var[1]
+                CONFIG[var[0]] = os.path.expandvars(var[1])
 
             # make expandvars work for our vars too
-            os.environ[var[0]] = var[1]
+            os.environ[var[0]] = str(CONFIG[var[0]])
 
     if CONFIG["USE_GIT"]:
         if not __import_git__():
@@ -960,6 +960,31 @@ def toggle_opt(option, opt_str, val, parser):
 ### End callback functions
 
 
+### Add-on functionality
+def load_actions():
+    action_dir = os.path.expanduser("/".join([CONFIG["TODO_DIR"], "actions"]))
+    actions = CONFIG["ACTIONS"].split(",")
+
+    if not (os.path.exists(action_dir) and any(actions)):
+        return
+
+    sys.path.insert(0, action_dir)
+
+    for action in actions:
+        try:
+            tmp = __import__(action)
+            if hasattr(tmp, "commands"):
+                commands.update(tmp.commands)
+            else:
+                print("Error loading {0}: No commands found.".format(action))
+        except ImportError:
+            print("No module named {0} available.".format(action))
+        except ValueError:
+            # For some reason there is a '' in the list `actions`
+            pass
+### End Add-on functionality
+
+
 ### Main components
 def opt_setup():
     opts = OptionParser("Usage: %prog [options] action [arg(s)]")
@@ -1050,6 +1075,7 @@ if __name__ == "__main__":
             "h"			: (False, cmd_help),
             "help"		: (False, cmd_help),
             }
+
     if CONFIG["USE_GIT"]:
         commands.update(
                 [("push", 	(False, _git_push)),
@@ -1057,6 +1083,9 @@ if __name__ == "__main__":
                 ("status", 	(False, _git_status)),
                 ("log", 	(False, _git_log))]
                 )
+
+    if CONFIG["ACTIONS"]:
+        load_actions()
 
     commandsl = [intern(key) for key in list(commands.keys())]
 
