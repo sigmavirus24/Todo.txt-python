@@ -435,7 +435,7 @@ def default_config():
     CONFIG["PRI_C"] = "light blue"
 
     TO_CONFIG = {True: 1, False: 0}
-    for key in list(TERM_COLORS.keys()):
+    for key in TERM_COLORS.keys():
         bkey = concat(["$", key.replace(' ', '_').upper()])
         TO_CONFIG[key] = bkey
 
@@ -445,9 +445,9 @@ def default_config():
     if yes_re.match(val):
         CONFIG["USE_GIT"] = True
 
-    for k, v in list(CONFIG.items()):
+    for k, v in CONFIG.items():
         if k != "GIT":
-            if v in list(TO_CONFIG.keys()):
+            if v in TO_CONFIG.keys():
                 cfg.write("export {0}={1}\n".format(k, TO_CONFIG[v]))
             else:
                 cfg.write("export {0}=\"{1}\"\n".format(k, str(v)))
@@ -538,7 +538,7 @@ def addm_todo(args):
     else:
         lines = concat(args, " ")
     lines = lines.split("\n")
-    list(map(add_todo, lines))  # Python 3 requirement
+    map(add_todo, lines)
 ### End new todo functions
 
 
@@ -954,7 +954,7 @@ def toggle_opt(option, opt_str, val, parser):
             "--invert-colors": "INVERT", "-l": "LEGACY",
             "--legacy": "LEGACY",
             }
-    if opt_str in list(toggle_dict.keys()):
+    if opt_str in toggle_dict.keys():
         k = toggle_dict[opt_str]
         CONFIG[k] ^= True
 ### End callback functions
@@ -1087,7 +1087,7 @@ if __name__ == "__main__":
     if CONFIG["ACTIONS"]:
         load_actions()
 
-    commandsl = [intern(key) for key in list(commands.keys())]
+    commandsl = [intern(key) for key in (commands.keys()]
 
     if not len(args) > 0:
         args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
