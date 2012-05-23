@@ -1087,7 +1087,7 @@ if __name__ == "__main__":
     if CONFIG["ACTIONS"]:
         load_actions()
 
-    commandsl = [intern(key) for key in (commands.keys()]
+    commandsl = [intern(key) for key in commands.keys()]
 
     if not len(args) > 0:
         args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
