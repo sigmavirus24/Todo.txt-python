@@ -24,7 +24,7 @@ setup(
     author="graffatcolmingov",
     author_email="graffatcolmingov@gmail.com",
     url="https://github.com/sigmavirus24/Todo.txt-python",
-    package_data={'': ['LICENSE']}
+    package_data={'': ['LICENSE']},
     classifiers=(
         'Development Status :: 4 - Beta',
         'Environment :: Console', 
