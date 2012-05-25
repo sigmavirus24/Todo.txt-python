@@ -23,6 +23,7 @@ import re
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
+from subprocess import Popen
 
 VERSION = "development"
 REVISION = "$Id$"
@@ -1094,11 +1095,18 @@ if __name__ == "__main__":
 
     all_re = re.compile('((app|pre)(?:end)?|p(?:ri)?)')
     all_set = set(["ls", "list", "a", "add", "addm"])
+    actions_dir = CONFIG.get('TODO_ACTIONS_DIR',
+            _pathc([CONFIG['TODO_DIR'], '/actions']))
 
     while args:
         # ensure this doesn't error because of a faulty CAPS LOCK key
         arg = args.pop(0).lower()
-        if arg in commandsl:
+        if arg in os.listdir(actions_dir):
+            arg = concat([actions_dir, arg], '/')
+            args.insert(0, arg)
+            Popen(args)
+            args = None
+        elif arg in commandsl:
             if not commands[arg][0]:
                 commands[arg][1]()
             else:
