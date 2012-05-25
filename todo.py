@@ -539,7 +539,7 @@ def addm_todo(args):
     else:
         lines = concat(args, " ")
     lines = lines.split("\n")
-    map(add_todo, lines)
+    list(map(add_todo, lines))  # Necessary for python 3000
 ### End new todo functions
 
 

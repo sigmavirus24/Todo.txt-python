@@ -23,6 +23,8 @@ import re
 import sys
 import unittest
 
+sys.path.insert(0, '..')
+
 import todo
 
 todotxt = todo.CONFIG["TODO_FILE"] = "test_todo.txt"
