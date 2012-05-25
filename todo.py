@@ -963,7 +963,10 @@ def toggle_opt(option, opt_str, val, parser):
 
 ### Add-on functionality
 def load_actions():
-    action_dir = os.path.expanduser("/".join([CONFIG["TODO_DIR"], "actions"]))
+    if CONFIG.get("TODO_ACTIONS_DIR"):
+        action_dir = CONFIG["TODO_ACTIONS_DIR"]
+    else:
+        action_dir = _pathc([CONFIG["TODO_DIR"], "/actions"])
     actions = CONFIG["ACTIONS"].split(",")
 
     if not (os.path.exists(action_dir) and any(actions)):
@@ -1098,27 +1101,25 @@ if __name__ == "__main__":
     actions_dir = CONFIG.get('TODO_ACTIONS_DIR',
             _pathc([CONFIG['TODO_DIR'], '/actions']))
 
-    while args:
-        # ensure this doesn't error because of a faulty CAPS LOCK key
-        arg = args.pop(0).lower()
-        if arg in os.listdir(actions_dir):
-            arg = concat([actions_dir, arg], '/')
-            args.insert(0, arg)
-            Popen(args)
-            args = None
-        elif arg in commandsl:
-            if not commands[arg][0]:
-                commands[arg][1]()
-            else:
-                if all_re.match(arg) or arg in all_set:
-                    commands[arg][1](args)
-                    args = None
-                else:
-                    commands[arg][1](args.pop(0))
+    arg = args.pop(0).lower()
+    if arg in os.listdir(actions_dir):
+        arg = concat([actions_dir, arg], '/')
+        args.insert(0, arg)
+        Popen(args)
+        args = None
+    elif arg in commandsl:
+        if not commands[arg][0]:
+            commands[arg][1]()
         else:
-            commandsl.sort()
-            commandsl = ["\t" + i for i in commandsl]
-            print("Unable to find command: {0}".format(arg))
-            print("Valid commands: ")
-            print(concat(commandsl, "\n"))
-            sys.exit(1)
+            if all_re.match(arg) or arg in all_set:
+                commands[arg][1](args)
+                args = None
+            else:
+                commands[arg][1](args.pop(0))
+    else:
+        commandsl.sort()
+        commandsl = ["\t" + i for i in commandsl]
+        print("Unable to find command: {0}".format(arg))
+        print("Valid commands: ")
+        print(concat(commandsl, "\n"))
+        sys.exit(1)
