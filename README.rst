@@ -20,6 +20,40 @@ colorama for 'termcolor' support.
 
 .. _GitPython: https://github.com/gitpython-developers/GitPython
 
+Installation
+------------
+
+From the repo
+`````````````
+If you want to install the copy locally (i.e. to a personal directory) you can
+simply download one of the packages_ and run the ``install.sh`` script.
+
+.. _packages: https://github.com/sigmavirus24/Todo.txt-python/downloads
+
+Be sure to run ``./install.sh -h`` first. You can decide where you would like
+the script installed (the default is ``$HOME/bin/``) and where you would like an
+alias for the script, e.g., ``t`` or ``tpy``, written (the default is
+``$HOME/.bashrc``).
+
+Using pypi
+``````````
+
+If you would prefer a system-wide installation, you can use install ``todo.py``
+from PyPi like so:
+
+::
+
+    $ pip install todo.py
+
+Be aware that making a system-wide installation will not automattically create
+an alias for your use. You will have to edit either your ``.bashrc`` or
+``.bash_profile`` (or respective shell configuration filse) to include something
+along the lines of:
+
+::
+
+    alias t='$HOME/bin/todo.py'
+
 Hacking
 -------
 

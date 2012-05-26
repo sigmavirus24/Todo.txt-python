@@ -23,7 +23,6 @@ import re
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
-from subprocess import Popen
 
 VERSION = "development"
 REVISION = "$Id$"
@@ -1105,7 +1104,7 @@ if __name__ == "__main__":
     if os.path.exists(actions_dir) and arg in os.listdir(actions_dir):
         arg = concat([actions_dir, arg], '/')
         args.insert(0, arg)
-        Popen(args)
+        os.system(concat(args,  " "))
         args = None
     elif arg in commandsl:
         if not commands[arg][0]:
