@@ -1102,7 +1102,7 @@ if __name__ == "__main__":
             _pathc([CONFIG['TODO_DIR'], '/actions']))
 
     arg = args.pop(0).lower()
-    if arg in os.listdir(actions_dir):
+    if os.path.exists(actions_dir) and arg in os.listdir(actions_dir):
         arg = concat([actions_dir, arg], '/')
         args.insert(0, arg)
         Popen(args)

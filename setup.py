@@ -17,7 +17,7 @@ requires = []
 
 setup(
     name="todo.py",
-    version="0.3-beta-1",
+    version="0.3-beta-3",
     description="Python version of Gina Trapani's popular bash script.",
     long_description="\n\n".join([open("README.rst").read(), 
         open("HISTORY.rst").read()]),
