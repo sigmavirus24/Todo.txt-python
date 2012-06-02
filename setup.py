@@ -17,7 +17,7 @@ requires = []
 
 setup(
     name="todo.py",
-    version="0.3-beta-3",
+    version="0.3",
     description="Python version of Gina Trapani's popular bash script.",
     long_description="\n\n".join([open("README.rst").read(), 
         open("HISTORY.rst").read()]),
@@ -26,11 +26,12 @@ setup(
     url="https://github.com/sigmavirus24/Todo.txt-python",
     package_data={'': ['LICENSE']},
     classifiers=(
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console', 
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: IronPython',
