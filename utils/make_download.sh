@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES=('todo.py' 'install.sh' 'README.md' 'LICENSE')
+FILES=('todo.py' 'install.sh' 'README.rst' 'LICENSE' 'HISTORY.rst' 'setup.py')
 
 base_name="todo.txt-python"
 if [[ -n $1 ]] ; then
