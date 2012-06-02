@@ -1040,60 +1040,8 @@ def opt_setup():
     return opts
 
 
-if __name__ == "__main__":
-    CONFIG["TODO_PY"] = sys.argv[0]
-    opts = opt_setup()
-
-    valid, args = opts.parse_args()
-
-    get_config(valid.config, valid.todo_dir)
-
-    global commands
-    commands = {
-            # command 	: ( Args, Function),
-            "a"			: (True, add_todo),
-            "add"		: (True, add_todo),
-            "addm"		: (True, addm_todo),
-            "app"		: (True, append_todo),
-            "append"	: (True, append_todo),
-            "do"		: (True, do_todo),
-            "p"			: (True, prioritize_todo),
-            "pri"		: (True, prioritize_todo),
-            "pre"		: (True, prepend_todo),
-            "prepend"	: (True, prepend_todo),
-            "dp"		: (True, de_prioritize_todo),
-            "depri"		: (True, de_prioritize_todo),
-            "del"		: (True, delete_todo),
-            "rm"		: (True, delete_todo),
-            "ls"		: (True, list_todo),
-            "list"		: (True, list_todo),
-            "listall"	: (False, list_all),
-            "lsa"		: (False, list_all),
-            "lsc"		: (False, list_context),
-            "listcon"	: (False, list_context),
-            "lsd"		: (False, list_date),
-            "listdate"	: (False, list_date),
-            "lsp"		: (False, list_project),
-            "listproj"	: (False, list_project),
-            "h"			: (False, cmd_help),
-            "help"		: (False, cmd_help),
-            }
-
-    if CONFIG["USE_GIT"]:
-        commands.update(
-                [("push", 	(False, _git_push)),
-                ("pull", 	(False, _git_pull)),
-                ("status", 	(False, _git_status)),
-                ("log", 	(False, _git_log))]
-                )
-
-    if CONFIG["ACTIONS"]:
-        load_actions()
-
+def execute_commands(args):
     commandsl = [intern(key) for key in commands.keys()]
-
-    if not len(args) > 0:
-        args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
     all_re = re.compile('((app|pre)(?:end)?|p(?:ri)?)')
     all_set = set(["ls", "list", "a", "add", "addm"])
@@ -1121,4 +1069,61 @@ if __name__ == "__main__":
         print("Unable to find command: {0}".format(arg))
         print("Valid commands: ")
         print(concat(commandsl, "\n"))
-        sys.exit(1)
+        return 1
+    return 0
+
+
+commands = {
+        # command 	: ( Args, Function),
+        "a"			: (True, add_todo),
+        "add"		: (True, add_todo),
+        "addm"		: (True, addm_todo),
+        "app"		: (True, append_todo),
+        "append"	: (True, append_todo),
+        "do"		: (True, do_todo),
+        "p"			: (True, prioritize_todo),
+        "pri"		: (True, prioritize_todo),
+        "pre"		: (True, prepend_todo),
+        "prepend"	: (True, prepend_todo),
+        "dp"		: (True, de_prioritize_todo),
+        "depri"		: (True, de_prioritize_todo),
+        "del"		: (True, delete_todo),
+        "rm"		: (True, delete_todo),
+        "ls"		: (True, list_todo),
+        "list"		: (True, list_todo),
+        "listall"	: (False, list_all),
+        "lsa"		: (False, list_all),
+        "lsc"		: (False, list_context),
+        "listcon"	: (False, list_context),
+        "lsd"		: (False, list_date),
+        "listdate"	: (False, list_date),
+        "lsp"		: (False, list_project),
+        "listproj"	: (False, list_project),
+        "h"			: (False, cmd_help),
+        "help"		: (False, cmd_help),
+        }
+
+
+if __name__ == "__main__":
+    CONFIG["TODO_PY"] = sys.argv[0]
+    opts = opt_setup()
+
+    valid, args = opts.parse_args()
+
+    get_config(valid.config, valid.todo_dir)
+
+    if CONFIG["USE_GIT"]:
+        commands.update(
+                [("push", 	(False, _git_push)),
+                ("pull", 	(False, _git_pull)),
+                ("status", 	(False, _git_status)),
+                ("log", 	(False, _git_log))]
+                )
+
+    if CONFIG["ACTIONS"]:
+        load_actions()
+
+    if not len(args) > 0:
+        args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
+
+    sys.exit(execute_commands(args))
