@@ -1041,8 +1041,6 @@ def opt_setup():
 
 
 def execute_commands(args):
-    commandsl = [intern(key) for key in commands.keys()]
-
     all_re = re.compile('((app|pre)(?:end)?|p(?:ri)?)')
     all_set = set(["ls", "list", "a", "add", "addm"])
     actions_dir = CONFIG.get('TODO_ACTIONS_DIR',
@@ -1054,7 +1052,7 @@ def execute_commands(args):
         args.insert(0, arg)
         os.system(concat(args,  " "))
         args = None
-    elif arg in commandsl:
+    elif arg in commands:
         if not commands[arg][0]:
             commands[arg][1]()
         else:
@@ -1064,11 +1062,11 @@ def execute_commands(args):
             else:
                 commands[arg][1](args.pop(0))
     else:
-        commandsl.sort()
-        commandsl = ["\t" + i for i in commandsl]
+        commandsl = sorted([intern(key) for key in commands.keys()])
+        commandsl[0] = "\t" + commandsl[0]
         print("Unable to find command: {0}".format(arg))
         print("Valid commands: ")
-        print(concat(commandsl, "\n"))
+        print(concat(commandsl, "\n\t"))
         return 1
     return 0
 
