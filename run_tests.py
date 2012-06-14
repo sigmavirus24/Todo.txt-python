@@ -30,7 +30,7 @@ if __name__ == "__main__":
         names = os.listdir("tests")
         regex = re.compile("(?!_+)\w+\.py$")
         join = '.'.join
-        names = [join('tests', f[:-3]) for f in names if regex.match(f)]
+        names = [join(['tests', f[:-3]]) for f in names if regex.match(f)]
         suite = unittest.defaultTestLoader.loadTestsFromNames(names)
 
     print("=== Starting unittest suite ===")
