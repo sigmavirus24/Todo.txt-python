@@ -313,7 +313,7 @@ def get_config(config_name="", dir_name=""):
             os.access(config_file, perms)) and not config_name:
         default_config()
     else:
-        strip_re = re.compile('\w+\s([A-Za-z_$="./01]+).*')
+        strip_re = re.compile('\w+\s([A-Za-z_\\\\:$="./01]+).*')
         pri_re = re.compile('(PRI_[A-X]|DEFAULT)')
 
         for line in _iter_actual_lines_(config_file):
