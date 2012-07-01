@@ -1071,6 +1071,31 @@ def execute_commands(args):
     return 0
 
 
+def main():
+    CONFIG["TODO_PY"] = sys.argv[0]
+    opts = opt_setup()
+
+    valid, args = opts.parse_args()
+
+    get_config(valid.config, valid.todo_dir)
+
+    if CONFIG["USE_GIT"]:
+        commands.update(
+                [("push", 	(False, _git_push)),
+                ("pull", 	(False, _git_pull)),
+                ("status", 	(False, _git_status)),
+                ("log", 	(False, _git_log))]
+                )
+
+    if CONFIG["ACTIONS"]:
+        load_actions()
+
+    if not len(args) > 0:
+        args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
+
+    sys.exit(execute_commands(args))
+
+
 commands = {
         # command 	: ( Args, Function),
         "a"			: (True, add_todo),
@@ -1103,25 +1128,4 @@ commands = {
 
 
 if __name__ == "__main__":
-    CONFIG["TODO_PY"] = sys.argv[0]
-    opts = opt_setup()
-
-    valid, args = opts.parse_args()
-
-    get_config(valid.config, valid.todo_dir)
-
-    if CONFIG["USE_GIT"]:
-        commands.update(
-                [("push", 	(False, _git_push)),
-                ("pull", 	(False, _git_pull)),
-                ("status", 	(False, _git_status)),
-                ("log", 	(False, _git_log))]
-                )
-
-    if CONFIG["ACTIONS"]:
-        load_actions()
-
-    if not len(args) > 0:
-        args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
-
-    sys.exit(execute_commands(args))
+    main()
