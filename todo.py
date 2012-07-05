@@ -717,13 +717,12 @@ def prepend_todo(args):
 def cmd_help():
     print(concat(["Use", CONFIG["TODO_PY"], "-h for option help\n"], " "))
     print(concat(["Usage:", CONFIG["TODO_PY"], "command [arg(s)]"], " "))
-    d = {}
-    for (key, val) in commands.items():
-        d[val[1]] = (key, val[1])
-        # By using the function, only one command name will be added
-    cmds = sorted(d.values())  # Only get the tuples
-    for (_, f) in cmds:
-        print(f.__usage__)
+    visited = []
+    for key in sorted(commands.keys()):
+        func = commands[key][1]
+        if func not in visited:
+            print(func.__usage__)
+            visited.append(func)
     sys.exit(0)
 ### HELP
 
