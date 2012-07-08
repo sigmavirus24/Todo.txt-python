@@ -23,12 +23,14 @@ import re
 import sys
 from optparse import OptionParser
 from datetime import datetime, date
+from getpass import getuser
 
 VERSION = "development"
 REVISION = "$Id$"
 
 try:
     import readline
+    readline.parse_and_bind('tab: complete')
 except ImportError:
     # This isn't crucial to the execution of the script.
     # But it is a nice feature to have. Sucks to be an OSX user.
@@ -46,11 +48,11 @@ except NameError:
     # Python 3 renamed raw_input to input
     pass
 
-try:
-    from string import uppercase
-except ImportError:
-    # Python 3 again
-    from string import ascii_uppercase as uppercase
+import string
+if hasattr(string, 'uppercase'):
+    PRIORITIES = string.uppercase[:24]
+elif hasattr(string, 'ascii_uppercase'):
+    PRIORITIES = string.ascii_uppercase[:24]
 
 if os.name == "nt":
     try:
@@ -60,7 +62,6 @@ if os.name == "nt":
         pass
     # colorama provides ANSI -> win32 color support
     # If they don't have it, no worries.
-PRIORITIES = uppercase[:24]
 
 # concat() is necessary long before the grouping of function declarations
 concat = lambda str_list, sep='': sep.join([str(i) for i in str_list])
@@ -106,6 +107,7 @@ for p in PRIORITIES:
     CONFIG["PRI_{0}".format(p)] = "default"
 del(p, TODO_DIR)
 
+commands = {}
 
 ### Helper Functions
 def todo_padding(include_done=False):
@@ -169,6 +171,16 @@ def usage(*args):
     return usage_decorator
 
 
+def command(requires_args, *args):
+    """Add function to the commands dictionary for each arg in args."""
+    def command_decorator(func):
+        """Function that actually does the work."""
+        for arg in args:
+            commands[arg] = (requires_args, func)
+        return func
+    return command_decorator
+
+
 def _git_err(g):
     """Print any errors that result from GitPython and exit."""
     if g.stderr:
@@ -178,6 +190,7 @@ def _git_err(g):
     sys.exit(g.status)
 
 
+@command(False, 'pull')
 @usage('\tpull', '\t\tPulls from your remote git repository.\n')
 def _git_pull():
     """Equivalent to running git pull on the command line."""
@@ -187,6 +200,7 @@ def _git_pull():
         _git_err(g)
 
 
+@command(False, 'push')
 @usage('\tpush', '\t\tPushes to your remote git repository.\n')
 def _git_push():
     """Push commits made locally to the remote."""
@@ -200,6 +214,7 @@ def _git_push():
         print("TODO: 'git push' executed.")
 
 
+@command(False, 'status')
 @usage('\tstatus',
     '\t\t"git status" of the repository containing your todo files.',
     '\t\tRequires git version 1.7.4 or newer.\n')
@@ -212,6 +227,7 @@ def _git_status():
         print("status only works for git version 1.7.4 or higher.")
 
 
+@command(False, 'log')
 @usage('\tlog', '\t\tShows the last five commits in your repository.\n')
 def _git_log():
     """Print the two latest commits in the local repository's log."""
@@ -495,6 +511,7 @@ def default_config():
 
 
 ### New todo Functions
+@command(True, 'add', 'a')
 @usage('\tadd | a "Item to do +project @context #{yyyy-mm-dd}"',
        concat(["\t\tAdds 'Item to do +project @context #{yyyy-mm-dd}'",
        "to your todo.txt"], ' '), "\t\tfile.",
@@ -527,6 +544,7 @@ def add_todo(args):
         _git_commit([CONFIG["TODO_FILE"]], s)
 
 
+@command(True, 'addm')
 @usage('\taddm "First item to do +project @context #{yyyy-mm-dd}',
     '\t\tSecond item to do +project @context #{yyyy-mm-dd}',
     '\t\t...', '\t\tLast item to do +project @context #{yyyy-mm-dd}',
@@ -543,6 +561,7 @@ def addm_todo(args):
 
 
 ### Start do/del functions
+@command(True, 'do')
 @usage('\tdo NUMBER',
     '\t\tMarks item with corresponding number as done and moves it to',
     '\t\tyour done.txt file.\n')
@@ -575,6 +594,7 @@ def do_todo(line):
             _git_commit(files, removed)
 
 
+@command(True, 'del', 'rm')
 @usage('\tdel | rm NUMBER', '\t\tDeletes the item on line NUMBER in todo.txt',
         '')
 def delete_todo(line):
@@ -621,6 +641,7 @@ def post_success(item_no, old_line, new_line):
         _git_commit([CONFIG["TODO_FILE"]], print_str)
 
 
+@command(True, 'append', 'app')
 @usage('\tappend | app NUMBER "text to append"',
     '\t\tAppend "text to append" to item NUMBER.\n')
 def append_todo(args):
@@ -640,6 +661,7 @@ def append_todo(args):
         post_error('append', 'NUMBER', 'string')
 
 
+@command(True, 'pri', 'p')
 @usage('\tpri | p NUMBER [A-X]',
     '\t\tAdd priority specified (A, B, C, etc.) to item NUMBER.\n')
 def prioritize_todo(args):
@@ -665,6 +687,7 @@ def prioritize_todo(args):
         post_error('pri', 'NUMBER', 'capital letter in [A-X]')
 
 
+@command(True, 'depri', 'dp')
 @usage('\tdepri | dp NUMBER',
     '\t\tRemove the priority of the item on line NUMBER.\n')
 def de_prioritize_todo(number):
@@ -681,9 +704,10 @@ def de_prioritize_todo(number):
 
         rewrite_and_post(number, old_line, new_line, lines)
     else:
-        post_err('depri', 'NUMBER', None)
+        post_error('depri', 'NUMBER', None)
 
 
+@command(True, 'prepend', 'pre')
 @usage('\tprepend | pre NUMBER "text to prepend"',
     '\t\tAdd "text to prepend" to the beginning of the item.\n')
 def prepend_todo(args):
@@ -712,6 +736,7 @@ def prepend_todo(args):
 
 
 ### HELP
+@command(False, 'help', 'h')
 @usage('\thelp | h',
     '\t\tDisplay this message and exit.\n')
 def cmd_help():
@@ -864,6 +889,7 @@ def _list_by_(*args):
     print_x_of_y(lines, alines)
 
 
+@command(True, 'list', 'ls')
 @usage('\tlist | ls',
     '\t\tLists all items in your todo.txt file sorted by priority.\n')
 def list_todo(args=None, plain=False, no_priority=False):
@@ -877,6 +903,7 @@ def list_todo(args=None, plain=False, no_priority=False):
         _list_by_(*args)
 
 
+@usage('listall', 'lsa')
 @usage('\tlistall | lsa',
     '\t\tLists all items in your todo.txt file sorted by priority followed',
     '\t\tby the items in your done.txt file.\n')
@@ -892,6 +919,7 @@ def list_all():
     print_x_of_y(lines, lines)
 
 
+@command(False, 'listdate', 'sd')
 @usage('\tlistdate | lsd',
     '\t\tLists all items in your todo.txt file sorted by date.\n')
 def list_date():
@@ -901,6 +929,7 @@ def list_date():
     print_x_of_y(sorted, lines)
 
 
+@command(False, 'listproj', 'lsp')
 @usage('\tlistproj | lsp',
     '\t\tLists all items in your todo.txt file sorted by project title.\n')
 def list_project():
@@ -910,6 +939,7 @@ def list_project():
     print_x_of_y(sorted, lines)
 
 
+@command(False, 'listcon', 'lsc')
 @usage('\tlistcon | lsc',
     '\t\tLists all items in your todo.txt file sorted by context.\n')
 def list_context():
@@ -1093,37 +1123,6 @@ def main():
         args.append(CONFIG["TODOTXT_DEFAULT_ACTION"])
 
     sys.exit(execute_commands(args))
-
-
-commands = {
-        # command 	: ( Args, Function),
-        "a"			: (True, add_todo),
-        "add"		: (True, add_todo),
-        "addm"		: (True, addm_todo),
-        "app"		: (True, append_todo),
-        "append"	: (True, append_todo),
-        "do"		: (True, do_todo),
-        "p"			: (True, prioritize_todo),
-        "pri"		: (True, prioritize_todo),
-        "pre"		: (True, prepend_todo),
-        "prepend"	: (True, prepend_todo),
-        "dp"		: (True, de_prioritize_todo),
-        "depri"		: (True, de_prioritize_todo),
-        "del"		: (True, delete_todo),
-        "rm"		: (True, delete_todo),
-        "ls"		: (True, list_todo),
-        "list"		: (True, list_todo),
-        "listall"	: (False, list_all),
-        "lsa"		: (False, list_all),
-        "lsc"		: (False, list_context),
-        "listcon"	: (False, list_context),
-        "lsd"		: (False, list_date),
-        "listdate"	: (False, list_date),
-        "lsp"		: (False, list_project),
-        "listproj"	: (False, list_project),
-        "h"			: (False, cmd_help),
-        "help"		: (False, cmd_help),
-        }
 
 
 if __name__ == "__main__":
