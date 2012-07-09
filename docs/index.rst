@@ -194,7 +194,7 @@ support add-ons but not the ``@command`` decorator is:
     from todo import usage
     try:
         from todo import command
-    except:
+    except ImportError:
         commands = {}
         def command(requires_args, *args):
             def command_decorator(func):
