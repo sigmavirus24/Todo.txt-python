@@ -16,7 +16,7 @@ be inviting to hackers of varying degrees of experience.
 Usage
 =====
 
-.. code-block:: none
+::
 
     Usage: todo.py [options] action [arg(s)]
 
@@ -38,7 +38,7 @@ Usage
 
 ------
 
-.. code-block:: none
+::
 
     Use ./todo.py -h for option help
 
@@ -107,4 +107,129 @@ Usage
 Add-ons
 =======
 
-Section about add-ons
+There are two ways to write add-ons for ``todo.py``.
+
+1. Write an executable that works similar to the specifications for 
+   ``todo.sh``.
+2. Write a python module.
+
+This documentation will cover the latter.
+
+Writing a python module to extend ``todo.py``.
+----------------------------------------------
+
+Your module should start with a doc-string, e.g.,
+
+::
+
+    """
+    example_module
+    ~~~~~~~~~~~~~~
+
+    My new awesome module to extend todo.py.
+
+    ------
+
+    Author: Ian Cordasco
+
+    Commands:
+        - foo | foobar
+        - monty | montypython
+        - spam
+    """
+
+You can put as much information in there as you like. It mainly helps other 
+people and isn't used by ``todo.py``.
+
+After that, you should import at least two things from ``todo.py``:
+
+- ``usage`` (introduced in v0.3.0)
+- ``command`` (introduced in v0.4.0)
+
+These are two decorators which supply some crucial information to ``todo.py``.  
+``usage`` will tell ``todo.py`` what to print when a user runs ``todo.py 
+help``. An example implementation would be:
+
+::
+
+    from todo import usage
+
+
+    @usage('\tfoo | foobar "Args if you want them"',
+        '\t\tDescription of what `foo` does.')
+    def foo(*args):
+        """Doc-string for foo()"""
+        pass
+
+``command`` registers the function with ``todo.py`` as the command names 
+provided, e.g.,
+
+::
+
+    from todo import command, usage
+
+
+    @command(True, 'foo', 'foobar')
+    @usage('\tfoo | foobar "Args if you want them"',
+        '\t\tDescription of what `foo` does.')
+    def foo(*args):
+        """Doc-string for foo()"""
+        pass
+
+
+    @command(False, 'spam')
+    @usage('\tspam', '\t\tDescription of what `spam` does.')
+    def spam():
+        """Doc-string for spam()"""
+        pass
+
+Backwards compatibility
+-----------------------
+
+An example of how you might deal with older versions of ``todo.py`` that 
+support add-ons but not the ``@command`` decorator is:
+
+::
+
+    from todo import usage
+    try:
+        from todo import command
+    except:
+        commands = {}
+        def command(requires_args, *args):
+            def command_decorator(func):
+                for arg in args:
+                    commands[arg] = (requires_args, func)
+                return func
+            return command_decorator
+
+
+    @command(True, 'foo', 'foobar')
+    @usage('\tfoo | foobar "Args if you want them"',
+        '\t\tDescription of what `foo` does.')
+    def foo(*args):
+        """Doc-string for foo()"""
+        pass
+
+
+    @command(False, 'spam')
+    @usage('\tspam', '\t\tDescription of what `spam` does.')
+    def spam():
+        """Doc-string for spam()"""
+        pass
+
+Which is essentially you redefining the decorator as part of your module. This 
+works because you're working with the old capabilities of ``todo.py`` which 
+required you to have a dictionary called ``commands`` which held the 
+structure:
+
+::
+
+    commands = {
+        'foo': (True, foo),
+        'foobar': (True, foo),
+        'spam': (False, spam),
+        }
+
+This will create the dictionary in a manner which is entirely compatible with 
+all versions >= 0.3.0.
