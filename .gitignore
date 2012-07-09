@@ -3,3 +3,4 @@
 *.tar*
 *.zip
 *.egg*
+docs/_build/
