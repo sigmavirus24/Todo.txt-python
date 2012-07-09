@@ -17,9 +17,10 @@
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
 import os
+import shutil
 import todo
 import base
-import unittest
+
 
 class TestAddons(base.BaseTest):
     def setUp(self):
@@ -33,10 +34,9 @@ class TestAddons(base.BaseTest):
 
     def tearDown(self):
         super(TestAddons, self).tearDown()
-        if os.path.exists(todo.CONFIG['TODO_ACTIONS_DIR']):
-            os.rmdir(todo.CONFIG['TODO_ACTIONS_DIR'])
-        if os.path.exists(todo.CONFIG['TODO_DIR']):
-            os.rmdir(todo.CONFIG['TODO_DIR'])
+        for key in ('TODO_ACTIONS_DIR', 'TODO_DIR'):
+            if os.path.exists(todo.CONFIG[key]):
+                shutil.rmtree(todo.CONFIG[key], ignore_errors=True)
 
     def test_noaddons(self):
         bad_args = ['addp', 'foo']
@@ -59,7 +59,8 @@ class TestAddons(base.BaseTest):
         args = ['addp', '']
         self.assertEqual(todo.execute_commands(args), 0)
         os.unlink(filename)
-        os.unlink(filename + 'c')
+        if os.path.exists(filename + 'c'):
+            os.unlink(filename + 'c')
         todo.CONFIG['ACTIONS'] = ''
         todo.commands = commands.copy()
         self.assertEqual(todo.execute_commands(args), 1)
@@ -70,7 +71,7 @@ class TestAddons(base.BaseTest):
         if not os.path.exists(filename):
             with open(filename, 'w+') as fd:
                 fd.writelines(lines)
-        os.chmod(filename, 0700)
+        os.chmod(filename, 700)
 
         args = ['addnums']
         self.assertEqual(todo.execute_commands(args), 0)

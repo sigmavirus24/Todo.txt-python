@@ -16,11 +16,10 @@
 # 
 # TLDR: This is licensed under the GPLv3. See LICENSE for more details.
 
-import os
 import todo
 import base
-import unittest
 from functools import partial
+
 
 class TestExecute(base.BaseTest):
 
@@ -29,7 +28,7 @@ class TestExecute(base.BaseTest):
         self.back_up = todo.commands.copy()
         args_msg = '{0} is expecting args to be passed to it, but none are.'
         noargs_msg = '{0} is having args passed during execution when none should be.'
-        for (k, v) in todo.commands.iteritems():
+        for (k, v) in todo.commands.items():
             if todo.commands[k][0]:
                 todo.commands[k] = (todo.commands[k][0], partial(self.assert_args,
                     args_msg.format(k)))
