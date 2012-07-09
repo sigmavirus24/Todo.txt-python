@@ -71,7 +71,7 @@ class TestAddons(base.BaseTest):
         if not os.path.exists(filename):
             with open(filename, 'w+') as fd:
                 fd.writelines(lines)
-        os.chmod(filename, 700)
+        os.chmod(filename, 0o700)
 
         args = ['addnums']
         self.assertEqual(todo.execute_commands(args), 0)
