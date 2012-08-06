@@ -109,6 +109,7 @@ del(p, TODO_DIR)
 
 commands = {}
 
+
 ### Helper Functions
 def todo_padding(include_done=False):
     lines = [line for line in iter_todos(include_done)]
@@ -308,9 +309,8 @@ def get_config(config_name="", dir_name=""):
 
     config_file = _path(config_file)
     perms = os.F_OK | os.R_OK | os.W_OK
-    if not (os.access(CONFIG["TODO_DIR"], perms | os.X_OK) and \
-            os.access(config_file, perms)) and \
-        not config_name:
+    if not (os.access(CONFIG["TODO_DIR"], perms | os.X_OK) and
+            os.access(config_file, perms)) and not config_name:
         default_config()
     else:
         strip_re = re.compile('\w+\s([A-Za-z_$="./01]+).*')
@@ -473,7 +473,7 @@ def default_config():
             sys.exit(0)
         CONFIG["GIT"] = git.Git(CONFIG["TODO_DIR"])
         try:
-            repo = git.Repo(CONFIG["TODO_DIR"])
+            git.Repo(CONFIG["TODO_DIR"])
         except git.exc.InvalidGitRepositoryError:
             val = prompt("Would you like to create a new git repository in\n ",
                     CONFIG["TODO_DIR"], "? [y/N]")
