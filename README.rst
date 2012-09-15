@@ -1,12 +1,20 @@
 todo.py
 =======
 
-.. image:: https://secure.travis-ci.org/sigmavirus24/Todo.txt-python.png?branch=development
+.. image:: https://secure.travis-ci.org/sigmavirus24/Todo.txt-python.png?branch=rewrite
     :alt: Build Status
     :target: http://travis-ci.org/sigmavirus24/Todo.txt-python
 
 A port of the `popular todo.txt-cli project
 <https://github.com/ginatrapani/todo.txt-cli>`_ from bash to python.
+
+Information About This Branch
+-----------------------------
+
+This will feature a complete rewrite of the script. I'm going to model the 
+design after pip and change the API for making python add-ons. The latter is 
+dependent upon the former which is why this is needed. This branch will be 
+extremely unstable for a (hopefully) short period of time.
 
 Dependencies
 ------------
