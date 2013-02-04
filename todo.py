@@ -439,7 +439,7 @@ def default_config():
         bkey = concat(["$", key.replace(' ', '_').upper()])
         TO_CONFIG[key] = bkey
 
-    val = prompt("Would you like to use git with your to manage\n ",
+    val = prompt("Would you like to use git to manage\n ",
         CONFIG["TODO_DIR"], "? [y/N]")
     yes_re = re.compile('y(?:es)?', re.I)
     if yes_re.match(val):
